@@ -54,6 +54,16 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         search.setOnClickListener { a.push(RecipesScreen(a, focusSearch = true)) }
         left.addView(search, Ui.lp(Ui.MATCH, Ui.u(72), t = 34))
 
+        // Raccourcis sous la recherche : dernières recettes cuisinées, et les plus cuisinées.
+        val shortcuts = Ui.horizontal(c)
+        shortcuts.addView(Ui.button(c, tr("Récentes"), Ui.Style.SECONDARY, Icon.Kind.CLOCK, height = 56, textSize = 18f) {
+            a.push(RecipesScreen(a, initialUsage = RecipesScreen.Usage.RECENT))
+        }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(12) })
+        shortcuts.addView(Ui.button(c, tr("Fréquentes"), Ui.Style.SECONDARY, Icon.Kind.FLAME, height = 56, textSize = 18f) {
+            a.push(RecipesScreen(a, initialUsage = RecipesScreen.Usage.MOST))
+        }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        left.addView(shortcuts, Ui.lp(Ui.MATCH, Ui.WRAP, t = 14))
+
         resumeCard = Ui.horizontal(c)
         resumeCard.setPadding(Ui.u(22), Ui.u(16), Ui.u(18), Ui.u(16))
         resumeCard.background = Ui.pressable(Ui.round(Ui.ACCENT_DIM, 24f), 24f)

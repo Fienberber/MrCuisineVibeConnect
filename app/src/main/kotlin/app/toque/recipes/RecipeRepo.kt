@@ -30,7 +30,12 @@ class RecipeRepo(private val context: Context) {
         // Table ajoutée sans changer le numéro de version de la base : une version plus ancienne
         // de l'appli, qui l'ignore, peut toujours ouvrir la même base.
         override fun onOpen(db: SQLiteDatabase) {
-            if (!db.isReadOnly) db.execSQL("CREATE TABLE IF NOT EXISTS adjustments (id TEXT PRIMARY KEY, json TEXT NOT NULL)")
+            if (!db.isReadOnly) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS adjustments (id TEXT PRIMARY KEY, json TEXT NOT NULL)")
+                // Recettes cuisinées : nombre de fois et dernière fois (ms), pour « Récentes » et
+                // « Les plus cuisinées ».
+                db.execSQL("CREATE TABLE IF NOT EXISTS cooked (id TEXT PRIMARY KEY, count INTEGER NOT NULL, last INTEGER NOT NULL)")
+            }
         }
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
@@ -44,6 +49,9 @@ class RecipeRepo(private val context: Context) {
     @Volatile var loaded = false
         private set
     private val favorites = HashSet<String>()
+    /** Une recette cuisinée [count] fois, la dernière à [lastMs]. */
+    class Usage(val count: Int, val lastMs: Long)
+    private val cooked = ConcurrentHashMap<String, Usage>()
     /** Adaptations personnelles (note, quantités, pesées), par identifiant de recette. */
     private val adjustments = ConcurrentHashMap<String, RecipeAdjustments>()
     @Volatile private var adjustmentsLoaded = false
@@ -79,6 +87,12 @@ class RecipeRepo(private val context: Context) {
             favorites.clear()
             favorites += favs
         }
+        val usage = HashMap<String, Usage>()
+        db.rawQuery("SELECT id, count, last FROM cooked", null).use { c ->
+            while (c.moveToNext()) usage[c.getString(0)] = Usage(c.getInt(1), c.getLong(2))
+        }
+        cooked.clear()
+        cooked.putAll(usage)
         index = SearchIndex(list)
         loaded = true
         notifyChanged()
@@ -243,7 +257,11 @@ class RecipeRepo(private val context: Context) {
         loadAdjustments(db)
         val favs = HashSet<String>()
         db.rawQuery("SELECT id FROM favorites", null).use { c -> while (c.moveToNext()) favs += c.getString(0) }
-        val wanted = gone.filterKeys { it in favs || adjustments.containsKey(it) }
+        val usage = HashMap<String, Usage>()
+        db.rawQuery("SELECT id, count, last FROM cooked", null).use { c ->
+            while (c.moveToNext()) usage[c.getString(0)] = Usage(c.getInt(1), c.getLong(2))
+        }
+        val wanted = gone.filterKeys { it in favs || adjustments.containsKey(it) || usage.containsKey(it) }
         if (wanted.isEmpty()) return
         val byTitle = HashMap<String, String>()
         for ((id, title) in titles(db)) byTitle.putIfAbsent(RecipeAdjustments.titleKey(title), id)
@@ -251,6 +269,19 @@ class RecipeRepo(private val context: Context) {
             val target = byTitle[RecipeAdjustments.titleKey(title)] ?: continue
             if (target == id) continue
             if (id in favs) db.execSQL("INSERT OR IGNORE INTO favorites (id) VALUES (?)", arrayOf(target))
+            usage[id]?.let { u ->
+                val t = usage[target]
+                val merged = Usage(u.count + (t?.count ?: 0), maxOf(u.lastMs, t?.lastMs ?: 0L))
+                usage[target] = merged
+                db.insertWithOnConflict("cooked", null, ContentValues().apply {
+                    put("id", target)
+                    put("count", merged.count)
+                    put("last", merged.lastMs)
+                }, SQLiteDatabase.CONFLICT_REPLACE)
+                // Déplacé, pas copié : des allers-retours entre sources ne gonflent pas le compte.
+                db.execSQL("DELETE FROM cooked WHERE id = ?", arrayOf(id))
+                usage.remove(id)
+            }
             adjustments[id]?.let { a ->
                 val r = get(target) ?: return@let
                 val merged = a.carriedTo(r, adjustments[target] ?: RecipeAdjustments())
@@ -262,6 +293,38 @@ class RecipeRepo(private val context: Context) {
                 }, SQLiteDatabase.CONFLICT_REPLACE)
             }
         }
+    }
+
+    /** Note qu'une recette vient d'être cuisinée (une fois par cuisson). */
+    fun markCooked(id: String) {
+        val now = System.currentTimeMillis()
+        exec.execute {
+            val u = cooked[id]
+            val next = Usage((u?.count ?: 0) + 1, now)
+            helper.writableDatabase.insertWithOnConflict("cooked", null, ContentValues().apply {
+                put("id", id)
+                put("count", next.count)
+                put("last", next.lastMs)
+            }, SQLiteDatabase.CONFLICT_REPLACE)
+            cooked[id] = next
+            notifyChanged()
+        }
+    }
+
+    fun usage(id: String): Usage? = cooked[id]
+
+    /** Recettes cuisinées, de la plus récente à la plus ancienne (seulement celles du catalogue). */
+    fun recentIds(limit: Int = 60): List<String> {
+        val known = index.entries.mapTo(HashSet()) { it.id }
+        return cooked.entries.filter { it.key in known }.sortedByDescending { it.value.lastMs }.take(limit).map { it.key }
+    }
+
+    /** Recettes les plus cuisinées (à égalité, la plus récente d'abord). */
+    fun mostCookedIds(limit: Int = 60): List<String> {
+        val known = index.entries.mapTo(HashSet()) { it.id }
+        return cooked.entries.filter { it.key in known }
+            .sortedWith(compareByDescending<Map.Entry<String, Usage>> { it.value.count }.thenByDescending { it.value.lastMs })
+            .take(limit).map { it.key }
     }
 
     /** Recharge l'index de recherche (après des mises à jour sans [rebuild]). */

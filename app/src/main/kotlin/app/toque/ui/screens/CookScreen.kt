@@ -40,6 +40,14 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
     }
     /** Bip de pesée : armé tant que le poids est sous la quantité, joué une fois en l'atteignant. */
     private var weighArmed = false
+    /** Cuisson déjà comptée (« Récentes », « Les plus cuisinées ») pendant cet écran. */
+    private var counted = false
+
+    private fun countCooked() {
+        if (counted) return
+        counted = true
+        a.app.recipes.markCooked(recipe.id)
+    }
     private val done = HashSet<Int>()
     private var launchedStep = -1
     /** Étapes couvertes par le programme lancé (plusieurs quand elles sont enchaînées). */
@@ -112,6 +120,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
 
     private fun next() {
         if (index >= recipe.steps.size - 1) {
+            countCooked()
             a.prefs.guidedRecipe = ""
             a.chime(1)
             a.toast(tr("Bon appétit !"), Ui.OK)
@@ -282,6 +291,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         a.prefs.guidedStep = first
         a.startJob(job, onHotConfirmed = { hotBlendOk = true }) { v ->
             if (v.ok) {
+                countCooked()
                 launchedStep = first
                 launchedCount = count
                 seenPhase = 0
