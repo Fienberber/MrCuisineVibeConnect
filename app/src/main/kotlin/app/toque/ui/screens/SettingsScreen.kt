@@ -153,10 +153,12 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         lidl.addView(b1, Ui.lp(t = 12))
         lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
             14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
-        val b2 = Ui.horizontal(c)
-        b2.addView(Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }, Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
-        b2.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() })
-        lidl.addView(b2, Ui.lp(t = 6))
+        // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
+        // son texte se coupait au milieu d'un mot.
+        lidl.addView(Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) },
+            Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+        lidl.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() },
+            Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
         lidl.addView(toggle(tr("Synchro automatique chaque nuit"), a.prefs.autoSync) { a.prefs.autoSync = it }, Ui.lp(t = 10))
 
         // ---- Mises à jour
@@ -407,7 +409,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private fun refreshSync() {
         val last = a.prefs.lastSyncResult
         syncText.text = (if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", last)) +
-            "\n" + tr("%d recettes dans Toque", a.app.recipes.count)
+            "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
     }
 
     // ------------------------------------------------------------------ mises à jour
@@ -510,10 +512,19 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         a.toast(message, Ui.WARN)
     }
 
+    /** Désabonnement du suivi des recettes (le nombre s'affiche une fois la base chargée). */
+    private var unsubRecipes: (() -> Unit)? = null
+
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
         if (!syncing) refreshSync()
+        unsubRecipes = a.app.recipes.onChange { if (!syncing) refreshSync() }
+    }
+
+    override fun onHide() {
+        unsubRecipes?.invoke()
+        unsubRecipes = null
     }
 
     override fun onSnapshot(s: Snapshot) {
