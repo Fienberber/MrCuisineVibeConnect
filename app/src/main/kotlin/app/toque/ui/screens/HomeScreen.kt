@@ -106,17 +106,22 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private fun tileLp(gap: Boolean) = LinearLayout.LayoutParams(0, Ui.MATCH, 1f).apply { if (gap) rightMargin = Ui.u(16) }
 
     private fun tile(icon: Icon.Kind, title: String, sub: String = "", hasSub: Boolean = true, onClick: () -> Unit): Pair<LinearLayout, TextView> {
-        // Tuile centrée : grande pastille d'icône, titre et sous-titre dessous.
-        val t = Ui.vertical(c, Gravity.CENTER)
+        // Tuile centrée : grande pastille d'icône, titre et sous-titre dessous. La pastille est à la
+        // même hauteur dans toutes les tuiles, quel que soit le texte (une ou deux lignes, avec ou
+        // sans sous-titre) : espace fixe au-dessus, texte accroché sous la pastille.
+        val t = Ui.vertical(c, Gravity.CENTER_HORIZONTAL)
         t.setPadding(Ui.u(14), Ui.u(14), Ui.u(14), Ui.u(14))
         t.background = Ui.pressable(Ui.round(Ui.SURFACE, 26f, Ui.STROKE, 1f), 26f)
+        t.addView(View(c), LinearLayout.LayoutParams(1, 0, 2f))
         val badge = android.widget.FrameLayout(c)
         badge.background = Ui.round(Ui.ACCENT_DIM, 44f)
         badge.addView(Icon(c, icon, Ui.ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
         t.addView(badge, LinearLayout.LayoutParams(Ui.u(84), Ui.u(84)))
-        t.addView(Ui.text(c, title, 22f, Ui.TEXT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
+        val text = Ui.vertical(c, Gravity.CENTER_HORIZONTAL or Gravity.TOP)
+        text.addView(Ui.text(c, title, 22f, Ui.TEXT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
         val s = Ui.ellipsize(Ui.text(c, sub, 15f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, 2)
-        if (hasSub) t.addView(s, Ui.lp(Ui.WRAP, Ui.WRAP, t = 4))
+        if (hasSub) text.addView(s, Ui.lp(Ui.WRAP, Ui.WRAP, t = 4))
+        t.addView(text, LinearLayout.LayoutParams(Ui.MATCH, 0, 3f))
         t.isClickable = true
         t.setOnClickListener { onClick() }
         return t to s
