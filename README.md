@@ -51,11 +51,27 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 - **Guided cooking**: each step starts with one tap, the next step shows up by itself, built-in
   weighing, resume after a power cut. Settings that follow each other with nothing to do in
   between (rinsing, blending at several speeds…) start together with a single tap: the blade goes
-  straight from one speed and temperature to the next without stopping.
+  straight from one speed and temperature to the next without stopping. Recipe steps that use the
+  site's **progressive speed ramp** become one machine step per stage. A recipe in progress shows
+  on the home screen and can be **abandoned** there (✕), except while a program is running.
+- **Your own notes and quantities**: a free note on each recipe, and tapping an ingredient's
+  quantity changes it (1000 g of water → 800 g); the weighings and mentions in the steps that use
+  it follow in proportion. Favourites, notes and adjusted quantities follow the recipe when a sync
+  replaces it with the same recipe from the other source (site or stock app).
 - **Manual cooking**, **Knead / Steam / Sauté** programs, **Turbo**, **scale**.
 - **Offline**: everything works without a network (no more "server unreachable" at startup).
 - **Always the right time**: the time zone comes from the Internet connection and the time from
-  the network (the robot has no clock battery); can be set by hand in *Settings › Date and time*.
+  the network (the robot has no clock battery). Right after power-on, the clock is set from the
+  first server that answers, so the time is right within seconds instead of staying on 01:00. Can
+  be set by hand in *Settings › Date and time*.
+- **Standby**, like the stock app: after a few minutes without a touch or a turn of the knob
+  (2 to 30 min, or never, in *Settings › Screen*), a dimmed black screen shows the time, and the
+  bowl temperature when it is hot. Never during a program or on the scale. The gesture that wakes
+  the screen does nothing else. During standby, the knob ring stays on as a faint white night-light
+  (can be turned off).
+- **Bowl sensor that reads the wrong way round**: on some robots (seen on an SKMC 1200 C3) the
+  base reports the bowl as present when it is removed; *Settings › Safety › Invert the bowl
+  sensor* fixes it.
 - **Made for a robot without Android buttons**: Toque opens at startup, and a **Back to Toque**
   button stays on top of the stock app when you open it.
 - **Updates from GitHub**: *Settings › Updates* checks this repository's
