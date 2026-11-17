@@ -157,6 +157,7 @@ class RecipeRepo(private val context: Context) {
 
     private fun replaceAllNow(recipes: List<Recipe>) {
         val db = helper.writableDatabase
+        val before = titles(db)
         db.beginTransaction()
         try {
             db.delete("recipes", null, null)
@@ -170,6 +171,8 @@ class RecipeRepo(private val context: Context) {
                 db.insertWithOnConflict("recipes", null, v, SQLiteDatabase.CONFLICT_REPLACE)
                 if (r.favorite) db.execSQL("INSERT OR IGNORE INTO favorites (id) VALUES (?)", arrayOf(r.id))
             }
+            val kept = recipes.map { it.id }.toHashSet()
+            carryOver(db, before.filterKeys { it !in kept })
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
@@ -211,17 +214,54 @@ class RecipeRepo(private val context: Context) {
     fun removeAllExcept(keep: Set<String>, rebuild: Boolean = true) {
         exec.submit {
             val db = helper.writableDatabase
-            val gone = ArrayList<String>()
-            db.rawQuery("SELECT id FROM recipes", null).use { c -> while (c.moveToNext()) c.getString(0).let { if (it !in keep) gone += it } }
+            val gone = titles(db).filterKeys { it !in keep }
             db.beginTransaction()
             try {
-                for (id in gone) db.delete("recipes", "id = ?", arrayOf(id))
+                for (id in gone.keys) db.delete("recipes", "id = ?", arrayOf(id))
+                carryOver(db, gone)
                 db.setTransactionSuccessful()
             } finally {
                 db.endTransaction()
             }
             if (rebuild) rebuild()
         }.get()
+    }
+
+    private fun titles(db: SQLiteDatabase): Map<String, String> {
+        val out = HashMap<String, String>()
+        db.rawQuery("SELECT id, title FROM recipes", null).use { c -> while (c.moveToNext()) out[c.getString(0)] = c.getString(1) }
+        return out
+    }
+
+    /**
+     * Favoris et adaptations des recettes retirées ([gone] : id → titre), reportés sur la recette
+     * restante de même titre : passer des recettes de l'appli d'origine à celles du site (ou
+     * l'inverse) ne les fait pas disparaître. Les anciennes lignes restent, pour un retour en arrière.
+     */
+    private fun carryOver(db: SQLiteDatabase, gone: Map<String, String>) {
+        if (gone.isEmpty()) return
+        loadAdjustments(db)
+        val favs = HashSet<String>()
+        db.rawQuery("SELECT id FROM favorites", null).use { c -> while (c.moveToNext()) favs += c.getString(0) }
+        val wanted = gone.filterKeys { it in favs || adjustments.containsKey(it) }
+        if (wanted.isEmpty()) return
+        val byTitle = HashMap<String, String>()
+        for ((id, title) in titles(db)) byTitle.putIfAbsent(RecipeAdjustments.titleKey(title), id)
+        for ((id, title) in wanted) {
+            val target = byTitle[RecipeAdjustments.titleKey(title)] ?: continue
+            if (target == id) continue
+            if (id in favs) db.execSQL("INSERT OR IGNORE INTO favorites (id) VALUES (?)", arrayOf(target))
+            adjustments[id]?.let { a ->
+                val r = get(target) ?: return@let
+                val merged = a.carriedTo(r, adjustments[target] ?: RecipeAdjustments())
+                if (merged.isEmpty) return@let
+                adjustments[target] = merged
+                db.insertWithOnConflict("adjustments", null, ContentValues().apply {
+                    put("id", target)
+                    put("json", merged.encode())
+                }, SQLiteDatabase.CONFLICT_REPLACE)
+            }
+        }
     }
 
     /** Recharge l'index de recherche (après des mises à jour sans [rebuild]). */

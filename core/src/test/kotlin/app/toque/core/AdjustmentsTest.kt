@@ -214,6 +214,23 @@ class AdjustmentsTest {
     }
 
     /** Les valeurs d'origine ne sont pas écrites dans le catalogue : la recette enregistrée reste celle de la source. */
+    @Test fun noteAndMatchingQuantitiesFollowToTheSameRecipeFromTheOtherSource() {
+        val mine = RecipeAdjustments().withNote("Moins de lait")
+            .withQty(sugar, "20").withQty(milk, "800").withWeigh(3, recipe.steps[3].weigh!!, 400)
+        // Même recette, autre source : le lait y est écrit autrement, le sucre pareil.
+        val other = recipe.copy(id = "mc-1", title = "Beurre de cacahuètes", ingredients = listOf(IngredientGroup("", listOf(
+            Ingredient(name = "400 g de cacahuètes salées"), Ingredient("25", "g", "sucre"), Ingredient(name = "1 l de lait")))))
+        val moved = mine.carriedTo(other)
+        assertEquals("Moins de lait", moved.note)
+        assertEquals(mapOf(RecipeAdjustments.qtyKey(sugar) to "20"), moved.qty)
+        assertTrue(moved.weigh.isEmpty())
+        // Ce que la recette cible a déjà l'emporte.
+        val kept = mine.carriedTo(other, RecipeAdjustments().withNote("Déjà là").withQty(sugar, "30"))
+        assertEquals("Déjà là", kept.note)
+        assertEquals("30", kept.qty[RecipeAdjustments.qtyKey(sugar)])
+        assertEquals(RecipeAdjustments.titleKey("Velouté d’hiver "), RecipeAdjustments.titleKey("velouté d'hiver"))
+    }
+
     @Test fun storedRecipeDoesNotCarryTheCorrection() {
         val a = RecipeAdjustments().withQty(peanuts, "320")
         val text = RecipeCodec.encode(recipe)

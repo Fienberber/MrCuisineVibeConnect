@@ -49,6 +49,19 @@ data class RecipeAdjustments(
 
     fun encode(): String = Json.write(linkedMapOf("note" to note, "qty" to qty, "weigh" to weigh))
 
+    /**
+     * Report sur [target], la même recette venue de l'autre source (même titre), quand celle-ci est
+     * retirée du catalogue. La note suit si [target] n'en a pas ; une quantité seulement si l'ingrédient
+     * y est écrit de la même façon ; les pesées d'étape jamais (les étapes ne se correspondent pas).
+     * [existing] : ce que [target] a déjà, qui reste prioritaire.
+     */
+    fun carriedTo(target: Recipe, existing: RecipeAdjustments = RecipeAdjustments()): RecipeAdjustments {
+        val keys = target.withSplitQuantities().ingredients.flatMap { it.items }.map { qtyKey(it) }.toHashSet()
+        val q = LinkedHashMap(existing.qty)
+        for ((k, v) in qty) if (k in keys && k !in q) q[k] = v
+        return existing.copy(note = existing.note.ifBlank { note }, qty = q)
+    }
+
     companion object {
         /** Portée de la balance du robot. */
         const val MAX_GRAMS = 5000
@@ -58,6 +71,9 @@ data class RecipeAdjustments(
             listOf(i.originalQty.ifBlank { i.qty }, i.unit, QuantityLinks.keyName(i.name)).joinToString("|") { it.trim() }
 
         fun weighKey(stepIndex: Int, originalGrams: Int): String = "$stepIndex:$originalGrams"
+
+        /** Titre comparable d'une source à l'autre (casse, accents, apostrophes, ponctuation). */
+        fun titleKey(title: String): String = QuantityLinks.norm(title)
 
         /** Texte illisible ou vide : aucune adaptation. */
         fun decode(text: String): RecipeAdjustments {
