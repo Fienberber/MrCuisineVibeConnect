@@ -7,10 +7,13 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.os.Handler
 import android.os.Looper
 import app.toque.core.recipes.Recipe
+import app.toque.core.recipes.RecipeAdjustments
 import app.toque.core.recipes.RecipeCodec
 import app.toque.core.recipes.RecipeSource
 import app.toque.core.recipes.SearchIndex
+import app.toque.core.recipes.adjusted
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
@@ -24,6 +27,12 @@ class RecipeRepo(private val context: Context) {
             db.execSQL("CREATE TABLE favorites (id TEXT PRIMARY KEY)")
         }
 
+        // Table ajoutée sans changer le numéro de version de la base : une version plus ancienne
+        // de l'appli, qui l'ignore, peut toujours ouvrir la même base.
+        override fun onOpen(db: SQLiteDatabase) {
+            if (!db.isReadOnly) db.execSQL("CREATE TABLE IF NOT EXISTS adjustments (id TEXT PRIMARY KEY, json TEXT NOT NULL)")
+        }
+
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
     }
     private val exec = Executors.newSingleThreadExecutor { r -> Thread(r, "toque-recettes").apply { priority = Thread.NORM_PRIORITY - 1 } }
@@ -35,6 +44,9 @@ class RecipeRepo(private val context: Context) {
     @Volatile var loaded = false
         private set
     private val favorites = HashSet<String>()
+    /** Adaptations personnelles (note, quantités, pesées), par identifiant de recette. */
+    private val adjustments = ConcurrentHashMap<String, RecipeAdjustments>()
+    @Volatile private var adjustmentsLoaded = false
 
     val imagesDir: File get() = File(context.filesDir, "images").apply { mkdirs() }
 
@@ -48,7 +60,8 @@ class RecipeRepo(private val context: Context) {
     fun load() = exec.execute { rebuild() }
 
     private fun rebuild() {
-        val db = helper.readableDatabase
+        val db = helper.writableDatabase
+        loadAdjustments(db)
         val favs = HashSet<String>()
         db.rawQuery("SELECT id FROM favorites", null).use { c -> while (c.moveToNext()) favs += c.getString(0) }
         val list = ArrayList<Recipe>()
@@ -83,6 +96,42 @@ class RecipeRepo(private val context: Context) {
                 null
             } ?: return null
             return r.copy(favorite = isFavorite(id))
+        }
+    }
+
+    /** La recette avec les adaptations de l'utilisateur (quantités et pesées corrigées). */
+    fun getAdjusted(id: String): Recipe? = get(id)?.let { it.adjusted(adjustmentsOf(it.id)) }
+
+    private fun loadAdjustments(db: SQLiteDatabase) {
+        if (adjustmentsLoaded) return
+        synchronized(adjustments) {
+            if (adjustmentsLoaded) return
+            db.rawQuery("SELECT id, json FROM adjustments", null).use { c ->
+                while (c.moveToNext()) {
+                    val a = RecipeAdjustments.decode(c.getString(1))
+                    if (!a.isEmpty) adjustments[c.getString(0)] = a
+                }
+            }
+            adjustmentsLoaded = true
+        }
+    }
+
+    /** Adaptations de l'utilisateur pour cette recette. Conservées d'une synchronisation à l'autre. */
+    fun adjustmentsOf(id: String): RecipeAdjustments {
+        if (!adjustmentsLoaded) loadAdjustments(helper.writableDatabase)
+        return adjustments[id] ?: RecipeAdjustments()
+    }
+
+    fun setAdjustments(id: String, a: RecipeAdjustments) {
+        if (!adjustmentsLoaded) loadAdjustments(helper.writableDatabase)
+        if (a.isEmpty) adjustments.remove(id) else adjustments[id] = a
+        exec.execute {
+            val db = helper.writableDatabase
+            if (a.isEmpty) db.delete("adjustments", "id = ?", arrayOf(id))
+            else db.insertWithOnConflict("adjustments", null, ContentValues().apply {
+                put("id", id)
+                put("json", a.encode())
+            }, SQLiteDatabase.CONFLICT_REPLACE)
         }
     }
 
