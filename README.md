@@ -58,6 +58,9 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   quantity changes it (1000 g of water → 800 g); the weighings and mentions in the steps that use
   it follow in proportion. Favourites, notes and adjusted quantities follow the recipe when a sync
   replaces it with the same recipe from the other source (site or stock app).
+- **Sounds**: a bell rings when the weight to add is reached (sound to choose in *Settings*), and a
+  loud tune plays when the recipe's last program ends. A setting you confirmed ("I checked this
+  setting") is remembered for the next time you cook the recipe.
 - **Manual cooking**, **Knead / Steam / Sauté** programs, **Turbo**, **scale**.
 - **Offline**: everything works without a network (no more "server unreachable" at startup).
 - **Always the right time**: the time zone comes from the Internet connection and the time from

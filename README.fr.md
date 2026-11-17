@@ -59,6 +59,9 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   qui l'utilisent suivent en proportion. Favoris, notes et quantités corrigées suivent la recette
   quand une synchronisation la remplace par la même recette de l'autre source (site ou appli
   d'origine).
+- **Sons** : une cloche sonne quand la quantité à peser est atteinte (son au choix dans les
+  Réglages), et une mélodie forte retentit à la fin du dernier programme de la recette. Un réglage
+  vérifié (« J'ai vérifié ce réglage ») est mémorisé pour les prochaines fois.
 - **Cuisson manuelle**, programmes **Pétrir / Vapeur / Rissoler**, **Turbo**, **balance**.
 - **Hors ligne** : tout fonctionne sans réseau (plus de « serveur injoignable » au démarrage).
 - **Heure toujours juste** : le fuseau horaire est trouvé d'après la connexion Internet et l'heure

@@ -263,16 +263,27 @@ class MainActivity : Activity() {
     // ------------------------------------------------------------------ évènements machine
 
     private fun onMachineEvent(e: MachineEvent) {
+        val ownSound = current?.ownsFinishSound(e) == true
         current?.onEvent(e)
         if (e.type != EventType.LINK_CHANGED && e.type != EventType.PHASE_CHANGED) standby.poke()
         when (e.type) {
-            EventType.JOB_FINISHED -> chime(2)
+            EventType.JOB_FINISHED -> if (!ownSound) chime(2)
             EventType.FAULT -> { chime(3); toast(e.message, Ui.DANGER) }
             EventType.LID_OPENED -> if (snapshot.busy || snapshot.state != null) toast(tr("Couvercle ouvert : pause"), Ui.WARN)
             EventType.JOB_PAUSED -> if (e.message != PauseReason.USER.label) toast(e.message, Ui.WARN)
             EventType.TURBO_END -> toast(e.message, Ui.TEXT2)
             else -> Unit
         }
+    }
+
+    /** Quantité à peser atteinte. */
+    fun weighBeep() {
+        if (prefs.sound) Sounds.weighReached(prefs.weighSound)
+    }
+
+    /** Fin de recette : mélodie forte, comme l'appli d'origine. */
+    fun recipeDoneSound() {
+        if (prefs.sound) Sounds.recipeDone()
     }
 
     fun chime(times: Int = 1) {

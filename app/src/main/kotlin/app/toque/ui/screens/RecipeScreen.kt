@@ -73,8 +73,9 @@ class RecipeScreen(a: MainActivity, private val recipe: Recipe) : Screen(a) {
         val byline = ArrayList<String>()
         if (recipe.author.isNotBlank()) byline += tr("Par %s", authorName(recipe.author))
         if (recipe.ratingCount > 0) byline += "★ " + tr("%s/5 · %d notes", rating(recipe.rating), recipe.ratingCount)
-        if (byline.isNotEmpty()) {
-            left.addView(Ui.ellipsize(Ui.text(c, byline.joinToString("   "), 16f, Ui.TEXT2)), Ui.lp(t = 10))
+        // Une ligne chacun : sur une seule, la note était coupée (« 124… ») dès que l'auteur est long.
+        byline.forEachIndexed { i, line ->
+            left.addView(Ui.ellipsize(Ui.text(c, line, 16f, Ui.TEXT2)), Ui.lp(t = if (i == 0) 10 else 2))
         }
 
         val actions = Ui.horizontal(c)

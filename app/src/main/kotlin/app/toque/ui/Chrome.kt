@@ -29,6 +29,8 @@ abstract class Screen(val a: MainActivity) {
     open fun onHide() {}
     open fun onSnapshot(s: Snapshot) {}
     open fun onEvent(e: MachineEvent) {}
+    /** L'écran joue lui-même le son de fin de ce programme (fin de recette) : pas de bip habituel. */
+    open fun ownsFinishSound(e: MachineEvent): Boolean = false
     open fun onKnob(delta: Int): Boolean = false
     open fun onKnobPress(): Boolean = false
     open fun canLeave(): Boolean = true
