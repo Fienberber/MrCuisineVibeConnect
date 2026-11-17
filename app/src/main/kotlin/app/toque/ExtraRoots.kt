@@ -16,7 +16,14 @@ import javax.net.ssl.X509TrustManager
  * Les APK des versions GitHub sont servis par release-assets.githubusercontent.com, dont le
  * certificat (Let's Encrypt) remonte à « ISRG Root X1 », arrivée seulement dans Android 7.1.1 :
  * sur le robot, le téléchargement échouait (« Trust anchor for certification path not found »).
- * Le système reste consulté en premier ; la racine embarquée ne sert que s'il refuse.
+ *
+ * assets/certs contient aussi les racines vers lesquelles les sites utilisés basculent ou
+ * basculeront, toutes absentes d'Android 6 : ISRG Root X2 (Let's Encrypt, ECDSA), Sectigo
+ * Public Server Authentication Root E46 et R46 (GitHub, aujourd'hui encore contre-signées par
+ * USERTrust) et GTS Root R1 à R4 (Google). Copiées du magasin de racines de macOS ; une racine
+ * de plus = un fichier PEM de plus dans ce dossier.
+ *
+ * Le système reste consulté en premier ; les racines embarquées ne servent que s'il refuse.
  */
 object ExtraRoots {
     private const val DIR = "certs"
