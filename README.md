@@ -37,7 +37,7 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 
 ## Features
 
-- **Dark interface** designed for the robot's 7" screen and rotary knob, and smooth on its
+- **Dark night-blue interface** designed for the robot's 7" screen and rotary knob, and smooth on its
   original tablet (1 GB RAM, Android 6): no heavy libraries, downsampled images, recycled views.
 - **Lidl recipes, straight from monsieur-cuisine.com.** Toque downloads the official Monsieur
   Cuisine connect recipes (about 1,700 in French, with each step's machine settings) from the
@@ -47,7 +47,8 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 - **Author, ratings and reviews**: each recipe shows who published it and its rating on the site,
   and the recipe page loads the users' comments (with Monsieur Cuisine's replies).
 - **Search that works**: ignores accents, plurals and typos ("bechamle", "risoto").
-  Search by ingredients (e.g. "chicken, curry"), filters, favorites.
+  Search by ingredients (e.g. "chicken, curry"), filters, favorites. **Recent** (last cooked first)
+  and **Frequent** (most cooked first) lists, also one tap away under the home search bar.
 - **Guided cooking**: each step starts with one tap, the next step shows up by itself, built-in
   weighing, resume after a power cut. Settings that follow each other with nothing to do in
   between (rinsing, blending at several speeds…) start together with a single tap: the blade goes
@@ -56,7 +57,7 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   on the home screen and can be **abandoned** there (✕), except while a program is running.
 - **Your own notes and quantities**: a free note on each recipe, and tapping an ingredient's
   quantity changes it (1000 g of water → 800 g); the weighings and mentions in the steps that use
-  it follow in proportion. Favourites, notes and adjusted quantities follow the recipe when a sync
+  it follow in proportion (numeric keypad, fractions included). Favourites, notes and adjusted quantities follow the recipe when a sync
   replaces it with the same recipe from the other source (site or stock app).
 - **Sounds**: a bell rings when the weight to add is reached (sound to choose in *Settings*), and a
   loud tune plays when the recipe's last program ends. A setting you confirmed ("I checked this
@@ -79,7 +80,9 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   button stays on top of the stock app when you open it.
 - **Updates from GitHub**: *Settings › Updates* checks this repository's
   [Releases](https://github.com/Wuki60/MrCuisineVibeConnect/releases) and installs the new version
-  (silently on a rooted robot, then Toque restarts). Refused while a program is running.
+  (silently on a rooted robot, then Toque restarts). Refused while a program is running. Recent
+  root certificates missing from Android 6 (ISRG Root X1/X2 for GitHub's download server, Sectigo,
+  Google) are bundled, so downloads over HTTPS work on the robot.
 
 ## Safety: what changes compared to the stock app
 

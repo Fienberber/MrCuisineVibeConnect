@@ -34,7 +34,7 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 
 ## Ce que fait Toque
 
-- **Interface sombre**, pensée pour l'écran 7" et le bouton rotatif du robot, fluide sur sa
+- **Interface sombre, bleu nuit**, pensée pour l'écran 7" et le bouton rotatif du robot, fluide sur sa
   tablette d'origine (1 Go de RAM, Android 6) : pas de bibliothèque lourde, images
   sous-échantillonnées, vues recyclées.
 - **Recettes Lidl, directement depuis monsieur-cuisine.com**. Toque télécharge les recettes
@@ -47,6 +47,8 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   fiche charge les commentaires des utilisateurs (avec les réponses de Monsieur Cuisine).
 - **Recherche qui marche** : insensible aux accents, aux pluriels et aux fautes de frappe
   (« bechamle », « risoto »). Recherche par ingrédients (« poulet, curry »), filtres, favoris.
+  Listes **Récentes** (dernières recettes cuisinées) et **Fréquentes** (les plus cuisinées), aussi
+  accessibles d'un appui sous la barre de recherche de l'accueil.
 - **Cuisine pas à pas** : chaque étape se lance d'un appui, l'étape suivante s'affiche toute
   seule, pesée intégrée, reprise après coupure. Les réglages qui se suivent sans geste à faire
   entre eux (rinçage, mixages en plusieurs vitesses…) partent ensemble d'un seul appui : la lame
@@ -56,7 +58,7 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   programme.
 - **Notes et quantités personnelles** : une note libre sur chaque recette, et un appui sur la
   quantité d'un ingrédient la change (1000 g d'eau → 800 g) ; les pesées et les mentions des étapes
-  qui l'utilisent suivent en proportion. Favoris, notes et quantités corrigées suivent la recette
+  qui l'utilisent suivent en proportion (pavé numérique, fractions comprises). Favoris, notes et quantités corrigées suivent la recette
   quand une synchronisation la remplace par la même recette de l'autre source (site ou appli
   d'origine).
 - **Sons** : une cloche sonne quand la quantité à peser est atteinte (son au choix dans les
@@ -80,6 +82,8 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 - **Mises à jour depuis GitHub** : Réglages › Mises à jour vérifie les
   [versions publiées](https://github.com/Wuki60/MrCuisineVibeConnect/releases) de ce dépôt et installe
   la nouvelle (sans rien demander sur un robot rooté, puis Toque redémarre). Refusé pendant un programme.
+  Les certificats racines récents absents d'Android 6 (ISRG Root X1/X2 pour le serveur de
+  téléchargement de GitHub, Sectigo, Google) sont embarqués : les téléchargements HTTPS marchent sur le robot.
 
 ## Sécurité : ce qui change par rapport à l'appli d'origine
 
