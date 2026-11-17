@@ -15,6 +15,7 @@ import android.widget.TextView
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.recipes.McOnline
+import app.toque.core.recipes.QuantityLinks
 import app.toque.core.recipes.Ingredient
 import app.toque.core.recipes.Recipe
 import app.toque.core.recipes.RecipeAdjustments
@@ -196,15 +197,26 @@ class RecipeScreen(a: MainActivity, private val recipe: Recipe) : Screen(a) {
 
     private fun editQuantity(i: Ingredient) {
         val original = i.originalQty.ifBlank { i.qty }
+        // Pavé numérique dès que la quantité de la recette est un nombre, fractions comprises
+        // (« 1/2 », « ½ », « 1 000 ») : la valeur proposée est alors écrite en décimal (« 0,5 »),
+        // tapable sur le pavé.
+        val number = QuantityLinks.parse(original) != null
+        val current = if (number) QuantityLinks.parse(i.qty)?.let(::decimal) ?: i.qty else i.qty
         editor(
             title = tr("Adapter la quantité"),
             detail = listOf(i.unit.trim(), i.name.trim()).filter { it.isNotEmpty() }.joinToString(" ") + "\n" +
                 tr("Recette : %s", quantity(original, i.unit)),
-            value = i.qty,
+            value = current,
             hint = original,
-            number = original.trim().replace(',', '.').toDoubleOrNull() != null,
+            number = number,
             reset = if (i.originalQty.isBlank()) null else tr("Valeur de la recette"),
         ) { text -> save(adjustments.withQty(i, text.orEmpty())); true }
+    }
+
+    /** 0.5 → « 0,5 », 2.0 → « 2 », 0.333… → « 0,33 ». */
+    private fun decimal(v: Double): String {
+        val r = Math.round(v * 100) / 100.0
+        return if (r == Math.floor(r)) r.toLong().toString() else r.toString().replace('.', ',')
     }
 
     private fun editWeigh(index: Int, name: String, w: Weigh) {
@@ -252,6 +264,12 @@ class RecipeScreen(a: MainActivity, private val recipe: Recipe) : Screen(a) {
                 setSingleLine()
                 inputType = if (number) InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                // Pavé numérique, mais la virgule décimale française reste acceptée.
+                // (setRawInputType après coup : le clavier reste le pavé décimal sans remplacer ce filtre.)
+                if (number) {
+                    keyListener = android.text.method.DigitsKeyListener.getInstance("0123456789.,")
+                    setRawInputType(InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
+                }
             } else {
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
                 minLines = lines
