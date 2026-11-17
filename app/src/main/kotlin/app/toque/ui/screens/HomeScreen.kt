@@ -110,17 +110,17 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private fun tileLp(gap: Boolean) = LinearLayout.LayoutParams(0, Ui.MATCH, 1f).apply { if (gap) rightMargin = Ui.u(16) }
 
     private fun tile(icon: Icon.Kind, title: String, sub: String = "", onClick: () -> Unit): Pair<LinearLayout, TextView> {
-        val t = Ui.vertical(c)
-        t.setPadding(Ui.u(20), Ui.u(20), Ui.u(18), Ui.u(18))
-        t.background = Ui.pressable(Ui.round(Ui.SURFACE, 26f), 26f)
+        // Tuile centrée : grande pastille d'icône, titre et sous-titre dessous.
+        val t = Ui.vertical(c, Gravity.CENTER)
+        t.setPadding(Ui.u(14), Ui.u(14), Ui.u(14), Ui.u(14))
+        t.background = Ui.pressable(Ui.round(Ui.SURFACE, 26f, Ui.STROKE, 1f), 26f)
         val badge = android.widget.FrameLayout(c)
-        badge.background = Ui.round(Ui.ACCENT_DIM, 26f)
-        badge.addView(Icon(c, icon, Ui.ACCENT), Ui.flp(Ui.u(28), Ui.u(28), Gravity.CENTER))
-        t.addView(badge, LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)))
-        t.addView(Ui.spacer(c, weight = 1f), LinearLayout.LayoutParams(1, 0, 1f))
-        t.addView(Ui.text(c, title, 23f, Ui.TEXT, Ui.MEDIUM).apply { setLineSpacing(0f, 1.05f) })
-        val s = Ui.ellipsize(Ui.text(c, sub, 16f, Ui.TEXT2), 2)
-        t.addView(s, Ui.lp(t = 6))
+        badge.background = Ui.round(Ui.ACCENT_DIM, 44f)
+        badge.addView(Icon(c, icon, Ui.ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
+        t.addView(badge, LinearLayout.LayoutParams(Ui.u(84), Ui.u(84)))
+        t.addView(Ui.text(c, title, 22f, Ui.TEXT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
+        val s = Ui.ellipsize(Ui.text(c, sub, 15f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, 2)
+        t.addView(s, Ui.lp(Ui.WRAP, Ui.WRAP, t = 4))
         t.isClickable = true
         t.setOnClickListener { onClick() }
         return t to s

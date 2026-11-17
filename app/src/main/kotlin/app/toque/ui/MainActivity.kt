@@ -65,10 +65,10 @@ class MainActivity : Activity() {
         val dm = resources.displayMetrics
         Ui.init(dm.widthPixels, dm.heightPixels)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Ui.BG))
+        window.setBackgroundDrawable(Ui.background())
 
         root = FrameLayout(this)
-        root.setBackgroundColor(Ui.BG)
+        root.background = Ui.background()
         val column = Ui.vertical(this)
         topBar = TopBar(this)
         column.addView(topBar, Ui.lp(Ui.MATCH, Ui.u(60)))
