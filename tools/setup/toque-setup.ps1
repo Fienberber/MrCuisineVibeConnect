@@ -280,7 +280,7 @@ function Step-Prepare {
     $tool = Get-FlashTool
     if (-not $tool) {
         $missing = $true
-        Say ("MISSING: SP Flash Tool v5.1924 for Windows. Download it from https://spflashtool.com/download (file SP_Flash_Tool_v5.1924_Win.rar, AES password spflashtool.com; Windows cannot open RAR alone, so use 7-Zip or WinRAR; a scripted download needs the header Referer: https://spflashtool.com/download) and extract it into " + (Join-Path $Work "SP_Flash_Tool"))
+        Say ("MISSING: SP Flash Tool v5.1924 for Windows. Download it from https://spflashtool.com/download (file SP_Flash_Tool_v5.1924_Win.rar, AES password spflashtool.com; Windows 10 and Windows 11 before 23H2 need 7-Zip or WinRAR; a scripted download needs the header Referer: https://spflashtool.com/download) and extract it into " + (Join-Path $Work "SP_Flash_Tool"))
     } else {
         $da = Join-Path (Split-Path $tool) "MTK_AllInOne_DA.bin"
         if ((Sha $tool) -ne $Known.FlashTool.Sha -or -not (Test-Path $da) -or (Sha $da) -ne $Known.FlashDA.Sha) {
@@ -454,8 +454,9 @@ function Step-Wifi {
     # the cable, with a serial; already on Wi-Fi it is the TCP device only, and the cable is not
     # needed, so fall back to any device. setprop/tcpip are harmless over the TCP serial.
     $usb = Get-AdbDevice -Usb
-    if (-not $usb) { $usb = Get-AdbDevice }
+    if (-not $usb -or $usb.State -ne "device") { $usb = Get-AdbDevice }
     if (-not $usb) { NeedHuman "Connect the robot with the USB cable (Android started), then run 'wifi' again." }
+    if ($usb.State -ne "device") { NeedHuman ("adb sees the robot as '" + $usb.State + "': accept the ADB prompt on the robot (or unplug/replug) and run 'wifi' again.") }
     $robotIp = $Ip -replace ':5555$', ''
     if ($robotIp -eq "") {
         $addr = Adb -s $usb.Serial shell "ip -f inet addr show wlan0"

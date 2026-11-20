@@ -107,8 +107,8 @@ Then: Toque › Settings › Lidl recipes › **Sync** (about 15 minutes the fir
    `C:\Toque\downloads\`.
 2. **SP Flash Tool v5.1924 for Windows** — `https://spflashtool.com/download`, file
    `SP_Flash_Tool_v5.1924_Win.rar`. Upstream ships only this password-protected RAR, not a ZIP: the
-   AES password is `spflashtool.com` (published on that page), and Windows cannot open RAR on its
-   own, so extract it with 7-Zip or WinRAR. A *scripted* direct download needs the header
+   AES password is `spflashtool.com` (published on that page), and Windows 10 and Windows 11 before
+   23H2 need 7-Zip or WinRAR to open it. A *scripted* direct download needs the header
    `Referer: https://spflashtool.com/download`, otherwise the server returns HTML instead of the
    file (a person can just use the download page). Extract it into `C:\Toque\SP_Flash_Tool\`, and
    the script checks `flash_tool.exe` (SHA-256
