@@ -447,13 +447,11 @@ function Step-Install {
     $ver = Adb shell "dumpsys package app.toque | grep versionName"
     if ($ver -notmatch "versionName") { Fail "Toque is not installed." }
     $mode = Get-MachineMode
-    if ($mode -eq "hardware") {
-        Ok "Toque machine mode: hardware (real machine)."
-    } elseif ($mode -ne "") {
-        Human ("Toque is in '" + $mode + "' mode, so the motor is not driven. On the robot, EMPTY bowl, lid closed, hand near the main switch: Toque > Settings > Machine > Real machine > Apply. The badge must then show 'Ready' ('Prete' in French) without the demo marker. Then try Manual cooking: 10 s, speed 2.")
-    } else {
-        Say "WARNING: Toque machine mode could not be verified (su or prefs unreadable). On the robot, Settings > Machine > Real machine must be applied before the motor can run."
+    if ($mode -ne "" -and $mode -ne "hardware") {
+        NeedHuman ("Toque is in '" + $mode + "' mode, so the motor is not driven. On the robot, EMPTY bowl, lid closed, hand near the main switch: Toque > Settings > Machine > Real machine > Apply, then run the install step again so the mode can be verified. Success: the badge must NOT show the demo marker AND the journal must show the real link, e.g. 'liaison ouverte : Base moteur (/dev/ttyMT...)'; the simulated-base line means the mode was not applied.")
     }
+    if ($mode -eq "hardware") { Ok "Toque machine mode: hardware (real machine)." }
+    elseif ($mode -eq "") { Say "WARNING: Toque machine mode could not be verified (su or prefs unreadable). On the robot, Settings > Machine > Real machine must be applied before the motor can run." }
     Set-State "done-install" (Get-Date).ToString("s")
     Ok ("Toque installed: " + $ver.Trim())
     Ok "install done. Next: wifi (optional)"
