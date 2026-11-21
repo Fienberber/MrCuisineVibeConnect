@@ -8,6 +8,7 @@ import app.toque.core.machine.FaultCode
 import app.toque.core.machine.JobKind
 import app.toque.core.machine.JobSpec
 import app.toque.core.machine.JobState
+import app.toque.core.machine.Limits
 import app.toque.core.machine.LinkState
 import app.toque.core.machine.MachineController
 import app.toque.core.machine.MachineEvent
@@ -380,6 +381,8 @@ class ControllerTest {
 
         // Sans mélange, la base ne chauffe pas en STANDARD : la trame part en opération vapeur.
         // 120 °C au plus (le niveau du programme Vapeur), et toujours le sens normal.
+        assertEquals(120, Mcc.celsiusForLevel(Limits.MAX_TEMP_LEVEL_NO_STIR))
+        assertEquals(Programs.steam().phases[0].setting.temperatureLevel, Limits.MAX_TEMP_LEVEL_NO_STIR)
         assertTrue(SafetyPolicy.checkJob(Programs.manual(0, 17, Direction.CLOCKWISE, 60_000), null).isEmpty())
         assertTrue(SafetyPolicy.checkJob(Programs.manual(0, 18, Direction.CLOCKWISE, 60_000), null).any { it.code == "no_stir_temp" })
         assertFalse(SafetyPolicy.checkJob(Programs.manual(1, 18, Direction.CLOCKWISE, 60_000), null).any { it.code == "no_stir_temp" })
