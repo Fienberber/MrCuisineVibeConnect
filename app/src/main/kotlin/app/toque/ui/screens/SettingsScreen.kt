@@ -40,6 +40,9 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private lateinit var host: EditText
     private lateinit var port: EditText
     private lateinit var syncText: TextView
+    private lateinit var syncBtn: View
+    private lateinit var stopSyncBtn: View
+    private lateinit var importBtn: View
     private lateinit var bowlText: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
@@ -152,14 +155,18 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         syncText = Ui.text(c, "", 16f, Ui.TEXT)
         lidl.addView(syncText, Ui.lp(t = 10))
         val b1 = Ui.horizontal(c)
-        b1.addView(Ui.button(c, tr("Synchroniser"), Ui.Style.PRIMARY, Icon.Kind.SYNC, height = 58) { sync(online = true) }, Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
+        syncBtn = Ui.button(c, tr("Synchroniser"), Ui.Style.PRIMARY, Icon.Kind.SYNC, height = 58) { sync(online = true) }
+        b1.addView(syncBtn, Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
+        // Visible seulement pendant une synchronisation ; ce qui est déjà fait est gardé.
+        stopSyncBtn = Ui.button(c, tr("Arrêter"), Ui.Style.SECONDARY, Icon.Kind.STOP, height = 58) { SyncProgress.requestStop() }
+        b1.addView(stopSyncBtn)
         lidl.addView(b1, Ui.lp(t = 12))
         lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
             14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
         // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
         // son texte se coupait au milieu d'un mot.
-        lidl.addView(Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) },
-            Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+        importBtn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
+        lidl.addView(importBtn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
         lidl.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() },
             Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
         lidl.addView(toggle(tr("Synchro automatique chaque nuit"), a.prefs.autoSync) { a.prefs.autoSync = it }, Ui.lp(t = 10))
@@ -388,14 +395,14 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             return
         }
         // L'avancement vit dans SyncProgress, pas dans cet écran : on peut le quitter et y revenir.
-        SyncProgress.start(tr("Synchronisation en cours… (quelques minutes)"))
+        SyncProgress.start(tr("Synchronisation en cours… (quelques minutes)"), stoppable = online)
         val app = a.app
         Thread {
             val r = if (online) OnlineSync(app, app.prefs, app.recipes, app.log).sync()
             else try {
                 LidlSync(app, app.prefs, app.recipes, app.log).importNow { SyncProgress.report(it) }
             } finally {
-                SyncProgress.report(null)
+                SyncProgress.finished()
             }
             a.runOnUiThread { a.toast(r.message, if (r.ok) Ui.OK else Ui.WARN) }
         }.start()
@@ -438,10 +445,21 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     }
 
     private fun refreshSync() {
-        SyncProgress.message?.let { syncText.text = it; return }
+        val progress = SyncProgress.message
+        val running = progress != null
+        // Pendant une synchronisation : rien à relancer, et un bouton pour l'arrêter.
+        Ui.setButtonEnabled(syncBtn, !running)
+        Ui.setButtonEnabled(importBtn, !running)
+        stopSyncBtn.visibility = if (running && SyncProgress.stoppable) View.VISIBLE else View.GONE
+        Ui.setButtonEnabled(stopSyncBtn, !SyncProgress.stopRequested)
         val last = a.prefs.lastSyncResult
-        syncText.text = (if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", last)) +
-            "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
+        val first = when {
+            progress == null -> if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", last)
+            SyncProgress.stopRequested -> tr("Arrêt en cours…")
+            else -> progress
+        }
+        // Le nombre de recettes reste affiché sous l'avancement : « Recettes : 343 / 1667 » compte les fiches relues, pas le catalogue.
+        syncText.text = first + "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
     }
 
     // ------------------------------------------------------------------ mises à jour
