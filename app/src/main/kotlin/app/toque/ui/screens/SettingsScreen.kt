@@ -5,6 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import android.text.InputType
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -269,7 +270,26 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         box.addView(label, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         box.addView(Icon(c, Icon.Kind.CHEVRON, Ui.TEXT2).apply { rotation = 90f }, LinearLayout.LayoutParams(Ui.u(22), Ui.u(22)))
         box.isClickable = true
+        // Poser le doigt hors de la liste la ferme, y compris sur la case elle-même, qui reçoit aussi cet
+        // appui : il faut s'en souvenir, sinon le même appui la rouvre aussitôt.
+        var shown: PopupWindow? = null
+        var boxDownAt = 0L
+        var closedByDownAt = -1L
+        box.setOnTouchListener { _, e ->
+            if (e.actionMasked == MotionEvent.ACTION_DOWN) boxDownAt = e.downTime
+            false
+        }
         box.setOnClickListener {
+            shown?.let {
+                if (it.isShowing) {
+                    it.dismiss()
+                    return@setOnClickListener
+                }
+            }
+            if (closedByDownAt == boxDownAt) {
+                closedByDownAt = -1L
+                return@setOnClickListener
+            }
             val list = Ui.vertical(c)
             list.setPadding(0, Ui.u(6), 0, Ui.u(6))
             val scroll = ScrollView(c).apply {
@@ -296,8 +316,14 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             }
             popup.setBackgroundDrawable(ColorDrawable(0))
             popup.isOutsideTouchable = true
+            popup.setTouchInterceptor { _, e ->
+                if (e.actionMasked == MotionEvent.ACTION_OUTSIDE) closedByDownAt = e.downTime
+                false
+            }
+            popup.setOnDismissListener { if (shown === popup) shown = null }
             popup.elevation = Ui.uf(8f)
             popup.showAsDropDown(box, 0, Ui.u(6))
+            shown = popup
         }
         return box
     }
