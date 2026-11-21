@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
+import app.toque.core.recipes.UserRecipes
 import app.toque.ui.Icon
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
@@ -153,10 +154,15 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private fun refresh() {
         val repo = a.app.recipes
         val n = repo.count
+        val perso = repo.index.entries.count { UserRecipes.isUser(it.id) }
+        val lidl = n - perso
         recipesSub.text = when {
             !repo.loaded -> tr("Chargement…")
             n == 0 -> tr("Aucune recette Lidl pour l'instant")
-            else -> tr("%d recettes Lidl", n)
+            else -> listOfNotNull(
+                when (lidl) { 0 -> null; 1 -> tr("1 recette Lidl"); else -> tr("%d recettes Lidl", lidl) },
+                when (perso) { 0 -> null; 1 -> tr("1 recette perso"); else -> tr("%d recettes perso", perso) },
+            ).joinToString("\n")
         }
         val favs = repo.index.entries.count { it.favorite }
         favSub.text = if (favs == 0) tr("Aucun favori") else if (favs == 1) tr("1 favori") else tr("%d favoris", favs)

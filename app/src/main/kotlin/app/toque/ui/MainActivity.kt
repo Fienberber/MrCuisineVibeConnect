@@ -187,14 +187,16 @@ class MainActivity : Activity() {
     fun back() {
         if (stack.size <= 1) return
         val top = stack.last()
-        if (!top.canLeave()) return
+        if (!top.canLeave { back() }) return
         hideKeyboard()
         top.onHide()
         stack.removeAt(stack.size - 1)
         show(stack.last())
     }
 
+    /** Retour à l'accueil (maison) ; un écran aux modifications non enregistrées demande d'abord confirmation. */
     fun home() {
+        for (i in stack.size - 1 downTo 1) if (!stack[i].canLeave { home() }) return
         hideKeyboard()
         while (stack.size > 1) stack.removeAt(stack.size - 1).onHide()
         show(stack.first())
@@ -238,11 +240,13 @@ class MainActivity : Activity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && standby.onKnob()) return true
-        knobListener?.let { l ->
+        // Retour reste Retour (tablettes et émulateur) : jamais un cran du bouton, même appris par erreur.
+        val isBack = event.keyCode == KeyEvent.KEYCODE_BACK
+        if (!isBack) knobListener?.let { l ->
             if (event.action == KeyEvent.ACTION_DOWN) l(event)
             return true
         }
-        if (event.action == KeyEvent.ACTION_DOWN && overlay.visibility != View.VISIBLE) {
+        if (!isBack && event.action == KeyEvent.ACTION_DOWN && overlay.visibility != View.VISIBLE) {
             val k = event.keyCode
             // Par défaut : les flèches, et les touches du bouton du robot (clavier mtk-kpd :
             // F6 à droite, F7 à gauche, F5 à l'appui).

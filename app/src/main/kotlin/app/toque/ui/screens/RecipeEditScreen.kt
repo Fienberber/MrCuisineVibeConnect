@@ -396,11 +396,11 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
         }
     }
 
-    override fun canLeave(): Boolean {
+    override fun canLeave(proceed: () -> Unit): Boolean {
         if (!dirty) return true
         a.confirm(tr("Quitter sans enregistrer ?"), tr("Les modifications de cette recette seront perdues."), tr("Quitter"), tr("Rester"), danger = true) {
             dirty = false
-            a.back()
+            proceed()
         }
         return false
     }
@@ -555,13 +555,13 @@ class StepEditScreen(
         onDone(s)
     }
 
-    override fun canLeave(): Boolean {
+    override fun canLeave(proceed: () -> Unit): Boolean {
         if (finished) return true
         val unchanged = text.trim() == start.text.trim() && machine == start.machine && grams == (start.weigh?.grams ?: 0)
         if (unchanged) return true
         a.confirm(tr("Abandonner l'étape ?"), tr("Les modifications de cette étape seront perdues."), tr("Abandonner"), tr("Rester"), danger = true) {
             finished = true
-            a.back()
+            proceed()
         }
         return false
     }

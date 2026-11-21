@@ -26,6 +26,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
         val make: (Long) -> JobSpec,
     ) {
         lateinit var value: TextView
+        lateinit var unit: TextView
         lateinit var card: LinearLayout
         lateinit var start: View
     }
@@ -37,7 +38,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
             1200, 300, 3600, 60) { Programs.steam(it) },
         Prog(Icon.Kind.FLAME, JobKind.TOAST.label, tr("Dorer oignons, lardons, viandes à 130 °C, avec un brassage doux en sens inverse."),
             420, 180, 840, 30) { Programs.toast(it) },
-        Prog(Icon.Kind.DROP, tr("Nettoyage"), tr("1 L d'eau chaude et une goutte de liquide vaisselle, couvercle fermé. La vitesse monte de 4 à 10."),
+        Prog(Icon.Kind.DROP, tr("Nettoyage"), tr("1 L d'eau chaude et une goutte de liquide vaisselle. La vitesse monte de 4 à 10."),
             90, 60, 180, 15) { Programs.clean(it) },
     )
     private val cleaning = progs.size - 1
@@ -66,10 +67,15 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
             }
             card.addView(Ui.spacer(c, weight = 1f), LinearLayout.LayoutParams(1, 0, 1f))
             val dur = Ui.horizontal(c)
-            dur.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.MINUS, height = 56) { selected = i; bump(p, -1) }, Ui.lp(Ui.u(64), Ui.WRAP))
-            p.value = Ui.text(c, "", 40f, Ui.TEXT, Ui.LIGHT).apply { gravity = Gravity.CENTER }
-            dur.addView(p.value, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
-            dur.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.PLUS, height = 56) { selected = i; bump(p, 1) }, Ui.lp(Ui.u(64), Ui.WRAP))
+            dur.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.MINUS, height = 56) { selected = i; bump(p, -1) }, Ui.lp(Ui.u(56), Ui.WRAP))
+            // Le nombre en grand sur une ligne, l'unité en dessous : les cartes sont étroites à 4 par ligne.
+            val gauge = Ui.vertical(c, Gravity.CENTER_HORIZONTAL)
+            p.value = Ui.fitText(c, 38f, 24f, Ui.TEXT, Ui.LIGHT).apply { gravity = Gravity.CENTER }
+            gauge.addView(p.value, Ui.lp(Ui.MATCH, Ui.u(45)))
+            p.unit = Ui.text(c, "", 14f, Ui.TEXT2).apply { gravity = Gravity.CENTER }
+            gauge.addView(p.unit, Ui.lp(Ui.MATCH, Ui.WRAP, t = 1))
+            dur.addView(gauge, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+            dur.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.PLUS, height = 56) { selected = i; bump(p, 1) }, Ui.lp(Ui.u(56), Ui.WRAP))
             card.addView(dur, Ui.lp(t = 10))
             p.start = Ui.button(c, tr("Démarrer"), Ui.Style.PRIMARY, Icon.Kind.PLAY, height = 66) {
                 selected = i
@@ -104,7 +110,13 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
 
     private fun refresh() {
         for ((i, p) in progs.withIndex()) {
-            p.value.text = Ui.duration(p.seconds)
+            val s = p.seconds
+            p.value.text = when {
+                s < 60 -> s.toString()
+                s % 60 == 0 -> (s / 60).toString()
+                else -> String.format("%d:%02d", s / 60, s % 60)
+            }
+            p.unit.text = if (s < 60) "s" else "min"
             p.card.background = Ui.round(Ui.SURFACE, 26f, if (i == selected) Ui.ACCENT else Ui.STROKE, if (i == selected) 2.5f else 1f)
         }
     }
