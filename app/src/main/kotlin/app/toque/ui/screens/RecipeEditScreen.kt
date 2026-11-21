@@ -178,7 +178,7 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
         time.addView(Edit.label(c, tr("Durée totale")))
         val m = draft.totalMinutes
         val step = if (m < 60) 5 else 15
-        time.addView(Edit.stepper(c, if (m > 0) "$m min" else "—", m > 0, m < 600,
+        time.addView(Edit.stepper(c, "$m min", m > 0, m < 600,
             { setMeta(draft.copy(totalMinutes = (m - (if (m <= 60) 5 else 15)).coerceAtLeast(0))) },
             { setMeta(draft.copy(totalMinutes = (m + step).coerceAtMost(600))) }), Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
         row.addView(time)
@@ -328,11 +328,12 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
             col.isClickable = true
             col.setOnClickListener { editStep(i) }
             row.addView(col, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
-            val move = Ui.vertical(c)
+            // Côte à côte : une étape d'une ligne n'est pas plus haute que les flèches (espacement régulier).
+            val move = Ui.horizontal(c)
             move.addView(Edit.iconButton(c, Icon.Kind.CHEVRON, Ui.TEXT2, tr("Monter"), -90f) { moveStep(i, -1) }.also { Ui.setButtonEnabled(it, i > 0) },
-                LinearLayout.LayoutParams(Ui.u(44), Ui.u(40)))
+                LinearLayout.LayoutParams(Ui.u(44), Ui.u(44)))
             move.addView(Edit.iconButton(c, Icon.Kind.CHEVRON, Ui.TEXT2, tr("Descendre"), 90f) { moveStep(i, 1) }.also { Ui.setButtonEnabled(it, i < last) },
-                LinearLayout.LayoutParams(Ui.u(44), Ui.u(40)))
+                LinearLayout.LayoutParams(Ui.u(44), Ui.u(44)))
             row.addView(move, Ui.lp(Ui.WRAP, Ui.WRAP, l = 6))
             stepsBox.addView(row, Ui.lp(t = 12))
         }
