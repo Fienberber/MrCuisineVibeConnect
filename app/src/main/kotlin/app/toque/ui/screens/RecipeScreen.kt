@@ -228,7 +228,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
             b.background = Ui.pressable(Ui.round(0, 26f), 26f)
             b.contentDescription = label
             b.isClickable = true
-            b.setOnClickListener { save(adjustments.withServings(to, recipe.servings)) }
+            b.setOnClickListener { changeServings(to) }
             Ui.setButtonEnabled(b, to in range)
             return b
         }
@@ -241,6 +241,15 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         return box
     }
 
+    /** Quitter le nombre de personnes de la recette : prévenir d'abord que l'adaptation a ses limites. */
+    private fun changeServings(to: Int) {
+        val apply = { save(adjustments.withServings(to, recipe.servings)) }
+        if (shown.servings != recipe.servings || to == recipe.servings) { apply(); return }
+        a.confirm(tr("Changer le nombre de personnes ?"),
+            tr("Toque recalcule les quantités et les pesées, mais pas les temps, les vitesses ni les températures, ni les nombres écrits dans les étapes (œufs, cuillerées). Certaines recettes s'adaptent mal : vapeur (gardez au moins 500 g d'eau dans le bol), pâtes à pétrir, pâtisserie, cuissons longues. Surveillez la cuisson et le remplissage du bol."),
+            tr("Adapter")) { apply() }
+    }
+
     /** Ce qui change (et ce qui ne change pas) quand la recette est pour plus ou moins de personnes. */
     private fun servingsNotice(): View {
         val box = Ui.vertical(c)
@@ -248,6 +257,8 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         box.setPadding(Ui.u(14), Ui.u(10), Ui.u(14), Ui.u(8))
         box.addView(Ui.text(c, tr("Quantités et pesées recalculées pour %s (recette : %s). Temps et températures ne changent pas : surveillez la cuisson et goûtez l'assaisonnement.",
             people(shown.servings), people(recipe.servings)), 15f, Ui.TEXT).apply { setLineSpacing(0f, 1.12f) })
+        box.addView(Ui.text(c, tr("Certaines recettes s'adaptent mal (vapeur, pâtes à pétrir, pâtisserie)."), 15f, Ui.WARN)
+            .apply { setLineSpacing(0f, 1.12f) }, Ui.lp(t = 6))
         val total = Portions.totalGrams(shown)
         if (shown.servings > recipe.servings && total > Portions.BOWL_MAX_G) {
             box.addView(Ui.text(c, tr("Environ %s kg d'ingrédients : vérifiez que le bol n'est pas trop rempli (2,5 L de liquide au maximum) ou cuisinez en deux fois.",
