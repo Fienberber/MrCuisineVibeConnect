@@ -369,6 +369,50 @@ class ControllerTest {
         assertEquals(0, b.snap.rpm)
     }
 
+    @Test fun manualHeatsWithoutStirring() {
+        // Vitesse 0 : acceptée en chauffe seulement.
+        assertTrue(SafetyPolicy.checkJob(Programs.manual(0, 13, Direction.CLOCKWISE, 60_000), null).isEmpty())
+        assertTrue(SafetyPolicy.checkJob(Programs.manual(0, 0, Direction.CLOCKWISE, 60_000), null).any { it.code == "speed_min" })
+        val step = app.toque.core.recipes.StepMachine(seconds = 600, speed = 0, tempC = 90)
+        assertTrue(step.violations().toString(), step.valid)
+        assertEquals("10 min · 90 °C · sans mélange", step.summary)
+        assertFalse(app.toque.core.recipes.StepMachine(seconds = 600, speed = 0).valid)
+
+        // Sans mélange, la base ne chauffe pas en STANDARD : la trame part en opération vapeur.
+        assertEquals(Operation.STEAM, Programs.manualOperation(0, 5))
+        assertEquals(Operation.STANDARD, Programs.manualOperation(1, 5))
+        assertEquals(Operation.STANDARD, Programs.manualOperation(0, 0))
+        val b = Bench().ready()
+        assertTrue(b.c.startJob(Programs.manual(0, 5, Direction.CLOCKWISE, 60_000)).ok)
+        b.step(10_000)
+        assertTrue(b.tx.none { it[1] == Operation.STANDARD.wire })
+        val heat = b.tx.filter { it[1] == Operation.STEAM.wire }
+        assertTrue(heat.isNotEmpty())
+        assertTrue(heat.all { it[2] == 0 && it[3] == 5 })
+        assertEquals(0, b.snap.rpm)
+        assertTrue(b.snap.heaterOn)
+        assertFalse(b.snap.motorOn)
+        // En cours de route : lancer le mélange puis l'arrêter, chaque fois par un arrêt confirmé ;
+        // couper la chauffe à vitesse 0 est refusé.
+        var mark = b.tx.size
+        assertTrue(b.c.adjust(speed = 2).ok)
+        b.step(3_000)
+        assertTrue(b.snap.rpm > 0)
+        assertEquals(Operation.STOP.wire, b.tx[mark][1])
+        assertEquals(Operation.STANDARD.wire, b.lastOp())
+        assertEquals(5, b.tx.last()[3])
+        mark = b.tx.size
+        assertTrue(b.c.adjust(speed = 0).ok)
+        b.step(3_000)
+        assertEquals(0, b.snap.rpm)
+        assertEquals(Operation.STOP.wire, b.tx[mark][1])
+        assertEquals(Operation.STEAM.wire, b.lastOp())
+        assertTrue(b.snap.heaterOn)
+        assertEquals(JobState.RUNNING.name, b.snap.jobState)
+        assertFalse(b.c.adjust(temperatureLevel = 0).ok)
+        assertEquals(5, b.snap.jobTempLevel)
+    }
+
     @Test fun tareIsAOneFramePulse() {
         val b = Bench().ready()
         b.board.contentWeightG = 600

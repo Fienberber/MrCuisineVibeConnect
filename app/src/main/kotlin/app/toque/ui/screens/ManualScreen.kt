@@ -40,7 +40,8 @@ class ManualScreen(
 
     private var seconds = preset?.seconds?.takeIf { it > 0 } ?: 60
     private var tempLevel = preset?.temperatureLevel ?: 0
-    private var speed = preset?.speed?.coerceIn(1, 10) ?: 2
+    // Vitesse 0 = chauffe sans mélange : seulement avec une température.
+    private var speed = (preset?.speed ?: 2).coerceIn(if (tempLevel > 0) 0 else 1, 10)
     private var reverse = preset?.reverse ?: false
     private var accessory = preset?.accessory ?: Accessory.BLADE
     private var selected = 0
@@ -134,6 +135,10 @@ class ManualScreen(
                     speed = Limits.MAX_SPEED_HEATED
                     a.toast(tr("En chauffe, vitesse %d maximum", Limits.MAX_SPEED_HEATED))
                 }
+                if (tempLevel == 0 && speed == 0) {
+                    speed = 1
+                    a.toast(tr("Sans chauffe, vitesse 1 minimum"))
+                }
             }
             2 -> {
                 var max = 10
@@ -141,7 +146,10 @@ class ManualScreen(
                 if (tempLevel > 0) { max = Limits.MAX_SPEED_HEATED; why = trKey("En chauffe, vitesse %d maximum") }
                 if (reverse && max > Limits.MAX_SPEED_REVERSE) { max = Limits.MAX_SPEED_REVERSE; why = trKey("En sens inverse, vitesse %d maximum") }
                 if (accessory.maxSpeed < max) { max = accessory.maxSpeed; why = trKey("Avec le fouet, vitesse %d maximum") }
-                val next = (speed + dir).coerceIn(1, 10)
+                // En chauffe, la vitesse descend jusqu'à 0 : la lame reste à l'arrêt.
+                val min = if (tempLevel > 0) 0 else 1
+                val next = (speed + dir).coerceIn(min, 10)
+                if (dir < 0 && speed == min && min == 1) a.toast(tr("Sans chauffe, vitesse 1 minimum"))
                 if (next > max) a.toast(tr(why, max)) else speed = next
             }
         }
@@ -222,6 +230,7 @@ class ManualScreen(
             tempCard.set("$t", "°C", if (t >= 100) tr("Ébullition") else if (t >= 60) tr("Cuisson") else tr("Tiédir"), Ui.tempColor(t))
         }
         speedCard.set("$speed", "", when (speed) {
+            0 -> tr("Sans mélange")
             1 -> tr("Mijoter")
             2, 3 -> tr("Mélanger")
             in 4..6 -> tr("Hacher")
@@ -241,7 +250,7 @@ class ManualScreen(
         // Pour une étape de recette, le bol d'aujourd'hui ne compte pas.
         val bowl = if (onPick == null && a.snapshot.hasSample) a.snapshot.actualTempC else null
         val v = SafetyPolicy.checkJob(spec(), bowl).filter { it.code != SafetyPolicy.HOT_BLEND }
-        hint.text = v.firstOrNull()?.message ?: if (onPick == null && a.snapshot.hot && speed >= 4) tr("Contenu chaud : confirmation demandée") else ""
+        hint.text = v.firstOrNull()?.message ?: if (onPick == null && a.snapshot.hot && speed >= 4) tr("Contenu chaud : confirmation demandée") else idleHint()
         Ui.setButtonEnabled(startBtn, v.isEmpty())
     }
 
@@ -279,8 +288,11 @@ class ManualScreen(
     private fun refreshHintOnly() {
         val v = SafetyPolicy.checkJob(spec(), if (a.snapshot.hasSample) a.snapshot.actualTempC else null)
             .filter { it.code != SafetyPolicy.HOT_BLEND }
-        hint.text = v.firstOrNull()?.message ?: if (a.snapshot.hot && speed >= 4) tr("Contenu chaud : confirmation demandée") else ""
+        hint.text = v.firstOrNull()?.message ?: if (a.snapshot.hot && speed >= 4) tr("Contenu chaud : confirmation demandée") else idleHint()
     }
+
+    /** Rappel affiché quand rien ne s'oppose au démarrage : sans mélange, rien ne décolle le fond du bol. */
+    private fun idleHint(): String = if (speed == 0 && tempLevel > 0) tr("Sans mélange : surveillez la cuisson") else ""
 
     override fun onKnob(delta: Int): Boolean {
         change(selected, delta)

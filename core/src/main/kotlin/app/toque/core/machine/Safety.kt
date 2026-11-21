@@ -77,6 +77,9 @@ object Limits {
  * Règles de sécurité. Reprend toutes les limites de l'appli d'origine (vitesse en chauffe,
  * sens inverse, durées, Turbo) et en ajoute : accessoire fouet, confirmation de mixage
  * chaud, températures uniquement issues de la table d'origine.
+ *
+ * Une cuisson manuelle peut chauffer sans mélanger (vitesse 0) ; sans chauffe, la vitesse
+ * minimale reste 1.
  */
 object SafetyPolicy {
 
@@ -94,7 +97,7 @@ object SafetyPolicy {
         if (setting.isRest) return v
 
         val expectedOp = when (kind) {
-            JobKind.MANUAL -> Operation.STANDARD
+            JobKind.MANUAL -> Programs.manualOperation(setting.speed, setting.temperatureLevel)
             JobKind.KNEAD -> Operation.KNEAD
             JobKind.STEAM -> Operation.STEAM
             JobKind.TOAST -> Operation.TOAST
@@ -104,7 +107,8 @@ object SafetyPolicy {
 
         when (kind) {
             JobKind.MANUAL -> {
-                if (setting.speed < 1) v += Violation("speed_min", tr("Vitesse minimale : 1"))
+                // Vitesse 0 : chauffe sans mélange, la lame à l'arrêt (voir Programs.manualOperation). Sans chauffe, il ne resterait rien à faire.
+                if (setting.speed < 1 && !setting.heated) v += Violation("speed_min", tr("Vitesse minimale : 1"))
                 if (setting.heated && setting.speed > Limits.MAX_SPEED_HEATED)
                     v += Violation("heated_speed", tr("En chauffe, vitesse %d maximum", Limits.MAX_SPEED_HEATED))
                 if (setting.direction == Direction.COUNTER_CLOCKWISE && setting.speed > Limits.MAX_SPEED_REVERSE)
@@ -183,13 +187,21 @@ object Programs {
     private val CCW = Direction.COUNTER_CLOCKWISE
     private val CW = Direction.CLOCKWISE
 
+    /**
+     * Opération envoyée à la base pour un réglage manuel. En STANDARD, la base ne chauffe pas à
+     * vitesse 0 (essai sur un SKMC 1100 A1 : son ventilateur tourne, la température ne bouge pas) ;
+     * la chauffe sans mélange passe donc par l'opération vapeur, qui chauffe lame à l'arrêt.
+     */
+    fun manualOperation(speed: Int, temperatureLevel: Int): Operation =
+        if (speed == 0 && temperatureLevel > 0) Operation.STEAM else Operation.STANDARD
+
     fun manual(
         speed: Int, temperatureLevel: Int, direction: Direction, durationMs: Long,
         accessory: Accessory = Accessory.BLADE, hotBlendConfirmed: Boolean = false, label: String = JobKind.MANUAL.label,
     ) = JobSpec(
         kind = JobKind.MANUAL,
         label = label,
-        phases = listOf(Phase(Setting(Operation.STANDARD, speed, temperatureLevel, direction), durationMs)),
+        phases = listOf(Phase(Setting(manualOperation(speed, temperatureLevel), speed, temperatureLevel, direction), durationMs)),
         totalMs = durationMs,
         cyclic = false,
         accessory = accessory,

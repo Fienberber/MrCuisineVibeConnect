@@ -82,6 +82,8 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   vérifié (« J'ai vérifié ce réglage ») est mémorisé pour les prochaines fois.
 - **Cuisson manuelle**, programmes **Pétrir / Vapeur / Rissoler / Nettoyage**, **Turbo**, **balance**.
   Nettoyage : 1 L d'eau chaude et une goutte de liquide vaisselle, vitesse de 4 à 10, sans chauffe.
+  La cuisson manuelle peut aussi **chauffer sans mélanger** : avec une température réglée, la
+  vitesse descend jusqu'à 0.
 - **Hors ligne** : tout fonctionne sans réseau (plus de « serveur injoignable » au démarrage).
 - **Heure toujours juste** : le fuseau horaire est trouvé d'après la connexion Internet et l'heure
   vient du réseau (le robot n'a pas de pile d'horloge). Juste après l'allumage, l'horloge est réglée
