@@ -724,5 +724,6 @@
   "Remettre la balance à zéro quand le bol vide est replacé": "Zero the scale when the empty bowl is put back",
   "Tare automatique aux étapes de pesée des recettes": "Automatic tare on recipe weighing steps",
   "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque compares the weight on the base with the remembered empty bowl: a bowl put back with food in it is never zeroed.",
-  "Bol retiré": "Bowl removed"
+  "Bol retiré": "Bowl removed",
+  "La boucle de la base moteur ne répond plus : arrêt d'urgence": "The motor base loop is not responding: emergency stop"
 }
