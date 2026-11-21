@@ -22,6 +22,7 @@ import app.toque.core.time.ZoneLookup
 import app.toque.core.update.Release
 import app.toque.recipes.LidlSync
 import app.toque.recipes.OnlineSync
+import app.toque.recipes.SyncProgress
 import app.toque.recipes.RecipeFiles
 import app.toque.core.recipes.UserRecipes
 import app.toque.ui.Icon
@@ -44,7 +45,6 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private lateinit var timeText: TextView
     private var settingTime = false
     private var mode = a.prefs.mode
-    private var syncing = false
 
     private enum class Upd { IDLE, CHECKING, UP_TO_DATE, AVAILABLE, ERROR }
     private val updater by lazy { Updater(a) }
@@ -382,21 +382,22 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     }
 
     private fun sync(online: Boolean) {
-        if (syncing) return
+        if (SyncProgress.running) return
         if (!online && a.prefs.mode != Prefs.Mode.HARDWARE) {
             a.toast(tr("Disponible une fois Toque installé sur le robot (mode Machine réelle)"), Ui.WARN)
             return
         }
-        syncing = true
-        syncText.text = tr("Synchronisation en cours… (quelques minutes)")
+        // L'avancement vit dans SyncProgress, pas dans cet écran : on peut le quitter et y revenir.
+        SyncProgress.start(tr("Synchronisation en cours… (quelques minutes)"))
+        val app = a.app
         Thread {
-            val r = if (online) OnlineSync(a, a.prefs, a.app.recipes, a.app.log).sync { msg -> view.post { syncText.text = msg } }
-            else LidlSync(a, a.prefs, a.app.recipes, a.app.log).importNow { msg -> view.post { syncText.text = msg } }
-            view.post {
-                syncing = false
-                refreshSync()
-                a.toast(r.message, if (r.ok) Ui.OK else Ui.WARN)
+            val r = if (online) OnlineSync(app, app.prefs, app.recipes, app.log).sync()
+            else try {
+                LidlSync(app, app.prefs, app.recipes, app.log).importNow { SyncProgress.report(it) }
+            } finally {
+                SyncProgress.report(null)
             }
+            a.runOnUiThread { a.toast(r.message, if (r.ok) Ui.OK else Ui.WARN) }
         }.start()
     }
 
@@ -437,6 +438,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     }
 
     private fun refreshSync() {
+        SyncProgress.message?.let { syncText.text = it; return }
         val last = a.prefs.lastSyncResult
         syncText.text = (if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", last)) +
             "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
@@ -501,17 +503,21 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
 
     /** Désabonnement du suivi des recettes (le nombre s'affiche une fois la base chargée). */
     private var unsubRecipes: (() -> Unit)? = null
+    private var unsubSync: (() -> Unit)? = null
 
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
-        if (!syncing) refreshSync()
-        unsubRecipes = a.app.recipes.onChange { if (!syncing) refreshSync() }
+        refreshSync()
+        unsubRecipes = a.app.recipes.onChange { refreshSync() }
+        unsubSync = SyncProgress.onChange { refreshSync() }
     }
 
     override fun onHide() {
         unsubRecipes?.invoke()
         unsubRecipes = null
+        unsubSync?.invoke()
+        unsubSync = null
     }
 
     override fun onSnapshot(s: Snapshot) {

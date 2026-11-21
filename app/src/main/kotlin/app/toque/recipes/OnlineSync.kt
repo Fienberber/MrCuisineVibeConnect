@@ -39,13 +39,16 @@ class OnlineSync(private val context: Context, private val prefs: Prefs, private
 
     fun sync(progress: (String) -> Unit = {}): LidlSync.Report {
         if (!running.compareAndSet(false, true)) return LidlSync.Report(false, tr("Synchronisation déjà en cours"))
+        // L'avancement est aussi publié pour l'écran des Réglages, qu'il ait lancé cette synchro ou non (synchro de nuit).
+        val both: (String) -> Unit = { SyncProgress.report(it); progress(it) }
         try {
-            return finish(run(progress))
+            return finish(run(both))
         } catch (e: Exception) {
             log.crash("synchro", e)
             return finish(LidlSync.Report(false, tr("Synchronisation impossible : %s", e.message ?: e.toString())))
         } finally {
             running.set(false)
+            SyncProgress.report(null)
         }
     }
 
