@@ -6,9 +6,11 @@
 qui remplace l'appli d'origine sur la tablette du robot tout en gardant **les recettes Lidl**.
 
 > Projet indépendant, non affilié à Lidl, SilverCrest ni Hoyer. Le pilotage du moteur repose
-> sur une analyse publique du protocole ; il tourne au quotidien sur un robot (SKMC 1200, Android 6)
-> depuis octobre 2026, mais n'a été essayé que sur celui-là. À utiliser à vos risques, en suivant la
-> procédure de premier essai.
+> sur une analyse publique du protocole. Depuis octobre 2026, Toque tourne sur des SKMC 1200
+> (révisions A1, B2 et C3) en France et en Espagne, et sur un SKMC 1100 A1 (avec un recovery
+> adapté, voir #10). À utiliser à vos risques, en suivant la procédure de premier essai.
+>
+> L'interface existe en **français**, **anglais**, **allemand** et **espagnol** (*Réglages › Langue · Language*).
 
 ## Installer avec un agent IA
 
@@ -183,6 +185,10 @@ synchronisation des recettes, retour à l'appli d'origine.
 
 - Protocole : [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk) (MIT).
 - Accès au robot : [Monsieur-Cuisine-Connect-Hack](https://github.com/EliasKotlyar/Monsieur-Cuisine-Connect-Hack).
+- Contributions : @pierok13 (veille, notes et quantités, paliers, sons, récentes, certificats Android 6,
+  capteur du bol), @lucasbraud, @OUTSIDE2k8 (traduction espagnole), @Locodice67 (traduction allemande,
+  script d'installation), @baptiste-gislot, @florentdestremau (bouton rotatif), et tous ceux qui ont
+  testé leur robot et signalé des bugs.
 
 Licence MIT. Ce dépôt ne contient aucune recette, image ni code de Lidl : chaque robot télécharge
 lui-même les recettes sur monsieur-cuisine.com, pour l'usage personnel de son propriétaire.

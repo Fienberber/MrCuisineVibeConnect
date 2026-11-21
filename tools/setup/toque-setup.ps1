@@ -380,6 +380,13 @@ function Step-FlashTwrp {
 function Step-Root {
     $st = Wait-AdbState @("recovery") $WaitSeconds
     if ($st -ne "recovery") { NeedHuman "adb does not see TWRP (state: '$st'). The robot must show TWRP and the cable must be plugged in AFTER it started." }
+    # This TWRP restarts by itself about 6 min 40 s after it started (watchdog): the step takes
+    # about 20 s, so start it on a fresh TWRP.
+    $uptime = 0
+    [void][double]::TryParse(((Adb shell "cat /proc/uptime") -split " ")[0], [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$uptime)
+    if ($uptime -gt 300) {
+        NeedHuman ("TWRP has been running for {0:N0} s and restarts by itself at about 400 s. Restart it now (off, unplug, on, plug in once TWRP shows; swipe 'Allow Modifications' if asked), then run 'root' again right away." -f $uptime)
+    }
     $boot = Join-Path $Backup "boot-original.img"
     Test-BootImage $boot "boot-original.img"
     $magisk = Join-Path $Downloads "Magisk-v31.0.apk"
@@ -430,9 +437,11 @@ function Step-Android {
     if ($pkgs -notmatch "com.topjohnwu.magisk") {
         Say (Adb install -r (Join-Path $Downloads "Magisk-v31.0.apk"))
     }
+    Human "Watch the robot's screen: Magisk asks for superuser access for 'Shell' in a few seconds. Tap GRANT (Autoriser) within 10 seconds."
+    Start-Sleep -Seconds 8
     $id = Adb shell "su -c 'id -u'"
     if ($id -ne "0") {
-        NeedHuman "On the robot's screen, Magisk asks for superuser access for 'Shell': tap GRANT (Autoriser) within 10 seconds. Then run 'android' again."
+        NeedHuman "Root was not granted to 'Shell'. If the prompt was missed, Magisk now refuses for good: open the Magisk app > Superuser, switch 'Shell' on. Then run 'android' again."
     }
     $expected = (Get-State)["boot-magisk-sha256"]
     if ($expected) {
@@ -515,7 +524,8 @@ function Step-Cleanup {
     $blocks = $out -split "(\r?\n){2,}"
     $published = @()
     foreach ($b in $blocks) {
-        if ($b -match "cdc-acm\.inf") {
+        # cdc-acm.inf is a generic name: only remove the MediaTek one.
+        if ($b -match "cdc-acm\.inf" -and $b -match "MediaTek") {
             $m = [regex]::Match($b, "(oem\d+\.inf)")
             if ($m.Success) { $published += $m.Groups[1].Value }
         }

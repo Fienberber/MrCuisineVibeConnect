@@ -37,8 +37,12 @@ with exactly these files; total time 1–2 hours, most of it waiting for the per
 - If the person is using the PC (a game, a call…), ask before taking over the screen.
 - When a step prints `STOP:`, do not improvise a workaround on the robot: read the cause, fix it
   on the PC side or ask the person, then run the step again.
-- If the robot is not an SKMC 1200 Monsieur Cuisine **Connect** (for example a Monsieur Cuisine
-  **Smart**, SKMS 1200), stop: this procedure does not apply.
+- Check the model on the label under the robot. **SKMC 1200**, revisions A1, B2 and C3, have been
+  installed with this procedure. An **SKMC 1100 A1** runs Toque too, but its owner needed a
+  recovery adapted to its newer kernel (issue #10): stop and say this guide does not cover it
+  yet. A Monsieur Cuisine **Smart** (SKMS 1200) is different hardware: stop.
+- The SP Flash Tool archive has a public password printed on its download page; typing it to
+  extract the archive is fine. Any other password: never.
 
 ## What the person needs
 
@@ -173,6 +177,13 @@ operation in the window — with a computer-use tool, or by guiding the person:
 | `Toque s'est vu refuser les droits` toasts | Magisk policy | `install` again (it allows Toque in Magisk's database) |
 | `root`: `can't create /proc/self/fd/` and `Failed to patch` after `Loading dtbs` | Magisk's installer messages outside its UI; no fstab in the device tree on Android 6 | Harmless if the step ends with `== Done` |
 | `android`: `WARNING` that the boot partition could not be checked (older script) | The check used Magisk's busybox, which only exists after `install` | Harmless; the step now reads the partition back and hashes it on the PC |
+| TWRP restarts by itself, the link drops and the robot stops on the battery screen | This TWRP restarts about 6 min 40 s after it started (watchdog) | Restart TWRP (off, unplug, on, plug in) and run `root` right away: it takes about 20 s. The step refuses a TWRP that has run more than 5 min |
+| TWRP's first screen: *Keep Read Only* / *Swipe to Allow Modifications* | TWRP protects `/system` by default | Swipe to allow modifications. Otherwise `root` stops with "/system is read-only" |
+| `prepare`: SP Flash Tool checksum mismatch, file sizes right | The RAR was extracted without its password: some tools write garbage of the right size | Extract again with the password `spflashtool.com` and check that no error is reported |
+| Magisk app: *Requires additional setup*, then *reinstall Magisk… recovery mode cannot get device info* | Magisk app's own check, harmless here | Accept a reboot if offered; **never** use *Direct install* (it rewrites `boot`). Back out of the install screen |
+| Toque says "bowl not detected" with the bowl in place, and "detected" without it | The bowl sensor is reversed on many robots (B2, C3, SKMC 1100) | Settings › Safety › **Invert the bowl sensor**; check *Settings › Tools › Diagnostics*, then enable *Require bowl detection* |
+| The rotary knob does nothing | Knob keys not set up | Tap the *Rotary knob not set up* pill on Home and follow the 3 steps |
+| Scale shows "overload · 0 g" right after the install | The robot was resting on the cable or the open cover | Put the robot flat on its feet with nothing under it, screw the cover back, restart it |
 
 ## Undo
 

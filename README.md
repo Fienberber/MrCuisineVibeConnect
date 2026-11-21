@@ -7,11 +7,11 @@ kitchen robot (SKMC 1200). It runs on the robot's own tablet instead of the stoc
 uses **the official Lidl recipes**.
 
 > Independent project, not affiliated with Lidl, SilverCrest or Hoyer. Motor control is based on
-> a public analysis of the serial protocol; it has been running daily on one robot (SKMC 1200,
-> Android 6) since October 2026, but has only been tried on that one. Use at your own risk and
-> follow the first-run procedure.
+> a public analysis of the serial protocol. Since October 2026 Toque has been running on SKMC 1200
+> robots (revisions A1, B2 and C3) in France and Spain, and on an SKMC 1100 A1 (with an adapted
+> recovery, see #10). Use at your own risk and follow the first-run procedure.
 >
-> The interface is available in **English** and **French** (*Settings › Langue · Language*), and
+> The interface is available in **English**, **French**, **German** and **Spanish** (*Settings › Langue · Language*), and
 > other languages can be added with a single file (see below).
 
 ## Install with an AI agent
@@ -181,6 +181,10 @@ bowl, recipe sync, going back to the stock app.
 
 - Protocol: [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk) (MIT).
 - Robot access: [Monsieur-Cuisine-Connect-Hack](https://github.com/EliasKotlyar/Monsieur-Cuisine-Connect-Hack).
+- Contributions: @pierok13 (standby, notes and quantities, speed stages, sounds, recent recipes,
+  Android 6 roots, bowl sensor), @lucasbraud, @OUTSIDE2k8 (Spanish), @Locodice67 (German, install
+  script), @baptiste-gislot, @florentdestremau (rotary knob), and everyone who tested their robot
+  and reported bugs.
 
 MIT License. This repository contains no Lidl recipes, images or code: each robot downloads the
 recipes itself from monsieur-cuisine.com, for its owner's personal use.
