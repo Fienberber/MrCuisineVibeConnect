@@ -9,6 +9,7 @@ import app.toque.core.recipes.Step
 import app.toque.core.recipes.StepMachine
 import app.toque.core.recipes.Weigh
 import app.toque.core.recipes.adjusted
+import app.toque.core.recipes.forServings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -93,5 +94,42 @@ class PortionsTest {
     @Test fun totalWeightForTheBowlWarning() {
         // 500 + 500 + 7 g de la liste (le reste ne se pèse pas) + 1 000 g d'eau hors liste.
         assertEquals(2007, Portions.totalGrams(recipe))
+    }
+    @Test fun countedNamesAgreeInNumber() {
+        assertEquals("oignons", Portions.agree("oignon", 1.0, 2.0, "fr"))
+        assertEquals("petits oignons rouges, émincé", Portions.agree("petit oignon rouge, émincé", 1.0, 2.0, "fr"))
+        assertEquals("gousse d'ail", Portions.agree("gousses d'ail", 2.0, 1.0, "fr"))
+        assertEquals("pincées de sel", Portions.agree("pincée de sel", 1.0, 2.0, "fr"))
+        assertEquals("œufs", Portions.agree("œuf", 1.0, 3.0, "fr"))
+        assertEquals("œuf", Portions.agree("œufs", 3.0, 1.5, "fr"))
+        assertEquals("poireaux", Portions.agree("poireau", 1.0, 2.0, "fr"))
+        assertEquals("poireau", Portions.agree("poireaux", 2.0, 1.0, "fr"))
+        assertEquals("bocal", Portions.agree("bocaux", 2.0, 1.0, "fr"))
+        assertEquals("choux-fleurs", Portions.agree("chou-fleur", 1.0, 2.0, "fr"))
+        assertEquals("noix de muscade", Portions.agree("noix de muscade", 1.0, 2.0, "fr"))
+        assertEquals("radis", Portions.agree("radis", 2.0, 1.0, "fr"))
+        assertEquals("gros oignon", Portions.agree("gros oignons", 2.0, 1.0, "fr"))
+        assertEquals("citrons (jus)", Portions.agree("citron (jus)", 1.0, 2.0, "fr"))
+        assertEquals("c. à s. d'huile", Portions.agree("c. à s. d'huile", 1.0, 2.0, "fr"))
+        assertEquals("oignon(s)", Portions.agree("oignon(s)", 1.0, 2.0, "fr"))
+        // 1 ½ reste au singulier ; pas de changement de nombre, pas de changement de mot.
+        assertEquals("oignon", Portions.agree("oignon", 1.0, 1.5, "fr"))
+        assertEquals("tomates", Portions.agree("tomates", 3.0, 6.0, "fr"))
+        // Autres langues : inchangé.
+        assertEquals("onion", Portions.agree("onion", 1.0, 2.0, "en"))
+    }
+
+    @Test fun scaledRecipeAgreesInNumber() {
+        val r = Recipe(
+            id = "perso-x", title = "Soupe", servings = 4, language = "fr",
+            ingredients = listOf(IngredientGroup("", listOf(
+                Ingredient("1", "", "oignon"), Ingredient("2", "", "gousses d'ail"),
+                Ingredient("500", "g", "carottes"), Ingredient("1", "pincée", "sel"),
+            ))),
+        )
+        assertEquals(listOf("2 oignons", "4 gousses d'ail", "1000 g carottes", "2 pincées sel"),
+            r.forServings(8).allIngredients.map { it.display })
+        assertEquals(listOf("½ oignon", "1 gousse d'ail", "250 g carottes", "½ pincée sel"),
+            r.forServings(2).allIngredients.map { it.display })
     }
 }

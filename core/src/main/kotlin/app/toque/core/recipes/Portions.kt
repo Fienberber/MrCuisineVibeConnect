@@ -113,6 +113,66 @@ object Portions {
         return if (whole == 0L) g else "$whole $g"
     }
 
+    /**
+     * Accord en nombre quand une quantité comptée passe le cap de 2 (en français, « 1,5 » reste au
+     * singulier) : « 1 oignon » → « 2 oignons », « 2 gousses d'ail » → « 1 gousse d'ail ».
+     * Seulement les mots du début, jusqu'au premier « de », « à », « en »… ou signe de ponctuation :
+     * « 1 petit oignon rouge, émincé » → « 2 petits oignons rouges, émincé ». Français seulement.
+     */
+    fun agree(phrase: String, from: Double, to: Double, language: String = ""): String {
+        if (!(language.ifBlank { I18n.code }).lowercase().startsWith("fr")) return phrase
+        if (phrase.contains("(s)") || phrase.contains("(x)")) return phrase // « oignon(s) » : déjà neutre
+        val plural = when {
+            from < 2 && to >= 2 -> true
+            from >= 2 && to < 2 -> false
+            else -> return phrase
+        }
+        val cut = phrase.indexOfFirst { it in ",;:(" }.let { if (it < 0) phrase.length else it }
+        var stop = false
+        val head = phrase.substring(0, cut).split(' ').joinToString(" ") { w ->
+            if (stop || w.isEmpty()) return@joinToString w
+            if (w.lowercase() in STOP || w.any { it == '\'' || it == '’' || it == '.' || it.isDigit() }) {
+                stop = true
+                return@joinToString w
+            }
+            w.split('-').joinToString("-") { if (plural) pluralFr(it) else singularFr(it) }
+        }
+        return head + phrase.substring(cut)
+    }
+
+    /** Quantité comptée (pas un poids ni un volume) : l'accord s'applique. */
+    fun isCount(unit: String): Boolean = METRIC[unit.trim().lowercase()] == null
+
+    private val STOP = setOf("de", "du", "des", "à", "a", "au", "aux", "en", "pour", "ou", "et", "avec", "sans", "sur",
+        "dans", "la", "le", "les", "un", "une", "par", "environ", "soit", "bien", "très")
+    private val INVARIABLE = setOf("noix", "pois", "radis", "anchois", "ananas", "maïs", "riz", "jus", "os", "cassis",
+        "brebis", "panais", "frais", "gros", "gras", "épais", "doux", "faux", "bio", "salsifis", "hachis", "couscous",
+        "chinois", "tournedos", "lys")
+    private val PLURAL_X = setOf("chou", "genou", "caillou", "bijou", "hibou", "joujou", "pou")
+
+    private fun pluralFr(w: String): String {
+        val l = w.lowercase()
+        if (l.isEmpty() || !l.all { it.isLetter() } || l in INVARIABLE) return w
+        return when {
+            l.endsWith("s") || l.endsWith("x") || l.endsWith("z") -> w
+            l in PLURAL_X || l.endsWith("au") || (l.endsWith("eu") && l != "bleu" && l != "pneu") -> w + "x"
+            l.endsWith("al") -> w.dropLast(2) + "aux"
+            else -> w + "s"
+        }
+    }
+
+    private fun singularFr(w: String): String {
+        val l = w.lowercase()
+        if (l.isEmpty() || !l.all { it.isLetter() } || l in INVARIABLE) return w
+        return when {
+            l.endsWith("eux") -> w // crémeux, juteux : même forme au singulier
+            l.endsWith("aux") && !l.endsWith("eaux") && !l.endsWith("yaux") -> w.dropLast(3) + "al"
+            l.endsWith("aux") || l.endsWith("oux") -> w.dropLast(1)
+            l.endsWith("s") && !l.endsWith("ss") && l.length > 2 -> w.dropLast(1)
+            else -> w
+        }
+    }
+
     /** Poids estimé de tous les ingrédients pesés ou mesurés (ml comptés comme g), pesées hors liste comprises. */
     fun totalGrams(r: Recipe): Int {
         val listed = r.allIngredients.sumOf { i ->
@@ -134,10 +194,16 @@ fun Recipe.forServings(people: Int): Recipe {
     val groups = ingredients.map { g ->
         g.copy(items = g.items.map { i ->
             val q = Portions.scaleQty(i.qty, i.unit, f, language) ?: return@map i
+            // « 1 oignon » → « 2 oignons » : sur l'unité si c'est un mot (« pincée »), sinon sur le nom.
+            val from = QuantityLinks.parse(i.qty)
+            val to = QuantityLinks.parse(q)
+            val count = from != null && to != null && Portions.isCount(i.unit)
+            val wordUnit = i.unit.isNotBlank() && i.unit.trim().all { it.isLetter() }
             i.copy(
                 qty = q,
                 originalQty = if (i.originalQty.isBlank()) "" else Portions.scaleQty(i.originalQty, i.unit, f, language) ?: i.originalQty,
-                name = Portions.scaleName(i.name, f),
+                unit = if (count && wordUnit) Portions.agree(i.unit, from!!, to!!, language) else i.unit,
+                name = Portions.scaleName(if (count && i.unit.isBlank()) Portions.agree(i.name, from!!, to!!, language) else i.name, f),
             )
         })
     }
