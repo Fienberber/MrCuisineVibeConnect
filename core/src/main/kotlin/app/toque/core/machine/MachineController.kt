@@ -421,7 +421,7 @@ class MachineController(
             operation = Programs.manualOperation(newSpeed, newLevel),
             speed = newSpeed,
             temperatureLevel = newLevel,
-            direction = direction ?: old.direction,
+            direction = Programs.manualDirection(newSpeed, direction ?: old.direction),
         )
         val newTotal = totalMs ?: j.spec.totalMs
         val spec = j.spec.copy(

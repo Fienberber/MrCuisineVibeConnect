@@ -139,6 +139,7 @@ class ManualScreen(
                     speed = 1
                     a.toast(tr("Sans chauffe, vitesse 1 minimum"))
                 }
+                capNoStirTemperature()
             }
             2 -> {
                 var max = 10
@@ -151,6 +152,7 @@ class ManualScreen(
                 val next = (speed + dir).coerceIn(min, 10)
                 if (dir < 0 && speed == min && min == 1) a.toast(tr("Sans chauffe, vitesse 1 minimum"))
                 if (next > max) a.toast(tr(why, max)) else speed = next
+                capNoStirTemperature()
             }
         }
         val maxS = ((if (speed > 6) Limits.MAX_MS_HIGH_SPEED else Limits.MAX_MS_DEFAULT) / 1000).toInt()
@@ -164,7 +166,16 @@ class ManualScreen(
         }
     }
 
+    /** Sans mélange, la base chauffe par l'opération vapeur : 120 °C au plus, comme le programme Vapeur. */
+    private fun capNoStirTemperature() {
+        if (speed == 0 && tempLevel > Limits.MAX_TEMP_LEVEL_NO_STIR) {
+            tempLevel = Limits.MAX_TEMP_LEVEL_NO_STIR
+            a.toast(tr("Sans mélange, %d °C maximum", Mcc.celsiusForLevel(tempLevel)))
+        }
+    }
+
     private fun setReverse(r: Boolean) {
+        if (speed == 0) return // sans mélange, pas de sens de rotation
         if (r && speed > Limits.MAX_SPEED_REVERSE) {
             speed = Limits.MAX_SPEED_REVERSE
             a.toast(tr("En sens inverse, vitesse %d maximum", Limits.MAX_SPEED_REVERSE))
@@ -192,7 +203,7 @@ class ManualScreen(
     private fun start() {
         onPick?.let { pick ->
             pick(app.toque.core.recipes.StepMachine(seconds = seconds, speed = speed, tempC = Mcc.celsiusForLevel(tempLevel),
-                reverse = reverse, accessory = accessory))
+                reverse = reverse && speed > 0, accessory = accessory))
             a.back()
             return
         }
@@ -235,12 +246,13 @@ class ManualScreen(
             2, 3 -> tr("Mélanger")
             in 4..6 -> tr("Hacher")
             else -> tr("Mixer")
-        } + if (reverse) " · " + tr("inverse") else "")
+        } + if (reverse && speed > 0) " · " + tr("inverse") else "")
         timeCard.select(selected == 0)
         tempCard.select(selected == 1)
         speedCard.select(selected == 2)
 
         dirRow.removeAllViews()
+        dirRow.alpha = if (speed == 0) 0.35f else 1f
         dirRow.addView(Ui.toggleChip(c, tr("Sens normal"), !reverse) { setReverse(false) }, Ui.lp(Ui.WRAP, Ui.WRAP, r = 8))
         dirRow.addView(Ui.toggleChip(c, tr("Inverse"), reverse) { setReverse(true) })
         accRow.removeAllViews()

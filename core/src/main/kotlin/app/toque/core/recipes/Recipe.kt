@@ -76,7 +76,7 @@ data class StepMachine(
                 append(SafetyPolicy.formatDuration(seconds * 1000L))
                 if (tempC > 0) append(" · ").append(Mcc.celsiusForLevel(temperatureLevel)).append(" °C")
                 append(" · ").append(if (speed == 0) tr("sans mélange") else tr("vitesse %d", speed))
-                if (reverse) append(" · ").append(tr("inverse"))
+                if (reverse && speed > 0) append(" · ").append(tr("inverse"))
                 if (accessory == Accessory.WHISK) append(" · ").append(tr("fouet"))
             }
         }

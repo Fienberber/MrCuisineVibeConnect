@@ -64,6 +64,8 @@ object Limits {
     const val MAX_SPEED_HEATED = 3
     const val MAX_SPEED_REVERSE = 3
     const val MAX_SPEED_KNEAD = 4
+    /** Sans mélange (vitesse 0) : 120 °C au plus, le niveau du programme Vapeur ; au-delà, l'opération vapeur n'a pas été essayée. */
+    const val MAX_TEMP_LEVEL_NO_STIR = 17
     const val HOT_C = 60
     const val MAX_MS_HIGH_SPEED = 15 * 60_000L    // vitesse > 6
     const val MAX_MS_DEFAULT = 99 * 60_000L
@@ -109,6 +111,10 @@ object SafetyPolicy {
             JobKind.MANUAL -> {
                 // Vitesse 0 : chauffe sans mélange, la lame à l'arrêt (voir Programs.manualOperation). Sans chauffe, il ne resterait rien à faire.
                 if (setting.speed < 1 && !setting.heated) v += Violation("speed_min", tr("Vitesse minimale : 1"))
+                if (setting.speed == 0 && setting.temperatureLevel > Limits.MAX_TEMP_LEVEL_NO_STIR)
+                    v += Violation("no_stir_temp", tr("Sans mélange, %d °C maximum", Mcc.celsiusForLevel(Limits.MAX_TEMP_LEVEL_NO_STIR)))
+                if (setting.speed == 0 && setting.direction != Direction.CLOCKWISE)
+                    v += Violation("no_stir_dir", tr("Sans mélange : sens normal uniquement"))
                 if (setting.heated && setting.speed > Limits.MAX_SPEED_HEATED)
                     v += Violation("heated_speed", tr("En chauffe, vitesse %d maximum", Limits.MAX_SPEED_HEATED))
                 if (setting.direction == Direction.COUNTER_CLOCKWISE && setting.speed > Limits.MAX_SPEED_REVERSE)
@@ -195,13 +201,16 @@ object Programs {
     fun manualOperation(speed: Int, temperatureLevel: Int): Operation =
         if (speed == 0 && temperatureLevel > 0) Operation.STEAM else Operation.STANDARD
 
+    /** Sens envoyé à la base pour un réglage manuel : sans mélange, toujours le sens normal, comme en Vapeur. */
+    fun manualDirection(speed: Int, direction: Direction): Direction = if (speed == 0) Direction.CLOCKWISE else direction
+
     fun manual(
         speed: Int, temperatureLevel: Int, direction: Direction, durationMs: Long,
         accessory: Accessory = Accessory.BLADE, hotBlendConfirmed: Boolean = false, label: String = JobKind.MANUAL.label,
     ) = JobSpec(
         kind = JobKind.MANUAL,
         label = label,
-        phases = listOf(Phase(Setting(manualOperation(speed, temperatureLevel), speed, temperatureLevel, direction), durationMs)),
+        phases = listOf(Phase(Setting(manualOperation(speed, temperatureLevel), speed, temperatureLevel, manualDirection(speed, direction)), durationMs)),
         totalMs = durationMs,
         cyclic = false,
         accessory = accessory,
