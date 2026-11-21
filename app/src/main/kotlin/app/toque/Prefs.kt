@@ -245,4 +245,36 @@ class Prefs(context: Context) {
         set(v) {
             p.edit().putString("weighSound", v).commit()
         }
+    /** Prévenir quand une nouvelle version de Toque est publiée (au démarrage et au réveil). */
+    var updateAlerts: Boolean
+        get() = p.getBoolean("updateAlerts", true)
+        set(v) {
+            p.edit().putBoolean("updateAlerts", v).commit()
+        }
+
+    var lastUpdateCheckMs: Long
+        get() = p.getLong("lastUpdateCheckMs", 0)
+        set(v) {
+            p.edit().putLong("lastUpdateCheckMs", v).commit()
+        }
+
+    /** Dernière version proposée par l'alerte, et quand (« Plus tard » ne la repropose pas tout de suite). */
+    var updateAskedVersion: String
+        get() = p.getString("updateAskedVersion", "") ?: ""
+        set(v) {
+            p.edit().putString("updateAskedVersion", v).commit()
+        }
+
+    var updateAskedMs: Long
+        get() = p.getLong("updateAskedMs", 0)
+        set(v) {
+            p.edit().putLong("updateAskedMs", v).commit()
+        }
+
+    /** Ajouter les recettes en ligne publiées seulement dans une autre langue. */
+    var foreignRecipes: Boolean
+        get() = p.getBoolean("foreignRecipes", false)
+        set(v) {
+            p.edit().putBoolean("foreignRecipes", v).commit()
+        }
 }

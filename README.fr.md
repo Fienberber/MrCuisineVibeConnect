@@ -63,10 +63,25 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   qui l'utilisent suivent en proportion (pavé numérique, fractions comprises). Favoris, notes et quantités corrigées suivent la recette
   quand une synchronisation la remplace par la même recette de l'autre source (site ou appli
   d'origine).
+- **Pour plus ou moins de personnes** : − / + au-dessus des ingrédients, de la moitié au double de la
+  recette. Tout ce qui se pèse ou se mesure suit (liste, pesées, « 500 g d'eau » dans les étapes),
+  arrondi comme on l'écrirait à la main, avec le même arrondi partout ; œufs et cuillerées sont
+  arrondis au demi. Temps, vitesses et températures restent ceux de la recette testée, avec un rappel
+  de surveiller la cuisson, et une alerte quand le bol risque d'être trop plein (2,5 L de liquide au
+  maximum).
+- **Mes recettes** : écrivez les vôtres (titre, personnes, durée, une ligne par ingrédient, étapes
+  avec leur réglage du robot et leur pesée, choisis avec les mêmes limites de sécurité que la cuisson
+  manuelle), ou faites **votre version** d'une recette Lidl avec le crayon. Les synchronisations n'y
+  touchent jamais. Réglages › Mes recettes les exporte vers `Download/toque-mes-recettes.json`, ou
+  les importe (pour les sauvegarder ou les passer à un autre robot).
+- **Recettes des autres langues** (option dans Réglages › Recettes Lidl) : les recettes absentes
+  dans votre langue sont ajoutées en anglais, français, allemand, espagnol…, une seule fois
+  chacune, avec leur langue sur la vignette.
 - **Sons** : une cloche sonne quand la quantité à peser est atteinte (son au choix dans les
   Réglages), et une mélodie forte retentit à la fin du dernier programme de la recette. Un réglage
   vérifié (« J'ai vérifié ce réglage ») est mémorisé pour les prochaines fois.
-- **Cuisson manuelle**, programmes **Pétrir / Vapeur / Rissoler**, **Turbo**, **balance**.
+- **Cuisson manuelle**, programmes **Pétrir / Vapeur / Rissoler / Nettoyage**, **Turbo**, **balance**.
+  Nettoyage : 1 L d'eau chaude et une goutte de liquide vaisselle, vitesse de 4 à 10, sans chauffe.
 - **Hors ligne** : tout fonctionne sans réseau (plus de « serveur injoignable » au démarrage).
 - **Heure toujours juste** : le fuseau horaire est trouvé d'après la connexion Internet et l'heure
   vient du réseau (le robot n'a pas de pile d'horloge). Juste après l'allumage, l'horloge est réglée
@@ -76,7 +91,7 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   bouton rotatif (de 2 à 30 min, ou jamais, dans Réglages › Écran), un écran noir assombri affiche
   l'heure, et la température du bol quand il est chaud. Jamais pendant un programme ni sur la
   balance. Le geste qui réveille ne fait rien d'autre. Pendant la veille, l'anneau de la molette
-  reste allumé en veilleuse blanche très faible (désactivable).
+  reste normal, passe en veilleuse blanche très faible ou s'éteint (Réglages › Écran).
 - **Capteur du bol inversé** : sur certains robots (vu sur un SKMC 1200 C3), la base signale le bol
   présent quand il est retiré ; Réglages › Sécurité › Inverser le capteur du bol corrige cela.
 - **Pensé pour un robot sans boutons Android** : Toque s'ouvre au démarrage, et un bouton
@@ -86,6 +101,8 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   la nouvelle (sans rien demander sur un robot rooté, puis Toque redémarre). Refusé pendant un programme.
   Les certificats racines récents absents d'Android 6 (ISRG Root X1/X2 pour le serveur de
   téléchargement de GitHub, Sectigo, Google) sont embarqués : les téléchargements HTTPS marchent sur le robot.
+  Quand une nouvelle version sort, Toque le signale au démarrage ou en sortant de veille (au plus
+  toutes les quelques heures, jamais pendant un programme) ; « Plus tard » attend le lendemain.
 
 ## Sécurité : ce qui change par rapport à l'appli d'origine
 

@@ -59,10 +59,24 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   quantity changes it (1000 g of water → 800 g); the weighings and mentions in the steps that use
   it follow in proportion (numeric keypad, fractions included). Favourites, notes and adjusted quantities follow the recipe when a sync
   replaces it with the same recipe from the other source (site or stock app).
+- **For more or fewer people**: − / + above the ingredients, from half to double the recipe. Every
+  weighed or measured quantity follows (list, weighings, "500 g of water" in the steps), rounded the
+  way you would write it by hand, with the same rounding everywhere; eggs and spoons are rounded to
+  the half. Times, speeds and temperatures stay those of the tested recipe, with a reminder to keep
+  an eye on the cooking, and a warning when the bowl may be too full (2.5 L of liquid at most).
+- **My recipes**: write your own (title, people, time, one line per ingredient, steps with their
+  robot setting and weighing, chosen with the same safety limits as manual cooking), or make **your
+  version** of a Lidl recipe with the pencil. Syncs never touch them. *Settings › My recipes* exports
+  them to, or imports them from, `Download/toque-mes-recettes.json` (to back them up or pass them to
+  another robot).
+- **Recipes from other languages** (option in *Settings › Lidl recipes*): the recipes that don't
+  exist in your language are added from English, French, German, Spanish…, each one only once, with
+  its language on the thumbnail.
 - **Sounds**: a bell rings when the weight to add is reached (sound to choose in *Settings*), and a
   loud tune plays when the recipe's last program ends. A setting you confirmed ("I checked this
   setting") is remembered for the next time you cook the recipe.
-- **Manual cooking**, **Knead / Steam / Sauté** programs, **Turbo**, **scale**.
+- **Manual cooking**, **Knead / Steam / Sauté / Cleaning** programs, **Turbo**, **scale**. Cleaning:
+  1 L of hot water and a drop of washing-up liquid, speed rising from 4 to 10, no heat.
 - **Offline**: everything works without a network (no more "server unreachable" at startup).
 - **Always the right time**: the time zone comes from the Internet connection and the time from
   the network (the robot has no clock battery). Right after power-on, the clock is set from the
@@ -71,8 +85,8 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 - **Standby**, like the stock app: after a few minutes without a touch or a turn of the knob
   (2 to 30 min, or never, in *Settings › Screen*), a dimmed black screen shows the time, and the
   bowl temperature when it is hot. Never during a program or on the scale. The gesture that wakes
-  the screen does nothing else. During standby, the knob ring stays on as a faint white night-light
-  (can be turned off).
+  the screen does nothing else. During standby, the knob ring stays normal, dims to a faint white
+  night-light, or turns off (*Settings › Screen*).
 - **Bowl sensor that reads the wrong way round**: on some robots (seen on an SKMC 1200 C3) the
   base reports the bowl as present when it is removed; *Settings › Safety › Invert the bowl
   sensor* fixes it.
@@ -82,7 +96,9 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   [Releases](https://github.com/Wuki60/MrCuisineVibeConnect/releases) and installs the new version
   (silently on a rooted robot, then Toque restarts). Refused while a program is running. Recent
   root certificates missing from Android 6 (ISRG Root X1/X2 for GitHub's download server, Sectigo,
-  Google) are bundled, so downloads over HTTPS work on the robot.
+  Google) are bundled, so downloads over HTTPS work on the robot. When a new version is out, Toque
+  says so when it starts or wakes from standby (at most every few hours, never during a program);
+  "Later" waits until the next day.
 
 ## Safety: what changes compared to the stock app
 
