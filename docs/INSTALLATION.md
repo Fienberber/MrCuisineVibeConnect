@@ -48,6 +48,16 @@ Menu names below are those of the English interface (*Settings › Langue · Lan
    `0x1000000`, region `EMMC_USER`) and `recovery` (start `0x2d20000`, length `0x1000000`), click
    **Read Back**, then switch the robot on. You get `boot-original.img` and
    `recovery-original.img` (16 MB each): **keep them safe, they are your only way back.**
+
+   > **SKMC 1100 A1** (label under the robot, system image `v4.3a_2022-09-15`): the TWRP of the
+   > reference guide carries a 2018 kernel and this robot runs a 2022 one. Before step 4, rebuild
+   > TWRP around your own kernel: put the two backups in `C:\Toque\backup\`, then run
+   > [`tools\setup\toque-setup.ps1`](../tools/setup/toque-setup.ps1) with `-Step prepare` (it
+   > fetches and checks the TWRP image; its remarks about the driver and SP Flash Tool do not
+   > matter if you already have them), `-Step backup` (with the files already there it only checks
+   > them) and `-Step own-twrp`. These commands send nothing to the robot. Use the resulting
+   > `C:\Toque\twrp-own-kernel.img` wherever this page says `hacks/recovery.img` (step 4 below, and
+   > step 2 of the next section).
 4. **Download** tab, *Download Only*: tick only `boot`, with `hacks/recovery.img` (TWRP). Click
    **Download**, then switch the robot off and on again.
 5. Switch the robot off, unplug the cable, switch it on: **TWRP** starts. Plug the cable back in:

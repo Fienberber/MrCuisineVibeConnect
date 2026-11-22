@@ -8,8 +8,9 @@ uses **the official Lidl recipes**.
 
 > Independent project, not affiliated with Lidl, SilverCrest or Hoyer. Motor control is based on
 > a public analysis of the serial protocol. Since October 2026 Toque has been running on SKMC 1200
-> robots (revisions A1, B2 and C3) in France and Spain, and on an SKMC 1100 A1 (with an adapted
-> recovery, see #10). Use at your own risk and follow the first-run procedure.
+> robots (revisions A1, B2 and C3) in France and Spain, and on SKMC 1100 A1 robots (TWRP rebuilt
+> around their own kernel: step `own-twrp` of the install guide, see #10). Use at your own risk and
+> follow the first-run procedure.
 >
 > The interface is available in **English**, **French**, **German** and **Spanish** (*Settings › Langue · Language*), and
 > other languages can be added with a single file (see below).

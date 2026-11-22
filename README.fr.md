@@ -7,8 +7,9 @@ qui remplace l'appli d'origine sur la tablette du robot tout en gardant **les re
 
 > Projet indépendant, non affilié à Lidl, SilverCrest ni Hoyer. Le pilotage du moteur repose
 > sur une analyse publique du protocole. Depuis octobre 2026, Toque tourne sur des SKMC 1200
-> (révisions A1, B2 et C3) en France et en Espagne, et sur un SKMC 1100 A1 (avec un recovery
-> adapté, voir #10). À utiliser à vos risques, en suivant la procédure de premier essai.
+> (révisions A1, B2 et C3) en France et en Espagne, et sur des SKMC 1100 A1 (TWRP reconstruit
+> autour de leur propre noyau : étape `own-twrp` du guide d'installation, voir #10). À utiliser à
+> vos risques, en suivant la procédure de premier essai.
 >
 > L'interface existe en **français**, **anglais**, **allemand** et **espagnol** (*Réglages › Langue · Language*).
 
