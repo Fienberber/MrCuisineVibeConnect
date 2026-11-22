@@ -94,8 +94,9 @@ Only do this on your home network: anyone on it could then connect to the robot.
 2. `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1`
    (over Wi-Fi: add `-Ip <robot IP address>`).
 3. The script also allows Toque in Magisk (no prompt on the robot: Magisk's prompt closes by
-   itself after 10 s and then refuses for good) and checks that Magisk's busybox, which Toque
-   needs for the serial port, is in place.
+   itself after 10 s and then refuses), installs a boot script that allows it again at every
+   start (Magisk 31 forgets the permission of every app each time an Android 6 device starts),
+   and checks that Magisk's busybox, which Toque needs for the serial port, is in place.
 
 ## 4. First run — EMPTY bowl
 
