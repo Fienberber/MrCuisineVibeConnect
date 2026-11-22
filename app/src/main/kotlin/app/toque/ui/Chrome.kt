@@ -274,7 +274,11 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         time.text = if (st == JobState.FINISHED) "00:00" else Ui.clock(s.remainingMs)
         progress.progress = if (s.totalMs > 0) s.elapsedMs.toFloat() / s.totalMs else 0f
         progress.color = if (s.jobTempLevel > 0) Ui.ACCENT else Ui.COOL
-        Ui.chipText(speedChip).text = if (s.jobKind == "STEAM") tr("Vapeur") else tr("Vitesse %d", s.jobSpeed)
+        Ui.chipText(speedChip).text = when {
+            s.jobKind == "STEAM" -> tr("Vapeur")
+            s.jobKind == "MANUAL" && s.jobSpeed == 0 -> tr("Sans mélange")
+            else -> tr("Vitesse %d", s.jobSpeed)
+        }
         tempChip.visibility = if (s.jobTempLevel > 0) View.VISIBLE else View.GONE
         Ui.chipText(tempChip).text = "${Mcc.celsiusForLevel(s.jobTempLevel)} °C"
         dirChip.visibility = if (s.jobReverse && s.jobKind == "MANUAL") View.VISIBLE else View.GONE
