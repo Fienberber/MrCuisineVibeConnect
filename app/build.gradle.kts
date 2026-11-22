@@ -15,8 +15,14 @@ android {
         targetSdk = 28
         // Pour publier une mise à jour : augmenter les deux valeurs puis pousser sur GitHub
         // (la version est publiée automatiquement, voir .github/workflows/release.yml).
-        versionCode = 11
-        versionName = "0.7.1"
+        // Branche de test du Monsieur Cuisine Smart : numéro au-dessus de main (0.7.x), pour qu'un Smart
+        // ne se voie jamais proposer une version de main sans le Smart. Pré-version seulement.
+        versionCode = 12
+        versionName = "0.8.0-smart.1"
+        // APK de test du Monsieur Cuisine Smart (gradlew -PtoqueSmart=true) : le JIT d'Android 8.1 de sa
+        // tablette compile mal certaines expressions Kotlin (portages Flav974 et Camybrith) ; le mode
+        // sûr le contourne mais ralentit toute l'appli. Jamais dans l'APK du Connect.
+        manifestPlaceholders["vmSafeMode"] = (project.findProperty("toqueSmart") == "true").toString()
     }
 
     signingConfigs {

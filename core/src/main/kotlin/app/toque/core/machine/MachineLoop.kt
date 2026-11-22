@@ -59,18 +59,35 @@ class MachineLoop(
         try {
             tick()
         } catch (t: Throwable) {
-            log("erreur de boucle : $t")
+            // Édition Ratatouille (R2) : pendant l'arrêt de la boucle (changement de mode,
+            // [shutdown]), le fil est interrompu exprès. Ce n'est pas une panne : pas d'alerte,
+            // mais la trame STOP part quand même ci-dessous.
+            val stopping = !running && (t is InterruptedException || t.cause is InterruptedException)
+            if (stopping) {
+                log("boucle interrompue pendant son arrêt")
+            } else {
+                log("erreur de boucle : $t")
+                try {
+                    controller.onWriteFailed(tr("erreur interne : %s", t.toString()))
+                } catch (_: Throwable) {
+                }
+            }
             try {
                 transport?.write(controller.stopFrame())
             } catch (_: Throwable) {
             }
+            // Le drapeau d'interruption est rétabli après la trame STOP, pour qu'elle parte.
+            if (stopping) Thread.currentThread().interrupt()
         }
     }
+
+    /** Vrai après [emergencyStop] : la boucle n'émet plus que des trames STOP. */
+    @Volatile private var halted = false
 
     private fun tick() {
         val now = clock.nowMs()
         if (transport == null && !suspended && now >= nextOpenAt) openTransport(now)
-        val frame = controller.tick()
+        val frame = if (halted) controller.stopFrame() else controller.tick()
         val t = transport
         if (t != null) {
             try {
@@ -103,7 +120,7 @@ class MachineLoop(
         lastOpenError = ""
         openFailures = 0
         transport = t
-        controller.onTransportUp(t.name)
+        controller.onTransportUp(t.name, t.codec)
         log("liaison ouverte : ${t.name}")
         val reader = Thread({ readLoop(t) }, "toque-rx")
         reader.isDaemon = true
@@ -138,6 +155,10 @@ class MachineLoop(
     private fun closeTransport(t: Transport, reason: String) {
         if (transport !== t) return
         transport = null
+        try {
+            t.write(controller.stopFrame()) // dernier essai, la liaison est peut-être encore utilisable
+        } catch (_: Throwable) {
+        }
         try {
             t.close()
         } catch (_: Throwable) {
@@ -211,6 +232,7 @@ class MachineLoop(
 
     /** Dernier recours (plantage du processus) : écrit un STOP depuis n'importe quel fil. */
     fun emergencyStop() {
+        halted = true
         val t = transport ?: return
         try {
             t.write(controller.stopFrame())

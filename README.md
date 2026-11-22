@@ -2,6 +2,11 @@
 
 🇫🇷 **[Version française](README.fr.md)**
 
+> ⚠️ **Test branch `test-mc-smart`: Monsieur Cuisine Smart (SKMS 1200).** It is not in `main`. I
+> don't own a Monsieur Cuisine Smart: **Smart owners test it and report back** in the
+> [issues](https://github.com/Wuki60/MrCuisineVibeConnect/issues). Their reports decide whether it
+> goes into `main`. Everything is in **[docs/SMART.en.md](docs/SMART.en.md)**.
+
 **Toque** is a fast, modern replacement interface for the Lidl **Monsieur Cuisine Connect**
 kitchen robot (SKMC 1200). It runs on the robot's own tablet instead of the stock app and still
 uses **the official Lidl recipes**.

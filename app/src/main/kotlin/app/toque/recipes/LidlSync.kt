@@ -45,7 +45,7 @@ class LidlSync(private val context: Context, private val prefs: Prefs, private v
         }
         val services = info.services?.map { it.name } ?: emptyList()
         return Components(
-            hardwareService = services.firstOrNull { it.endsWith("HardwareMachineService") },
+            hardwareService = services.firstOrNull { it.endsWith(prefs.robot.vendorHardwareService) },
             importService = services.firstOrNull { it.endsWith("RecipeImportService") },
             launch = pm.getLaunchIntentForPackage(pkg),
         )

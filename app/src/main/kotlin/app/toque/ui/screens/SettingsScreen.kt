@@ -68,6 +68,13 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         columns.addView(right, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         col.addView(columns)
 
+        // ---- Robot (fiche : protocole, programmes, recettes montrées)
+        val robot = section(left, tr("Robot"), Icon.Kind.POT)
+        robotText = Ui.text(c, "", 18f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
+        robot.addView(robotText, Ui.lp(t = 4))
+        robot.addView(Ui.button(c, tr("Changer de robot"), Ui.Style.SECONDARY, height = 52) { a.askRobot() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+        renderRobot()
+
         // ---- Machine
         val machine = section(left, tr("Machine"), Icon.Kind.POT)
         modeRow = Ui.horizontal(c)
@@ -328,6 +335,15 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         return box
     }
 
+    private lateinit var robotText: TextView
+
+    private fun renderRobot() {
+        val p = a.prefs.robot
+        robotText.text = if (!a.prefs.robotConfirmed) tr("Pas encore choisi : la liaison avec la base reste fermée en « Machine réelle ».")
+            else p.displayName + " (" + p.models.joinToString(", ") + ")" + if (p.tested) "" else
+                "\n" + tr("En test : le projet ne l'a pas essayé lui-même, vos retours sont attendus sur GitHub.")
+    }
+
     private fun renderModes() {
         modeRow.removeAllViews()
         for (m in Prefs.Mode.values()) {
@@ -348,6 +364,12 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private fun applyMode() {
         if (a.snapshot.busy) {
             a.toast(tr("Arrêtez d'abord le programme en cours"), Ui.WARN)
+            return
+        }
+        if (mode == Prefs.Mode.HARDWARE && !a.prefs.robotConfirmed) {
+            // Jamais de trame vers la base sans savoir quel robot c'est.
+            a.toast(tr("Choisissez d'abord votre robot"), Ui.WARN)
+            a.askRobot()
             return
         }
         if (mode == Prefs.Mode.HARDWARE && a.prefs.mode != Prefs.Mode.HARDWARE) {
@@ -420,6 +442,11 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             a.toast(tr("Disponible une fois Toque installé sur le robot (mode Machine réelle)"), Ui.WARN)
             return
         }
+        if (!online && !a.prefs.robot.stockImport) {
+            // Base de l'appli d'origine du Smart : format pas encore relevé.
+            a.toast(tr("Pas encore possible sur ce robot : utilisez « Synchroniser »"), Ui.WARN)
+            return
+        }
         // L'avancement vit dans SyncProgress, pas dans cet écran : on peut le quitter et y revenir.
         SyncProgress.start(tr("Synchronisation en cours… (quelques minutes)"), stoppable = online)
         val app = a.app
@@ -485,7 +512,11 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             else -> progress
         }
         // Le nombre de recettes reste affiché sous l'avancement : « Recettes : 343 / 1667 » compte les fiches relues, pas le catalogue.
-        syncText.text = first + "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
+        val repo = a.app.recipes
+        syncText.text = first + "\n" + if (repo.loaded) tr("%d recettes dans Toque", repo.count) +
+            // Recettes enregistrées mais pas faisables sur ce robot (autre robot, programme absent).
+            (if (repo.hiddenCount > 0) "\n" + tr("%d recettes masquées : pas faites pour ce robot", repo.hiddenCount) else "")
+            else tr("Chargement des recettes…")
     }
 
     // ------------------------------------------------------------------ mises à jour
@@ -552,8 +583,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
+        renderRobot()
         refreshSync()
-        unsubRecipes = a.app.recipes.onChange { refreshSync() }
+        // Changement de robot : les recettes sont refiltrées, puis cet écran se met à jour.
+        unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync() }
         unsubSync = SyncProgress.onChange { refreshSync() }
     }
 
