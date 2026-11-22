@@ -245,7 +245,9 @@ class ManualScreen(
         timeEdited = false
         a.machine.adjust(speed, tempLevel, reverse, total, s.hotBlendConfirmed, smartLevel) { v ->
             if (!v.ok && v.has(SafetyPolicy.HOT_BLEND)) {
-                a.confirm(tr("Contenu chaud"), tr("Le bol est à %d °C. Passer à la vitesse %d ?", a.snapshot.actualTempC, speed), tr("Confirmer"), icon = Icon.Kind.THERMO) {
+                val q = if (RobotProfiles.active.capabilities.measuresTemperature) tr("Le bol est à %d °C. Passer à la vitesse %d ?", a.snapshot.actualTempC, speed)
+                    else tr("Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Passer à la vitesse %d ?", speed)
+                a.confirm(tr("Contenu chaud"), q, tr("Confirmer"), icon = Icon.Kind.THERMO) {
                     a.machine.adjust(speed, tempLevel, reverse, total, true, smartLevel) { a.refusal(it) }
                 }
             } else a.refusal(v)

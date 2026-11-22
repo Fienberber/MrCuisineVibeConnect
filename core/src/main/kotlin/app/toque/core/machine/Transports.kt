@@ -169,7 +169,11 @@ class SimBoard(private val clock: Clock) {
     }
 }
 
-class SimTransport(val board: SimBoard) : Transport {
+/**
+ * Base simulée. [codec] : [ConnectCodec], ou [DemoCodec] pour la démo d'un autre robot (la base
+ * simulée parle toujours le protocole du Connect).
+ */
+class SimTransport(val board: SimBoard, override val codec: BoardCodec = ConnectCodec) : Transport {
     override val name: String get() = tr("Démo (base simulée)")
     private val queue = LinkedBlockingQueue<ByteArray>()
     @Volatile private var closed = false

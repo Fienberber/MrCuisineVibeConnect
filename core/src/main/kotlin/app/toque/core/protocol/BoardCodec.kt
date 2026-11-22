@@ -75,6 +75,12 @@ interface BoardCodec {
      * sécurité (confirmation de mixage, montée progressive de la vitesse).
      */
     val temperatureReliable: Boolean get() = true
+
+    /**
+     * Codec dont viennent les règles du robot (programmes, plages, refroidissement du pétrin) :
+     * lui-même, sauf en démo d'un autre robot que le Connect (`DemoCodec`).
+     */
+    val rules: BoardCodec get() = this
 }
 
 /** Découpage d'un flux d'octets en trames complètes et vérifiées. */

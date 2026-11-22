@@ -214,6 +214,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         val version = try { a.packageManager.getPackageInfo(a.packageName, 0).versionName } catch (_: Exception) { "?" }
         tools.addView(Ui.text(c, tr("Toque %s · protocole d'après le Monsieur Cuisine Developer SDK (licence MIT). " +
             "Projet indépendant, non affilié à Lidl ni à SilverCrest.", version), 14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+        a.prefs.robot.let { p -> p.credit?.let { who ->
+            tools.addView(Ui.text(c, tr("%s : protocole d'après %s (licence MIT).", p.displayName, who), 14f, Ui.TEXT3)
+                .apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 4))
+        } }
 
         return Ui.scroll(c, col)
     }

@@ -20,6 +20,7 @@ import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.machine.Accessory
 import app.toque.core.machine.ControllerConfig
+import app.toque.core.machine.DemoCodec
 import app.toque.core.machine.JobState
 import app.toque.core.machine.MachineEvent
 import app.toque.core.machine.MachineLoop
@@ -96,7 +97,9 @@ class MachineService : Service() {
             Prefs.Mode.DEMO -> {
                 val board = SimBoard(MonotonicClock)
                 sim = board
-                ({ SimTransport(board) })
+                // Démo du robot choisi : ses règles, avec la base simulée du Connect.
+                val codec = DemoCodec.forRobot(prefs.robot.newCodec())
+                ({ SimTransport(board, codec) })
             }
             Prefs.Mode.TWIN -> {
                 val host = prefs.twinHost

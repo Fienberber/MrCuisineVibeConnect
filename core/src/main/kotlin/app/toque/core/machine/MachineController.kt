@@ -420,14 +420,14 @@ class MachineController(
         if (j != null && !j.ended) return Verdict.refuse("busy", tr("Un programme est déjà en cours"))
         if (turboStartedAt != null) return Verdict.refuse("busy", tr("Turbo en cours"))
         // Smart : pétrin, vapeur et rissolage tels que l'appli d'origine les envoie.
-        val spec = if (codec is SmartCodec) Programs.forSmart(requested) else requested
+        val spec = if (codec.rules is SmartCodec) Programs.forSmart(requested) else requested
         val v = ArrayList(baseChecks(now))
         v += SafetyPolicy.checkJob(spec, actualTemp())
         if (spec.phases.any { p -> p.setting.let { !it.isRest && !codec.accepts(it.operation, it.speed, it.temperatureLevel, it.direction, it.program, it.smartLevel, it.programCelsius) } })
             v += Violation("unsupported", tr("Programme pas encore pris en charge sur ce robot"))
         // Comme l'appli d'origine : 30 min entre deux pétrissages, pour laisser refroidir le moteur.
         val kneadEnd = kneadEndedAtMs
-        if (spec.cooldown && codec is SmartCodec && kneadEnd != null && now - kneadEnd < Limits.KNEAD_COOLDOWN_MS) {
+        if (spec.cooldown && codec.rules is SmartCodec && kneadEnd != null && now - kneadEnd < Limits.KNEAD_COOLDOWN_MS) {
             val min = ((Limits.KNEAD_COOLDOWN_MS - (now - kneadEnd) + 59_999) / 60_000).toInt()
             v += Violation(KNEAD_COOLDOWN, tr("Attendez encore %d min avant le prochain pétrissage, pour que l'appareil puisse refroidir.", min))
         }

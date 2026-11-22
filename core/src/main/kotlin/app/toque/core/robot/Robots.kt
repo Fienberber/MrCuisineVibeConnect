@@ -80,6 +80,8 @@ class RobotProfile(
     /** Essayé par le projet sur de vrais robots ; sinon « en test », retours des utilisateurs attendus. */
     val tested: Boolean,
     private val codecFactory: () -> BoardCodec,
+    /** Auteurs du protocole de ce robot, cités dans les Réglages (null : celui de Toque, d'après le SDK). */
+    val credit: String? = null,
 ) {
     /** Nouveau codec (avec son propre compteur de séquence) pour une liaison. */
     fun newCodec(): BoardCodec = codecFactory()
@@ -138,6 +140,7 @@ object RobotProfiles {
         stockImport = false,
         tested = false,
         codecFactory = { SmartCodec() },
+        credit = "Flav974 (toque-smart-ratatouille), Tidusneo24150 (Camybrith Cooking)",
     )
 
     val ALL: List<RobotProfile> = listOf(MC_CONNECT, MC_SMART)
