@@ -277,4 +277,15 @@ class Prefs(context: Context) {
         set(v) {
             p.edit().putBoolean("foreignRecipes", v).commit()
         }
+
+    /**
+     * Langue du catalogue Lidl : « auto » (d'après l'interface ; le catalan → espagnol) ou un code
+     * du site (es-ES, fr-FR, …). Indépendant de la langue de l'interface.
+     */
+    var recipeLanguage: String
+        get() = p.getString("recipeLanguage", "auto") ?: "auto"
+        set(v) {
+            p.edit().putString("recipeLanguage", v).commit()
+        }
+
 }

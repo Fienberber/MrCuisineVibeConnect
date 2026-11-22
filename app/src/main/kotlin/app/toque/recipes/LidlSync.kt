@@ -10,6 +10,7 @@ import app.toque.Prefs
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.machine.RootShell
+import app.toque.core.recipes.McOnline
 import app.toque.core.recipes.OriginalDbMapper
 import java.io.File
 import java.text.SimpleDateFormat
@@ -129,8 +130,24 @@ class LidlSync(private val context: Context, private val prefs: Prefs, private v
         }
         writeDiagnostic(tables)
         progress(tr("Conversion…"))
-        val result = OriginalDbMapper.map(tables, "fr")
-        if (result.recipes.isEmpty()) return finish(Report(false, tr("Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.")))
+        // La base stock tague LANGUAGE en code court (« es », « fr ») ; le réglage Toque
+        // est du type « es-ES ». On aligne sur la langue des recettes (pas l'UI : ca → es).
+        val lang = McOnline.recipeLanguage(I18n.code, prefs.recipeLanguage)
+            .substringBefore('-').lowercase()
+        val result = OriginalDbMapper.map(tables, lang)
+        if (result.recipes.isEmpty()) {
+            val langs = tables.entries.firstOrNull { it.key.equals("RECIPE", true) }
+                ?.value?.rows
+                ?.mapNotNull { row ->
+                    row.entries.firstOrNull { e -> e.key.equals("LANGUAGE", true) || e.key.equals("LANG", true) }
+                        ?.value?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+                }
+                ?.distinct()
+                ?.sorted()
+                .orEmpty()
+            val hint = if (langs.isNotEmpty()) " (${langs.joinToString()})" else ""
+            return finish(Report(false, tr("Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.") + hint))
+        }
 
         progress(tr("Copie des photos…"))
         val img = repo.imagesDir.absolutePath

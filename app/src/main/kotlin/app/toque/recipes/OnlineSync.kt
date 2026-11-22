@@ -50,7 +50,7 @@ class OnlineSync(private val context: Context, private val prefs: Prefs, private
     }
 
     private fun run(progress: (String) -> Unit): LidlSync.Report {
-        val language = McOnline.languageFor(I18n.code)
+        val language = McOnline.recipeLanguage(I18n.code, prefs.recipeLanguage)
         val stored = readIndex()
         // Autre langue ou lecture des fiches améliorée depuis : toutes les fiches sont relues.
         val index = if (stored.language == language && stored.parser == McOnline.PARSER) HashMap(stored.recipes) else HashMap()

@@ -110,6 +110,16 @@ class RecipesTest {
         assertEquals(1, res.recipes.size)
         val r = res.recipes.single()
         assertEquals("mc-4711", r.id)
+        // Langue courte de la base stock (« es ») : le code « es » (issu de « es-ES ») doit matcher.
+        val esOnly = OriginalDbMapper.map(tables, "es")
+        assertEquals(0, esOnly.recipes.size)
+        val frEs = mapOf(
+            "RECIPE" to OriginalDbMapper.Table("RECIPE", listOf(
+                mapOf("_id" to 9L, "NAME" to "Tortilla", "LANGUAGE" to "es", "REMOVE" to 0L),
+            )),
+        )
+        assertEquals(1, OriginalDbMapper.map(frEs, "es").recipes.size)
+        assertEquals(0, OriginalDbMapper.map(frEs, "fr").recipes.size)
         assertEquals(listOf("Hacher", "Cuire", "Pétrir la pâte"), r.steps.map { it.text })
         val cook = r.steps[1].machine
         assertNotNull(cook)

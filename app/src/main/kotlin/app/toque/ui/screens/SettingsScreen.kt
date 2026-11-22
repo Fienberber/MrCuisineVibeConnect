@@ -21,6 +21,7 @@ import app.toque.core.machine.Snapshot
 import app.toque.core.time.ZoneLookup
 import app.toque.core.update.Release
 import app.toque.recipes.LidlSync
+import app.toque.core.recipes.McOnline
 import app.toque.recipes.OnlineSync
 import app.toque.recipes.RecipeFiles
 import app.toque.core.recipes.UserRecipes
@@ -162,6 +163,27 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
         lidl.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() },
             Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
+        lidl.addView(Ui.text(c, tr("Langue des recettes"), 18f, Ui.TEXT), Ui.lp(t = 12))
+        val recipeLangs = McOnline.RECIPE_LANGUAGES.map { code ->
+            code to when (code) {
+                "auto" -> tr("Automatique (selon l'interface)")
+                "es-ES" -> "Español"
+                "fr-FR" -> "Français"
+                "en-US" -> "English"
+                "de-DE" -> "Deutsch"
+                "it-IT" -> "Italiano"
+                "pt-PT" -> "Português"
+                "nl-NL" -> "Nederlands"
+                "pl-PL" -> "Polski"
+                else -> code
+            }
+        }
+        lidl.addView(dropdown(recipeLangs, a.prefs.recipeLanguage) { code ->
+            a.prefs.recipeLanguage = code
+            a.toast(tr("Pris en compte à la prochaine synchronisation"))
+        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
+        lidl.addView(Ui.text(c, tr("Le site Lidl n'a pas de recettes en catalan : en automatique, Toque prend l'espagnol. Vous pouvez aussi choisir une autre langue ici."),
+            14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
         lidl.addView(toggle(tr("Synchro automatique chaque nuit"), a.prefs.autoSync) { a.prefs.autoSync = it }, Ui.lp(t = 10))
         lidl.addView(toggle(tr("Recettes des autres langues"), a.prefs.foreignRecipes) {
             a.prefs.foreignRecipes = it

@@ -75,18 +75,43 @@ object McOnline {
         return out
     }
 
+    /**
+     * Langues proposées pour le catalogue Lidl (le site n'a pas de catalan).
+     * Valeur « auto » : dérivée de la langue de l'interface via [languageFor].
+     */
+    val RECIPE_LANGUAGES = listOf(
+        "auto",
+        "es-ES",
+        "fr-FR",
+        "en-US",
+        "de-DE",
+        "it-IT",
+        "pt-PT",
+        "nl-NL",
+        "pl-PL",
+    )
+
     /** Langue des recettes d'après celle de l'interface (le français par défaut). */
     fun languageFor(uiCode: String): String = when (uiCode.substringBefore('-').lowercase()) {
         "fr" -> "fr-FR"
         "de" -> "de-DE"
         "it" -> "it-IT"
         "es" -> "es-ES"
+        // Pas de recettes en catalan sur monsieur-cuisine.com : on prend l'espagnol.
+        "ca" -> "es-ES"
         "nl" -> "nl-NL"
         "pl" -> "pl-PL"
         "cs" -> "cs-CZ"
         "pt" -> "pt-PT"
         "en" -> "en-US"
         else -> "fr-FR"
+    }
+
+    /** Langue effective du catalogue : réglage manuel, ou [languageFor] si « auto ». */
+    fun recipeLanguage(uiCode: String, setting: String?): String {
+        val s = setting?.trim().orEmpty()
+        if (s.isNotEmpty() && s != "auto" && s in RECIPE_LANGUAGES) return s
+        return languageFor(uiCode)
     }
 
     class Entry(
