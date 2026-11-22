@@ -170,6 +170,8 @@ class MainActivity : Activity() {
         machine.reconfigure { v -> if (!v.ok) refusal(v) }
         app.recipes.load()
         refreshTitle()
+        // Les Réglages ouverts montrent des choses propres au robot (recettes Lidl, import) : on les refait.
+        if (current is SettingsScreen && before !== p) replace(SettingsScreen(this))
         val msg = if (!p.tested) tr("%s : en test. Vos retours sont attendus sur GitHub.", p.displayName) else tr("Robot : %s", p.displayName)
         toast(msg, if (p.tested) Ui.OK else Ui.WARN)
         if (before != null && before.lidlDevice != p.lidlDevice && app.recipes.count > 0)

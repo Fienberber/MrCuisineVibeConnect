@@ -43,7 +43,8 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private lateinit var syncText: TextView
     private lateinit var syncBtn: View
     private lateinit var stopSyncBtn: View
-    private lateinit var importBtn: View
+    /** Absent sur un robot dont la base de l'appli d'origine n'est pas encore lue (Smart). */
+    private var importBtn: View? = null
     private lateinit var bowlText: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
@@ -171,14 +172,18 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         stopSyncBtn = Ui.button(c, tr("Arrêter"), Ui.Style.SECONDARY, Icon.Kind.STOP, height = 58) { SyncProgress.requestStop() }
         b1.addView(stopSyncBtn)
         lidl.addView(b1, Ui.lp(t = 12))
-        lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
-            14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
-        // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
-        // son texte se coupait au milieu d'un mot.
-        importBtn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
-        lidl.addView(importBtn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+        // Import depuis l'appli d'origine : seulement là où Toque sait lire sa base (pas encore le Smart).
+        if (chosen.stockImport) {
+            lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
+                14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+            // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
+            // son texte se coupait au milieu d'un mot.
+            val btn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
+            lidl.addView(btn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+            importBtn = btn
+        }
         lidl.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() },
-            Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
+            Ui.lp(Ui.WRAP, Ui.WRAP, t = if (chosen.stockImport) 8 else 12))
         lidl.addView(toggle(tr("Synchro automatique chaque nuit"), a.prefs.autoSync) { a.prefs.autoSync = it }, Ui.lp(t = 10))
         lidl.addView(toggle(tr("Recettes des autres langues"), a.prefs.foreignRecipes) {
             a.prefs.foreignRecipes = it
@@ -508,7 +513,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         val running = progress != null
         // Pendant une synchronisation : rien à relancer, et un bouton pour l'arrêter.
         Ui.setButtonEnabled(syncBtn, !running)
-        Ui.setButtonEnabled(importBtn, !running)
+        importBtn?.let { Ui.setButtonEnabled(it, !running) }
         stopSyncBtn.visibility = if (running && SyncProgress.stoppable) View.VISIBLE else View.GONE
         Ui.setButtonEnabled(stopSyncBtn, !SyncProgress.stopRequested)
         val last = a.prefs.lastSyncResult
