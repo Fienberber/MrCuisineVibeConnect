@@ -1,5 +1,6 @@
 package app.toque.ui.screens
 
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
@@ -61,6 +62,8 @@ class ManualScreen(
     private var timeEdited = false
     private var configuredSeconds = seconds
     private val pushLive = Runnable { sendAdjust() }
+    /** Jusqu'à cette heure, l'anneau montre la consigne réglée ici plutôt que celle du programme en cours. */
+    private var ownTargetUntil = 0L
 
     override fun build(): View {
         val root = Ui.horizontal(c, Gravity.TOP)
@@ -147,10 +150,15 @@ class ManualScreen(
         }
         val maxS = ((if (speed > 6) Limits.MAX_MS_HIGH_SPEED else Limits.MAX_MS_DEFAULT) / 1000).toInt()
         if (seconds > maxS) seconds = maxS
-        refresh()
-        if (live && s.kind?.name == "MANUAL") {
+        val liveEdit = live && s.kind?.name == "MANUAL"
+        if (liveEdit) {
             if (card == 0) timeEdited = true
             pendingEdit = true
+            // Le temps que la base applique le réglage et le renvoie dans son état.
+            ownTargetUntil = SystemClock.uptimeMillis() + 1_500
+        }
+        refresh()
+        if (liveEdit) {
             view.removeCallbacks(pushLive)
             view.postDelayed(pushLive, 350)
         }
@@ -243,11 +251,22 @@ class ManualScreen(
         val v = SafetyPolicy.checkJob(spec(), bowl).filter { it.code != SafetyPolicy.HOT_BLEND }
         hint.text = v.firstOrNull()?.message ?: if (onPick == null && a.snapshot.hot && speed >= 4) tr("Contenu chaud : confirmation demandée") else ""
         Ui.setButtonEnabled(startBtn, v.isEmpty())
+        showRing(a.snapshot)
+    }
+
+    /**
+     * Anneau : température mesurée et repère de consigne. Le repère suit la carte Température dès
+     * l'appui, sans attendre la prochaine trame de la base (jusqu'à une seconde au repos) ; en
+     * cuisson, il revient à la consigne du programme une fois le réglage appliqué.
+     */
+    private fun showRing(s: Snapshot) {
+        val editing = pendingEdit || SystemClock.uptimeMillis() < ownTargetUntil
+        val level = if (s.jobActive && s.jobTempLevel > 0 && !editing) s.jobTempLevel else tempLevel
+        ring.set(if (s.hasSample) s.actualTempC else 0, if (level > 0) Mcc.celsiusForLevel(level) else 0, s.speedLevel)
     }
 
     override fun onSnapshot(s: Snapshot) {
-        ring.set(if (s.hasSample) s.actualTempC else 0, if (s.jobActive && s.jobTempLevel > 0) Mcc.celsiusForLevel(s.jobTempLevel) else
-            if (tempLevel > 0) Mcc.celsiusForLevel(tempLevel) else 0, s.speedLevel)
+        showRing(s)
         weight.text = if (s.hasSample) tr("Balance : %d g", s.weightG) else tr("Base non connectée")
         if (onPick != null) return
         val manualJob = s.kind?.name == "MANUAL" && (s.state == JobState.RUNNING || s.state == JobState.STARTING || s.state == JobState.PAUSED)
