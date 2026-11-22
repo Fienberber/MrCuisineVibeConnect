@@ -131,22 +131,14 @@ class LidlSync(private val context: Context, private val prefs: Prefs, private v
         writeDiagnostic(tables)
         progress(tr("Conversion…"))
         // La base stock tague LANGUAGE en code court (« es », « fr ») ; le réglage Toque
-        // est du type « es-ES ». On aligne sur la langue des recettes (pas l'UI : ca → es).
-        val lang = McOnline.recipeLanguage(I18n.code, prefs.recipeLanguage)
+        // est du type « es-ES ». On aligne sur la langue des recettes (pas l'UI : ca → es),
+        // avec repli sur la langue dominante de la base (robot FR + interface EN/DE).
+        val preferred = McOnline.recipeLanguage(I18n.code, prefs.recipeLanguage)
             .substringBefore('-').lowercase()
+        val lang = OriginalDbMapper.stockLanguage(tables, preferred)
         val result = OriginalDbMapper.map(tables, lang)
         if (result.recipes.isEmpty()) {
-            val langs = tables.entries.firstOrNull { it.key.equals("RECIPE", true) }
-                ?.value?.rows
-                ?.mapNotNull { row ->
-                    row.entries.firstOrNull { e -> e.key.equals("LANGUAGE", true) || e.key.equals("LANG", true) }
-                        ?.value?.toString()?.trim()?.takeIf { it.isNotEmpty() }
-                }
-                ?.distinct()
-                ?.sorted()
-                .orEmpty()
-            val hint = if (langs.isNotEmpty()) " (${langs.joinToString()})" else ""
-            return finish(Report(false, tr("Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.") + hint))
+            return finish(Report(false, tr("Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.")))
         }
 
         progress(tr("Copie des photos…"))

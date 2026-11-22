@@ -120,6 +120,12 @@ class RecipesTest {
         )
         assertEquals(1, OriginalDbMapper.map(frEs, "es").recipes.size)
         assertEquals(0, OriginalDbMapper.map(frEs, "fr").recipes.size)
+        // Base française + préférence « en » (interface EN) : repli sur « fr », pas d'import vide.
+        assertEquals("fr", OriginalDbMapper.stockLanguage(tables, "en"))
+        assertEquals(1, OriginalDbMapper.map(tables, OriginalDbMapper.stockLanguage(tables, "en")).recipes.size)
+        assertEquals("fr", OriginalDbMapper.stockLanguage(tables, "fr"))
+        assertEquals("es", OriginalDbMapper.stockLanguage(frEs, "es"))
+        assertEquals("es", OriginalDbMapper.stockLanguage(frEs, "de"))
         assertEquals(listOf("Hacher", "Cuire", "Pétrir la pâte"), r.steps.map { it.text })
         val cook = r.steps[1].machine
         assertNotNull(cook)
