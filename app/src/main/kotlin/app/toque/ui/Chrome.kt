@@ -17,7 +17,6 @@ import app.toque.core.machine.JobState
 import app.toque.core.machine.LinkState
 import app.toque.core.machine.MachineEvent
 import app.toque.core.machine.Snapshot
-import app.toque.core.protocol.Mcc
 
 /** Écran de l'appli (vue construite une fois, réutilisée). */
 abstract class Screen(val a: MainActivity) {
@@ -282,7 +281,8 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
             else -> tr("Vitesse %d", s.jobSpeed)
         }
         tempChip.visibility = if (s.jobTempLevel > 0) View.VISIBLE else View.GONE
-        Ui.chipText(tempChip).text = "${Mcc.celsiusForLevel(s.jobTempLevel)} °C"
+        // °C exacts du programme (40 °C et programmes du Smart compris), pas le niveau de Toque juste en dessous.
+        Ui.chipText(tempChip).text = "${s.jobTempC} °C"
         dirChip.visibility = if (s.jobReverse && s.jobKind == "MANUAL") View.VISIBLE else View.GONE
         val ended = st == JobState.FINISHED || st == JobState.ABORTED
         setButtons(running = st != JobState.PAUSED, ended = ended, turbo = false)

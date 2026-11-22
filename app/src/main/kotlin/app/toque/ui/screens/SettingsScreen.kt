@@ -158,8 +158,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
 
         // ---- Recettes Lidl
         val lidl = section(right, tr("Recettes Lidl"), Icon.Kind.SYNC)
-        lidl.addView(Ui.text(c, tr("Toque télécharge lui-même les recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com (sans compte)."),
-            16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        val chosen = a.prefs.robot
+        val lidlIntro = if (chosen.lidlDevice == "MC2.0") tr("Toque télécharge lui-même les recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com (sans compte).")
+            else tr("Toque télécharge lui-même les recettes officielles du %s sur monsieur-cuisine.com (sans compte).", chosen.displayName)
+        lidl.addView(Ui.text(c, lidlIntro, 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
         syncText = Ui.text(c, "", 16f, Ui.TEXT)
         lidl.addView(syncText, Ui.lp(t = 10))
         val b1 = Ui.horizontal(c)

@@ -84,9 +84,11 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
         val many = progs.size > 4
         val rows = Ui.vertical(c)
         var row = Ui.horizontal(c, Gravity.TOP)
+        // Une ligne avec un réglage de température (sous-vide, mijoter, fermenter) est plus haute.
+        fun rowHeight(first: Int) = if (progs.subList(first, minOf(first + 4, progs.size)).any { it.maxC > it.minC }) 456 else 400
         for ((i, p) in progs.withIndex()) {
             if (i > 0 && i % 4 == 0) {
-                rows.addView(row, Ui.lp(Ui.MATCH, Ui.u(400), b = 16))
+                rows.addView(row, Ui.lp(Ui.MATCH, Ui.u(rowHeight(i - 4)), b = 16))
                 row = Ui.horizontal(c, Gravity.TOP)
             }
             val card = Ui.vertical(c)
@@ -119,10 +121,12 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
             if (p.maxC > p.minC) {
                 // Température exacte (sous-vide, mijoter, fermenter), dans les bornes de l'appli d'origine.
                 val t = Ui.horizontal(c, Gravity.CENTER_VERTICAL)
-                t.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.MINUS, height = 48) { selected = i; bumpTemp(p, -1) }, Ui.lp(Ui.u(48), Ui.WRAP))
+                t.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.MINUS, height = 48) { selected = i; bumpTemp(p, -1) }
+                    .apply { setPadding(0, 0, 0, 0) }, Ui.lp(Ui.u(48), Ui.WRAP))
                 p.temp = Ui.text(c, "", 20f, Ui.TEXT).apply { gravity = Gravity.CENTER }
                 t.addView(p.temp, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
-                t.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.PLUS, height = 48) { selected = i; bumpTemp(p, 1) }, Ui.lp(Ui.u(48), Ui.WRAP))
+                t.addView(Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.PLUS, height = 48) { selected = i; bumpTemp(p, 1) }
+                    .apply { setPadding(0, 0, 0, 0) }, Ui.lp(Ui.u(48), Ui.WRAP))
                 card.addView(t, Ui.lp(t = 8))
             }
             p.start = Ui.button(c, tr("Démarrer"), Ui.Style.PRIMARY, Icon.Kind.PLAY, height = 66) {
@@ -138,7 +142,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
         if (many && progs.size % 4 != 0) for (k in progs.size % 4 until 4)
             row.addView(View(c), LinearLayout.LayoutParams(0, Ui.MATCH, 1f).apply { if (k < 3) rightMargin = Ui.u(16) })
         if (many) {
-            rows.addView(row, Ui.lp(Ui.MATCH, Ui.u(400)))
+            rows.addView(row, Ui.lp(Ui.MATCH, Ui.u(rowHeight(progs.size - 1 - (progs.size - 1) % 4))))
             root.addView(Ui.scroll(c, rows), LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
         } else {
             root.addView(row, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))

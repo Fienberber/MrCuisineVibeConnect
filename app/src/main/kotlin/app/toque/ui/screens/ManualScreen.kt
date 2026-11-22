@@ -296,8 +296,8 @@ class ManualScreen(
      */
     private fun showRing(s: Snapshot) {
         val editing = pendingEdit || SystemClock.uptimeMillis() < ownTargetUntil
-        val level = if (s.jobActive && s.jobTempLevel > 0 && !editing) s.jobTempLevel else tempLevel
-        val target = if (s.jobActive && s.jobTempLevel > 0 && !editing) Mcc.celsiusForLevel(level) else tempC
+        // °C exacts du programme (40 °C sur le Smart), pas le niveau de Toque juste en dessous.
+        val target = if (s.jobActive && s.jobTempLevel > 0 && !editing) s.jobTempC else tempC
         ring.set(if (s.hasSample) s.actualTempC else 0, target, s.speedLevel)
     }
 

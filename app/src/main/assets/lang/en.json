@@ -629,5 +629,6 @@
   "%s : protocole d'après %s (licence MIT).": "%s: protocol based on %s (MIT licence).",
   "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Mixer chaud peut provoquer des projections.\n\nVérifiez que le couvercle est verrouillé, que le gobelet est en place et que le bol n'est pas trop rempli.": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Blending hot food can cause splashes.\n\nCheck that the lid is locked, the measuring cup is in place and the bowl is not overfilled.",
   "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Passer à la vitesse %d ?": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Switch to speed %d?",
-  "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Reprendre le mixage ?": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Resume blending?"
+  "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Reprendre le mixage ?": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Resume blending?",
+  "Toque télécharge lui-même les recettes officielles du %s sur monsieur-cuisine.com (sans compte).": "Toque downloads the official %s recipes from monsieur-cuisine.com itself (no account needed)."
 }
