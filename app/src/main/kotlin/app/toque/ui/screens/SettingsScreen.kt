@@ -182,8 +182,6 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             a.prefs.recipeLanguage = code
             a.toast(tr("Pris en compte à la prochaine synchronisation"))
         }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
-        lidl.addView(Ui.text(c, tr("Le site Lidl n'a pas de recettes en catalan : en automatique, Toque prend l'espagnol. Vous pouvez aussi choisir une autre langue ici."),
-            14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
         lidl.addView(toggle(tr("Synchro automatique chaque nuit"), a.prefs.autoSync) { a.prefs.autoSync = it }, Ui.lp(t = 10))
         lidl.addView(toggle(tr("Recettes des autres langues"), a.prefs.foreignRecipes) {
             a.prefs.foreignRecipes = it

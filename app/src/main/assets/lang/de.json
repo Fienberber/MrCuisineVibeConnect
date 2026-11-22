@@ -270,7 +270,6 @@
   "Le moteur tourne alors qu'il devrait être arrêté. Coupez l'interrupteur principal.": "Der Motor läuft, obwohl er stehen sollte. Hauptschalter ausschalten.",
   "Le port série est déjà utilisé par : %s": "Die serielle Schnittstelle wird bereits verwendet von: %s",
   "Le programme n'est pas en pause": "Das Programm ist nicht pausiert",
-  "Le site Lidl n'a pas de recettes en catalan : en automatique, Toque prend l'espagnol. Vous pouvez aussi choisir une autre langue ici.": "Auf der Lidl-Website gibt es keine katalanischen Rezepte: Automatisch nimmt Toque Spanisch. Hier kannst du auch eine andere Sprache wählen.",
   "Le système a refusé le fuseau %s": "Das System hat die Zeitzone %s abgelehnt",
   "Les modifications de cette recette seront perdues.": "Deine Änderungen an diesem Rezept gehen verloren.",
   "Les modifications de cette étape seront perdues.": "Deine Änderungen an diesem Schritt gehen verloren.",

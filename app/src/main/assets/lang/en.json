@@ -270,7 +270,6 @@
   "Le moteur tourne alors qu'il devrait être arrêté. Coupez l'interrupteur principal.": "The motor is running when it should be stopped. Switch off the main switch.",
   "Le port série est déjà utilisé par : %s": "The serial port is already used by: %s",
   "Le programme n'est pas en pause": "The program is not paused",
-  "Le site Lidl n'a pas de recettes en catalan : en automatique, Toque prend l'espagnol. Vous pouvez aussi choisir une autre langue ici.": "Lidl's site has no Catalan recipes: in automatic mode, Toque uses Spanish. You can also pick another language here.",
   "Le système a refusé le fuseau %s": "The system refused the time zone %s",
   "Les modifications de cette recette seront perdues.": "Your changes to this recipe will be lost.",
   "Les modifications de cette étape seront perdues.": "Your changes to this step will be lost.",
