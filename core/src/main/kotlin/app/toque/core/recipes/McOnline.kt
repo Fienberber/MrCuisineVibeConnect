@@ -23,7 +23,7 @@ object McOnline {
     const val DEVICE = "MC2.0"
     const val PAGE_SIZE = 100
     /** Version de la lecture des fiches : à augmenter quand elle change, pour que la synchro les relise toutes. */
-    const val PARSER = 3
+    const val PARSER = 4
     /** Préfixe des identifiants Toque des recettes du site (« mc- » : celles de l'appli d'origine). */
     const val ID_PREFIX = "web-"
 
@@ -136,8 +136,12 @@ object McOnline {
         return Page(d.int("total") ?: entries.size, d.int("totalPage") ?: 1, entries)
     }
 
-    /** Fiche complète (réponse de [recipeUrl]) convertie en recette Toque ; null si inutilisable. */
-    fun parseRecipe(json: String): Recipe? {
+    /**
+     * Fiche complète (réponse de [recipeUrl]) convertie en recette Toque ; null si inutilisable.
+     * [categoryNames] : catégories de la langue des recettes (voir [McCategories]), pour nommer
+     * celles d'une fiche prise dans une autre langue.
+     */
+    fun parseRecipe(json: String, categoryNames: Map<Long, String> = emptyMap()): Recipe? {
         val r = Json.parse(json).obj()["data"].obj()["recipe"].obj()
         val apiId = r["id"].long() ?: return null
         val title = r.str("name")?.trim().orEmpty()
@@ -147,7 +151,11 @@ object McOnline {
         val defaultSize = r.int("defaultServingSizeId")
         val size = sizes.firstOrNull { it.int("id") == defaultSize } ?: sizes.firstOrNull() ?: emptyMap()
 
-        val categories = r["categories"].list().mapNotNull { it.obj().str("name")?.trim()?.takeIf { n -> n.isNotEmpty() } }
+        val categories = r["categories"].list().mapNotNull { any ->
+            val c = any.obj()
+            val local = if (categoryNames.isEmpty()) null else c["id"].long()?.let { McCategories.localName(it, categoryNames) }
+            (local ?: c.str("name")?.trim())?.takeIf { n -> n.isNotEmpty() }
+        }.distinct()
         val tags = r["tags"].list().mapNotNull { t ->
             (if (t is String) t else t.obj().str("name"))?.trim()?.takeIf { it.isNotEmpty() }
         }
