@@ -6,6 +6,9 @@
 the **Connect**, and the **Smart** in test. It runs on the robot's own tablet instead of the stock app
 and still uses **the official Lidl recipes**.
 
+🌐 **[toqueapp.org](https://toqueapp.org)**, the Toque community site: share your recipes, find other
+users' ones and send them to your robot.
+
 ## Supported robots
 
 | Robot | Label under the robot | Status | How to install |
@@ -29,6 +32,25 @@ robot without sending anything to its motor base and asks you to confirm it.
 > The interface is available in **English**, **French**, **German**, **Spanish**, **Catalan** and
 > **Ukrainian** (*Settings › Langue · Language*), and other languages can be added with a single file
 > (see below).
+
+## Community site: [toqueapp.org](https://toqueapp.org)
+
+Toque's own recipe site, free and ad-free, in English, French, German, Spanish, Catalan and Ukrainian.
+
+- **Browse and search** recipes shared by Toque users, with photos, ratings and reviews; filter by
+  robot (Connect, Smart), language and category.
+- **Publish your recipes** on the site or straight from the robot. Each step's settings (time,
+  temperature, speed) are checked with the same safety rules as on the robot.
+- **Send them to your robot**: community recipes reach the robot without any account
+  (*Settings › Community recipes*). With a free, optional Toque account (*Settings › Toque account*),
+  your favourites and your own recipes follow you to the robot.
+- **Translate** other people's recipes into your language, **follow** the cooks you like, and report
+  what doesn't belong there.
+- Your account stays private: the public profile only shows your username and published recipes, and
+  the robot keeps a key you can revoke, never your password.
+
+A question, or a robot you would like Toque to support: [contact page](https://toqueapp.org/contact.php).
+If Toque helps you, you can [support the project](https://toqueapp.org/donate.php).
 
 ## Install with an AI agent (Connect)
 

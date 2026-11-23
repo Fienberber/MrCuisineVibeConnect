@@ -6,6 +6,9 @@
 **Connect**, et le **Smart** en test. Elle remplace l'appli d'origine sur la tablette du robot tout en
 gardant **les recettes Lidl**.
 
+🌐 **[toqueapp.org](https://toqueapp.org)**, le site communautaire de Toque : partagez vos recettes,
+trouvez celles des autres et envoyez-les sur votre robot.
+
 ## Robots pris en charge
 
 | Robot | Étiquette sous le robot | État | Installation |
@@ -28,6 +31,26 @@ robot sans rien envoyer à sa base moteur et demande de le confirmer.
 >
 > L'interface existe en **français**, **anglais**, **allemand**, **espagnol**, **catalan** et
 > **ukrainien** (*Réglages › Langue · Language*).
+
+## Le site communautaire : [toqueapp.org](https://toqueapp.org)
+
+Le site de recettes de Toque, gratuit et sans publicité, en français, anglais, allemand, espagnol,
+catalan et ukrainien.
+
+- **Parcourez et cherchez** les recettes partagées par les utilisateurs de Toque, avec photos, notes
+  et avis ; filtres par robot (Connect, Smart), langue et catégorie.
+- **Publiez vos recettes** sur le site ou directement depuis le robot. Les réglages de chaque étape
+  (durée, température, vitesse) sont vérifiés avec les mêmes règles de sécurité que sur le robot.
+- **Envoyez-les sur votre robot** : les recettes de la communauté arrivent sur le robot sans aucun
+  compte (*Réglages › Recettes de la communauté*). Avec un compte Toque gratuit et facultatif
+  (*Réglages › Compte Toque*), vos favoris et vos recettes vous suivent sur le robot.
+- **Traduisez** les recettes des autres dans votre langue, **abonnez-vous** aux cuisiniers que vous
+  aimez, et signalez ce qui n'a rien à y faire.
+- Votre compte reste privé : le profil public ne montre que votre pseudo et vos recettes publiées, et
+  le robot garde une clé que vous pouvez révoquer, jamais votre mot de passe.
+
+Une question, ou un robot que vous aimeriez voir pris en charge : [page Contact](https://toqueapp.org/contact.php).
+Si Toque vous rend service, vous pouvez [soutenir le projet](https://toqueapp.org/donate.php).
 
 ## Installer avec un agent IA (Connect)
 
