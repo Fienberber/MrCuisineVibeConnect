@@ -1,11 +1,11 @@
-# Toque on the Monsieur Cuisine Smart (SKMS 1200): test version
+# Toque on the Monsieur Cuisine Smart (SKMS 1200): in test
 
 🇫🇷 **[Version française](SMART.md)**
 
-> **Test branch `test-mc-smart`, not in `main`.** Toque's maintainer does not own a Monsieur Cuisine
-> Smart: **Smart owners test it and report back** in the
-> [issues](https://github.com/Wuki60/MrCuisineVibeConnect/issues). Their reports decide whether it goes
-> into `main`. Nothing here has been tried by the project itself on a Smart.
+> **In Toque since version 0.8.0, still in test.** Toque's maintainer does not own a Monsieur Cuisine
+> Smart: **Smart owners test it and report back** in
+> [issue #59](https://github.com/Wuki60/MrCuisineVibeConnect/issues/59). Nothing here has been tried by
+> the project itself on a Smart: do the first run with an empty bowl, hand on the main switch.
 
 ## Where the code comes from
 
@@ -47,7 +47,7 @@
 - **Not yet**: heating without stirring (speed 0) in manual cooking; importing the stock app's
   database; the list of the base's error codes.
 
-## Install (testers)
+## Install
 
 You need a Smart **rooted with Magisk, with ADB enabled**. Toque has no root guide for the Smart yet:
 follow [Camybrith Cooking's](https://github.com/Tidusneo24150/camybrith-cooking/blob/main/docs/GUIDE.en.md).
@@ -55,11 +55,16 @@ follow [Camybrith Cooking's](https://github.com/Tidusneo24150/camybrith-cooking/
 1. Another port (Camybrith Cooking, Ratatouille Edition) has the same package name `app.toque` with
    a different signature: **uninstall it first** (`adb uninstall app.toque`). Its settings and own
    recipes are erased: export your recipes first if needed.
-2. Download the test APK `Toque-0.8.0-smart.N.apk` from the
-   [releases](https://github.com/Wuki60/MrCuisineVibeConnect/releases) (pre-release, never offered
-   to robots automatically), then, from this branch:
-   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-0.8.0-smart.N.apk`
-   (or `adb install -r`, then `tools/robot/setup-root.sh` as root).
+2. Download **`Toque-x.y.z-smart.apk`** from the
+   [latest release](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest) (the one **ending in
+   `-smart`**: the other APK is the Connect's and does not work on the Smart's tablet), then, from the
+   repository folder:
+   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-x.y.z-smart.apk`
+   (or `adb install -r`, then `tools/robot/setup-root.sh` as root). After that, Settings › Updates
+   takes the Smart APK by itself.
+
+   Had a `0.8.0-smart.N` test version? Install 0.8.0 over it with the same command, once: the updater
+   of those test versions does not offer it.
 3. On start, "Which robot is this?": **Monsieur Cuisine Smart**.
 4. Settings › Machine › **Real machine** › Apply. **First run with an empty bowl**, hand on the main
    switch.

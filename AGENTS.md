@@ -41,8 +41,8 @@ with exactly these files; total time 1–2 hours, most of it waiting for the per
   installed with this procedure. An **SKMC 1100 A1** needs TWRP rebuilt around its own, newer
   kernel (issue #10): one more step, `own-twrp`, right after `backup` (see *SKMC 1100 A1* below);
   everything else is the same. A Monsieur Cuisine **Smart** (SKMS 1200) is different hardware:
-  this guide does not root it. On the `test-mc-smart` branch only, follow `docs/SMART.en.md`
-  (community root guide, then Toque's test APK); otherwise stop.
+  this guide does not root it: follow `docs/SMART.en.md` instead (community root guide, then
+  Toque's Smart APK, `Toque-x.y.z-smart.apk`).
 - The SP Flash Tool archive has a public password printed on its download page; typing it to
   extract the archive is fine. Any other password: never.
 
