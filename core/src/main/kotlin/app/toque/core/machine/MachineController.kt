@@ -299,7 +299,7 @@ class MachineController(
 
     // ------------------------------------------------------------------ émission
 
-    /** À appeler toutes les ~100 ms : met à jour l'état et renvoie la trame à émettre. */
+    /** À appeler à chaque trame (100 ms Connect, 200 ms Smart) : met à jour l'état et renvoie la trame à émettre. */
     fun tick(): ByteArray {
         val now = clock.nowMs()
         if ((link == LinkState.READY || link == LinkState.ARMING) && now - latestAtMs > config.staleMs) {

@@ -82,6 +82,11 @@ class RobotProfile(
     private val codecFactory: () -> BoardCodec,
     /** Auteurs du protocole de ce robot, cités dans les Réglages (null : celui de Toque, d'après le SDK). */
     val credit: String? = null,
+    /**
+     * Une trame toutes les… (ms), comme l'appli d'origine. Le Smart répond ~100 ms après chaque
+     * trame : à 100 ms, la commande suivante arriverait pendant sa réponse.
+     */
+    val framePeriodMs: Long = 100,
 ) {
     /** Nouveau codec (avec son propre compteur de séquence) pour une liaison. */
     fun newCodec(): BoardCodec = codecFactory()
@@ -141,6 +146,8 @@ object RobotProfiles {
         tested = false,
         codecFactory = { SmartCodec() },
         credit = "Flav974 (toque-smart-ratatouille), Tidusneo24150 (Camybrith Cooking)",
+        // Appli d'origine et Camybrith Cooking : 200 ms (retour de Tidusneo24150, issue #59).
+        framePeriodMs = 200,
     )
 
     val ALL: List<RobotProfile> = listOf(MC_CONNECT, MC_SMART)

@@ -8,8 +8,9 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /**
- * Boucle de pilotage : un fil unique émet une trame toutes les 100 ms, reçoit les états,
- * rouvre la liaison si elle tombe. Toute interaction avec le contrôleur passe par [call].
+ * Boucle de pilotage : un fil unique émet une trame toutes les [periodMs] (cadence du robot :
+ * 100 ms pour le Connect, 200 ms pour le Smart), reçoit les états, rouvre la liaison si elle
+ * tombe. Toute interaction avec le contrôleur passe par [call].
  */
 class MachineLoop(
     private val transportFactory: () -> Transport,

@@ -92,6 +92,71 @@ class SmartProtocolTest {
         assertTrue(rx.drop(1).all { it in tx })
     }
 
+    /**
+     * Toutes les réponses réelles reprennent la commande de même séquence ([Smart.echoes]) et ont
+     * un code retour nul : la vérification des réponses ne peut pas arrêter une cuisson normale.
+     * Seules les trames que Toque envoie (08 02, 08 03) comptent ; couvercle ouvert ou bol absent
+     * ne sont pas vérifiés.
+     */
+    @Test fun everyCapturedAnswerEchoesItsCommand() {
+        var checked = 0
+        for (name in CAPTURES) {
+            val sent = ArrayList<ByteArray>()
+            for (row in capture(name)) {
+                if (row.dir == "TX") { sent += row.raw; continue }
+                val rx = row.raw
+                assertEquals(0, rx[Smart.RX_RETURN_CODE].toInt())
+                val tx = sent.takeLast(8).lastOrNull { it[7] == rx[7] } ?: continue
+                if (tx[9].toInt() != Smart.CMD_SET && tx[9].toInt() != Smart.CMD_TARE) continue
+                if (rx[12].toInt() and Smart.STATUS_LID_OR_BOWL != 0) continue
+                assertTrue("$name ${row.time} : ${Mcc.hex(tx)} -> ${Mcc.hex(rx)}", Smart.echoes(tx, rx))
+                checked++
+            }
+        }
+        assertTrue("réponses vérifiées : $checked", checked > 20_000)
+    }
+
+    @Test fun echoRejectsAnotherSpeedLevelOrStoppedFunction() {
+        val tx = Smart.buildTx(5, temperatureLevel = 3, speedHalfSteps = 4, function = Smart.FN_MANUAL)
+        fun rx(level: Int, speed: Int, fn: Int, reverse: Int = 0): ByteArray {
+            val r = ByteArray(Smart.RX_SIZE)
+            r[7] = 5; r[9] = Smart.CMD_SET.toByte(); r[17] = level.toByte(); r[25] = speed.toByte()
+            r[26] = reverse.toByte(); r[28] = fn.toByte()
+            return r
+        }
+        assertTrue(Smart.echoes(tx, rx(3, 4, 1)))
+        assertFalse(Smart.echoes(tx, rx(3, 2, 1)))
+        assertFalse(Smart.echoes(tx, rx(0, 4, 1)))
+        assertFalse(Smart.echoes(tx, rx(3, 4, 0)))
+        assertFalse("lame en marche : le sens compte", Smart.echoes(tx, rx(3, 4, 1, reverse = 1)))
+        val stop = Smart.buildTx(6)
+        val r = rx(0, 0, 0, reverse = 1).also { it[7] = 6 }
+        assertTrue("à l'arrêt, la base garde le dernier sens", Smart.echoes(stop, r))
+    }
+
+    @Test fun codecFlagsRefusalWrongEchoAndForeignSequences() {
+        val c = SmartCodec(initialSeq = 20)
+        val f = c.encodeTx(Operation.STANDARD, 2, 0, Direction.CLOCKWISE, false, 60)
+        fun answer(seq: Int, speed: Int, fn: Int, rc: Int = 0, status: Int = 0): ByteArray {
+            val r = ByteArray(Smart.RX_SIZE)
+            r[0] = 0xAA.toByte(); r[2] = Smart.RX_L.toByte(); r[3] = 1; r[4] = 0x0F
+            r[7] = seq.toByte(); r[8] = 8; r[9] = Smart.CMD_SET.toByte(); r[10] = 0x0C; r[11] = 0x12
+            r[12] = status.toByte(); r[Smart.RX_RETURN_CODE] = rc.toByte(); r[25] = speed.toByte(); r[28] = fn.toByte()
+            r[Smart.RX_L] = Smart.checksum(r, Smart.RX_L).toByte()
+            return r
+        }
+        val seq = f[7].toInt() and 0xFF
+        assertFalse(c.decodeRx(answer(seq, 4, 1)).errorDetected)
+        assertEquals(Smart.ERR_REFUSED + 3, c.decodeRx(answer(seq, 4, 1, rc = 3)).errorCode)
+        assertFalse("couvercle ouvert : la base refuse d'elle-même", c.decodeRx(answer(seq, 0, 0, rc = 3, status = 0x80)).errorDetected)
+        assertEquals(Smart.ERR_ECHO, c.decodeRx(answer(seq, 0, 0)).errorCode)
+        assertFalse(c.decodeRx(answer(seq + 50, 4, 1)).errorDetected)
+        assertFalse(c.decodeRx(answer(seq + 51, 4, 1)).errorDetected)
+        assertEquals(Smart.ERR_FOREIGN, c.decodeRx(answer(seq + 52, 4, 1)).errorCode)
+        assertFalse("une bonne réponse remet le compte à zéro", c.decodeRx(answer(seq, 4, 1)).errorDetected)
+        assertTrue(Smart.errorMessage(Smart.ERR_REFUSED + 3).contains("3"))
+    }
+
     @Test fun weightLidAndBowlFromTheScaleCapture() {
         val t = capture("02-balance-couvercle").filter { it.dir == "RX" }.map { Smart.decodeRx(it.raw) }
         assertTrue("paquet de riz lu ~1035 g", t.any { it.weight in 1030..1040 })

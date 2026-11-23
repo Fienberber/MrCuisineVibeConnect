@@ -630,5 +630,8 @@
   "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Mixer chaud peut provoquer des projections.\n\nVérifiez que le couvercle est verrouillé, que le gobelet est en place et que le bol n'est pas trop rempli.": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Blending hot food can cause splashes.\n\nCheck that the lid is locked, the measuring cup is in place and the bowl is not overfilled.",
   "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Passer à la vitesse %d ?": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Switch to speed %d?",
   "Ce robot ne mesure pas toujours la température du bol : Toque considère le contenu comme chaud. Reprendre le mixage ?": "This robot does not always measure the bowl temperature, so Toque treats the contents as hot. Resume blending?",
+  "La base a refusé la commande (code retour %d) : tout est arrêté": "The base refused the command (return code %d): everything is stopped",
+  "La base n'a pas repris la commande envoyée : tout est arrêté": "The base did not echo the command sent: everything is stopped",
+  "La base répond à des commandes qui ne viennent pas de Toque : tout est arrêté": "The base is answering commands that did not come from Toque: everything is stopped",
   "Toque télécharge lui-même les recettes officielles du %s sur monsieur-cuisine.com (sans compte).": "Toque downloads the official %s recipes from monsieur-cuisine.com itself (no account needed)."
 }

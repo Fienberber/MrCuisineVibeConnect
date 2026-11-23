@@ -33,6 +33,11 @@ class RobotTest {
     private fun recipe(vararg m: StepMachine, devices: List<String> = emptyList()) =
         Recipe(id = "t", title = "Essai", steps = m.map { Step("étape", it) }, devices = devices)
 
+    @Test fun eachRobotHasTheFramePeriodOfItsOriginalApp() {
+        assertEquals("Connect : inchangé", 100L, RobotProfiles.MC_CONNECT.framePeriodMs)
+        assertEquals("Smart : comme l'appli d'origine (issue #59)", 200L, RobotProfiles.MC_SMART.framePeriodMs)
+    }
+
     @Test fun detectionUsesOnlyWhatTheTabletShows() {
         val connect = RobotDetector.detect(DeviceFacts(setOf("de.silpion.mc2"), 23, setOf("/dev/ttyMT0", "/dev/ttyMT1")))
         assertSame(RobotProfiles.MC_CONNECT, connect.profile)

@@ -35,6 +35,12 @@ class SmartSimBoard {
     var weight = 0
     var temperature = 0
     var errorCode = 0
+    /** Octet 16 : code retour (3 = la base refuse de tourner). */
+    var returnCode = 0
+    /** La base répond sans reprendre la commande (écho d'un arrêt). */
+    var ignoresCommands = false
+    /** Décalage des séquences répondues (réponses à des commandes que Toque n'a pas envoyées). */
+    var seqShift = 0
     var silent = false
     /** Bit 5 de l'octet d'état : « température atteinte ». */
     var aboveTarget = false
@@ -62,16 +68,20 @@ class SmartSimBoard {
         return out
     }
 
-    private fun reply(c: Smart.Command): ByteArray {
+    private fun reply(cmd: Smart.Command): ByteArray {
+        val c = if (!ignoresCommands) cmd else Smart.Command(
+            seq = cmd.seq, cmd = cmd.cmd, temperatureLevel = 0, speedHalfSteps = 0, reverse = false, function = 0,
+            tare = false, hours = 0, minutes = 0, seconds = 0, unexpectedBytes = emptyList(),
+        )
         val r = ByteArray(Smart.RX_SIZE)
         r[0] = 0xAA.toByte(); r[1] = 0; r[2] = Smart.RX_L.toByte()
-        r[3] = 0x01; r[4] = 0x0F; r[7] = c.seq.toByte(); r[8] = 0x08; r[9] = c.cmd.toByte()
+        r[3] = 0x01; r[4] = 0x0F; r[7] = (c.seq + seqShift).toByte(); r[8] = 0x08; r[9] = c.cmd.toByte()
         r[10] = 0x0C; r[11] = 0x12
         var st = 0
         if (lidOpen) st = st or 0x80
         if (!bowlPresent) st = st or 0x40
         if (aboveTarget) st = st or 0x20
-        r[12] = st.toByte(); r[15] = errorCode.toByte()
+        r[12] = st.toByte(); r[15] = errorCode.toByte(); r[Smart.RX_RETURN_CODE] = returnCode.toByte()
         r[17] = c.temperatureLevel.toByte()
         r[20] = (temperature shr 8).toByte(); r[21] = temperature.toByte()
         r[25] = c.speedHalfSteps.toByte(); r[26] = (if (c.reverse) 1 else 0).toByte(); r[28] = c.function.toByte()
@@ -532,5 +542,86 @@ class SmartControllerTest {
         } finally {
             loop.shutdown()
         }
+    }
+
+    // ------------------------------------------------------------------ réponses vérifiées
+    // Retour de Tidusneo24150 (issue #59) : code retour (octet 16) et échos, comme Camybrith Cooking.
+
+    @Test fun boardRefusalStopsEverything() {
+        val b = SmartBench().ready()
+        assertTrue(b.c.startJob(Programs.manual(2, 0, Direction.CLOCKWISE, 60_000)).ok)
+        b.step(1_000)
+        assertEquals(Smart.FN_MANUAL, b.last().function)
+        b.board.returnCode = 3
+        b.step(400)
+        assertEquals(FaultCode.BOARD_ERROR.name, b.snap.faultCode)
+        assertTrue(b.snap.faultMessage, b.snap.faultMessage.contains("3"))
+        assertEquals(JobState.ABORTED.name, b.snap.jobState)
+        assertEquals(0, b.last().function)
+        assertFalse("la cause est toujours là", b.c.acknowledgeFault().ok)
+        b.board.returnCode = 0
+        b.step(400)
+        assertTrue(b.c.acknowledgeFault().ok)
+        b.step(2_000)
+        assertEquals("rien ne redémarre tout seul", 0, b.last().function)
+    }
+
+    @Test fun returnCodeWithLidOpenOrBowlMissingIsOnlyAPause() {
+        val b = SmartBench().ready()
+        assertTrue(b.c.startJob(Programs.manual(2, 0, Direction.CLOCKWISE, 60_000)).ok)
+        b.step(1_000)
+        b.board.lidOpen = true
+        b.board.returnCode = 3
+        b.step(600)
+        assertEquals("", b.snap.faultCode)
+        assertEquals(JobState.PAUSED.name, b.snap.jobState)
+        b.board.lidOpen = false
+        b.board.bowlPresent = false
+        b.step(600)
+        assertEquals("", b.snap.faultCode)
+    }
+
+    @Test fun boardThatDoesNotEchoTheCommandStopsEverything() {
+        val b = SmartBench().ready()
+        b.board.ignoresCommands = true
+        b.step(1_000)
+        assertEquals("au repos, l'écho d'un arrêt est le bon", "", b.snap.faultCode)
+        assertTrue(b.c.startJob(Programs.manual(3, 0, Direction.CLOCKWISE, 60_000)).ok)
+        b.step(400)
+        assertEquals(FaultCode.BOARD_ERROR.name, b.snap.faultCode)
+        assertEquals(JobState.ABORTED.name, b.snap.jobState)
+        b.step(200)
+        assertEquals("STOP dès la trame suivante", 0, b.last().function)
+    }
+
+    @Test fun answersToSequencesToqueDidNotSendStopEverythingAfterThree() {
+        val b = SmartBench().ready()
+        assertTrue(b.c.startJob(Programs.manual(1, 0, Direction.CLOCKWISE, 60_000)).ok)
+        b.step(1_000)
+        b.board.seqShift = 40
+        b.step(400)
+        assertEquals("deux réponses étrangères sont tolérées", "", b.snap.faultCode)
+        b.step(200)
+        assertEquals(FaultCode.BOARD_ERROR.name, b.snap.faultCode)
+        b.step(200)
+        assertEquals("STOP dès la trame suivante", 0, b.last().function)
+    }
+
+    @Test fun turboAndTareAnswersAreAccepted() {
+        val b = SmartBench().ready()
+        b.board.weight = 500
+        b.c.tare()
+        b.step(1_000)
+        assertEquals("", b.snap.faultCode)
+        assertTrue(b.c.turboPress().has(app.toque.core.machine.SafetyPolicy.COLD_CONFIRM))
+        assertTrue(b.c.confirmCold().ok)
+        val v = b.c.turboPress()
+        assertTrue(v.message, v.ok)
+        b.step(1_000)
+        assertTrue(b.tx.any { it.second.function == Smart.FN_TURBO })
+        assertEquals("", b.snap.faultCode)
+        b.c.turboRelease()
+        b.step(600)
+        assertEquals("", b.snap.faultCode)
     }
 }

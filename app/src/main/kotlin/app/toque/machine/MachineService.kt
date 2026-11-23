@@ -124,6 +124,8 @@ class MachineService : Service() {
         val l = MachineLoop(
             transportFactory = factory,
             config = ControllerConfig(requireBowl = prefs.requireBowl, invertBowl = prefs.invertBowl, hotRamp = prefs.hotRamp),
+            // Cadence du robot pour la vraie base ; la démo et le jumeau parlent comme le Connect.
+            periodMs = if (mode == Prefs.Mode.HARDWARE) prefs.robot.framePeriodMs else RobotProfiles.MC_CONNECT.framePeriodMs,
             onSnapshot = { s -> main.post { publish(s) } },
             onEvent = { e -> main.post { broadcastEvent(e) } },
             log = { line -> log.write("machine", line) },

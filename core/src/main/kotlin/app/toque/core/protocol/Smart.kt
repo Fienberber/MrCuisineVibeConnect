@@ -217,13 +217,17 @@ object Smart {
 
     fun rxSeq(raw: ByteArray): Int = u(raw, 7)
 
-    /** Décode une trame d'état 53 octets en [Telemetry] (mêmes champs que pour le Connect). */
-    fun decodeRx(raw: ByteArray): Telemetry {
+    /**
+     * Décode une trame d'état 53 octets en [Telemetry] (mêmes champs que pour le Connect).
+     * [toqueError] : erreur constatée par Toque sur cette réponse ([SmartCodec.responseError]),
+     * signalée comme une erreur de la base si la base n'en signale pas elle-même (octet 15).
+     */
+    fun decodeRx(raw: ByteArray, toqueError: Int = 0): Telemetry {
         validate(raw, RX_SIZE)
         fun word(i: Int) = (u(raw, i) shl 8) or u(raw, i + 1)
         fun s16(i: Int) = word(i).toShort().toInt()
         val status = u(raw, 12)
-        val errorCode = u(raw, 15)
+        val errorCode = u(raw, 15).let { if (it != 0) it else toqueError }
         val levelEcho = u(raw, 17)
         val speedEcho = u(raw, 25)
         val functionEcho = u(raw, 28)
@@ -279,7 +283,45 @@ object Smart {
         )
     }
 
-    fun errorMessage(code: Int): String = tr("Erreur de la base (code %d)", code)
+    /** Octet 16 de la réponse : code retour de la base (`returnCode` de l'appli d'origine), 0 = commande acceptée. */
+    const val RX_RETURN_CODE = 16
+
+    /** Bits de l'octet d'état 12 : couvercle ouvert (0x80), bol absent (0x40). */
+    const val STATUS_LID_OR_BOWL = 0xC0
+
+    /**
+     * Codes d'erreur propres à Toque, au-delà de ceux de la base (0..255) : la base a refusé la
+     * commande (+ son code retour), n'a pas repris la commande envoyée, ou répond à des
+     * séquences que Toque n'a pas envoyées.
+     */
+    const val ERR_REFUSED = 0x100
+    const val ERR_ECHO = 0x200
+    const val ERR_FOREIGN = 0x201
+
+    /**
+     * La réponse [rx] reprend-elle la commande [tx] (même séquence) ? Règles vérifiées sur toutes
+     * les captures (plus de 21 000 réponses, appli d'origine et Toque) :
+     *  - commande (02 réglage, 03 tare), niveau de température et vitesse en demi-pas : identiques ;
+     *  - fonction : la base renvoie 1 pour toute fonction active, 0 à l'arrêt ;
+     *  - sens : seulement lame en marche (à l'arrêt, la base garde le dernier sens) ;
+     *  - Turbo : touche turbo à 10, vitesse et niveau à 0, fonction active.
+     * Comparaison faite comme Camybrith Cooking (Tidusneo24150, issue #59).
+     */
+    fun echoes(tx: ByteArray, rx: ByteArray): Boolean {
+        if (u(rx, 9) != u(tx, 9)) return false
+        if (tx.size == TURBO_SIZE)
+            return u(rx, 27) == TURBO_MOTOR_VALUE && u(rx, 25) == 0 && u(rx, 17) == 0 && u(rx, 28) != FN_STOP
+        if (u(rx, 17) != u(tx, 10) || u(rx, 25) != u(tx, 16)) return false
+        if ((u(rx, 28) != FN_STOP) != (u(tx, 19) != FN_STOP)) return false
+        return u(tx, 16) == 0 || u(rx, 26) == u(tx, 17)
+    }
+
+    fun errorMessage(code: Int): String = when {
+        code == ERR_ECHO -> tr("La base n'a pas repris la commande envoyée : tout est arrêté")
+        code == ERR_FOREIGN -> tr("La base répond à des commandes qui ne viennent pas de Toque : tout est arrêté")
+        code in ERR_REFUSED until ERR_ECHO -> tr("La base a refusé la commande (code retour %d) : tout est arrêté", code - ERR_REFUSED)
+        else -> tr("Erreur de la base (code %d)", code)
+    }
 }
 
 /**
@@ -361,9 +403,67 @@ class SmartCodec(initialSeq: Int = 0, initialTurboSeq: Int = 0) : BoardCodec {
     private var turboSeq = initialTurboSeq and 0xFF
     private var lastActive: ByteArray? = null
 
+    /** Dernières trames émises (la réponse arrive au plus 3 trames après la sienne dans les captures). */
+    private val sent = arrayOfNulls<ByteArray>(SENT_HISTORY)
+    private var sentNext = 0
+    private var sentCount = 0
+    private var unknownInARow = 0
+
     override val id: String get() = "smart"
     override fun newRxParser(): FrameParser = SmartStreamParser(Smart.RX_SIZE)
-    override fun decodeRx(raw: ByteArray): Telemetry = Smart.decodeRx(raw)
+
+    /** Décode la réponse et vérifie qu'elle correspond à ce que Toque a envoyé ([responseError]). */
+    override fun decodeRx(raw: ByteArray): Telemetry {
+        Smart.validate(raw, Smart.RX_SIZE)
+        return Smart.decodeRx(raw, responseError(raw))
+    }
+
+    /**
+     * Erreur constatée sur une réponse valide, 0 si tout va bien (même règle que Camybrith
+     * Cooking, retour de Tidusneo24150 sur l'issue #59) :
+     *  - code retour (octet 16) non nul : la base a refusé la commande ;
+     *  - réponse qui ne reprend pas la commande de même séquence ([Smart.echoes]) ;
+     *  - 3 réponses de suite à des séquences que Toque n'a pas envoyées (une seule est tolérée :
+     *    une réponse en retard juste après l'ouverture de la liaison).
+     * Couvercle ouvert ou bol absent : rien n'est vérifié, la base refuse d'elle-même (code 3)
+     * et le contrôleur met déjà le programme en pause.
+     */
+    @Synchronized
+    fun responseError(rx: ByteArray): Int {
+        if (rx[12].toInt() and Smart.STATUS_LID_OR_BOWL != 0) {
+            unknownInARow = 0
+            return 0
+        }
+        val rc = rx[Smart.RX_RETURN_CODE].toInt() and 0xFF
+        if (rc != 0) return Smart.ERR_REFUSED + rc
+        val s = rx[7]
+        var known = false
+        for (k in 1..sentCount) {
+            val tx = sent[(sentNext - k + SENT_HISTORY) % SENT_HISTORY] ?: continue
+            if (tx[7] != s) continue
+            known = true
+            if (Smart.echoes(tx, rx)) {
+                unknownInARow = 0
+                return 0
+            }
+        }
+        if (known) {
+            unknownInARow = 0
+            return Smart.ERR_ECHO
+        }
+        if (sentCount == 0) return 0
+        unknownInARow++
+        return if (unknownInARow >= 3) Smart.ERR_FOREIGN else 0
+    }
+
+    /** Note une trame émise (même tableau, pas de copie : la boucle ne les modifie pas). */
+    private fun remember(frame: ByteArray): ByteArray {
+        sent[sentNext] = frame
+        sentNext = (sentNext + 1) % SENT_HISTORY
+        if (sentCount < SENT_HISTORY) sentCount++
+        return frame
+    }
+
     override fun supports(operation: Operation): Boolean = operation in SUPPORTED
 
     /** Vrai si [encodeTx] accepte ce réglage actif (mêmes règles, sans rien émettre). */
@@ -426,18 +526,18 @@ class SmartCodec(initialSeq: Int = 0, initialTurboSeq: Int = 0) : BoardCodec {
         if (operation == Operation.STOP) {
             lastActive = null
             seq = Smart.nextSeq(seq)
-            return Smart.buildTx(seq, cmd = if (tare) Smart.CMD_TARE else Smart.CMD_SET, tare = tare)
+            return remember(Smart.buildTx(seq, cmd = if (tare) Smart.CMD_TARE else Smart.CMD_SET, tare = tare))
         }
         require(!tare) { "tare seulement au repos" }
         if (operation == Operation.TURBO) {
             // Comme l'appli d'origine : une trame construite au début de l'appui, renvoyée telle
             // quelle jusqu'au relâchement ; compteur de séquence à part, durée fixe 5 s.
             val last = lastActive
-            if (last != null && last.size == Smart.TURBO_SIZE) return last.copyOf()
+            if (last != null && last.size == Smart.TURBO_SIZE) return remember(last.copyOf())
             turboSeq = Smart.nextSeq(turboSeq)
             val f = Smart.buildTurbo(turboSeq)
             lastActive = f.copyOf()
-            return f
+            return remember(f)
         }
         val d = durationS.coerceIn(0, 99 * 3600 + 59 * 60 + 59)
         val candidate = if (program != null) Smart.buildTx(
@@ -462,19 +562,19 @@ class SmartCodec(initialSeq: Int = 0, initialTurboSeq: Int = 0) : BoardCodec {
             hours = d / 3600, minutes = d / 60 % 60, seconds = d % 60,
         )
         val last = lastActive
-        if (last != null && last.size == Smart.TX_SIZE && samePayload(last, candidate)) return last.copyOf()
+        if (last != null && last.size == Smart.TX_SIZE && samePayload(last, candidate)) return remember(last.copyOf())
         seq = Smart.nextSeq(seq)
         candidate[7] = seq.toByte()
         candidate[Smart.TX_L] = Smart.checksum(candidate, Smart.TX_L).toByte()
         lastActive = candidate.copyOf()
-        return candidate
+        return remember(candidate)
     }
 
     @Synchronized
     override fun stopFrame(direction: Direction): ByteArray {
         lastActive = null
         seq = Smart.nextSeq(seq)
-        return Smart.buildTx(seq)
+        return remember(Smart.buildTx(seq))
     }
 
     private fun samePayload(a: ByteArray, b: ByteArray): Boolean {
@@ -488,6 +588,8 @@ class SmartCodec(initialSeq: Int = 0, initialTurboSeq: Int = 0) : BoardCodec {
         )
         /** Vitesse du programme Malaxer de l'appli d'origine (pâtes ferme, molle et liquide). */
         const val KNEAD_SPEED = 4
+        /** Trames émises gardées pour vérifier les réponses. */
+        private const val SENT_HISTORY = 8
         private val TEMPERATURE_LEVELS_RANGE = Smart.TEMPERATURE_LEVELS.indices
 
         /** Niveaux de la table de Toque (Connect) pour 120 °C et 130 °C. */
