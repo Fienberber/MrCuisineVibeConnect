@@ -14,8 +14,10 @@ import app.toque.core.machine.Accessory
  * Recettes publiées sur monsieur-cuisine.com, lues directement par l'API publique du site
  * (sans compte, sans l'appli d'origine) puis converties au modèle de Toque.
  *
- * Seules les recettes officielles du Monsieur Cuisine connect sont demandées. Chaque étape
- * porte son réglage machine (mode « customized », balance, turbo, vapeur, rissoler, pétrir).
+ * Seules les recettes officielles du robot choisi sont demandées (« MC2.0 » : Connect, « MC3.0 » :
+ * Smart, voir [app.toque.core.robot.RobotProfile.lidlDevice]). Chaque étape porte son réglage
+ * machine (mode « customized », balance, turbo, vapeur, rissoler, pétrir ; sur le Smart aussi
+ * mixer, smoothie, sous-vide, mijoter, fermenter).
  */
 object McOnline {
     const val API = "https://mc-api.tecpal.com"
@@ -31,8 +33,20 @@ object McOnline {
     fun headers(language: String): Map<String, String> =
         linkedMapOf("Accept" to "application/json", "Accept-Language" to language, "device-type" to "web")
 
-    fun listUrl(page: Int): String =
-        "$API/api/v2/recipes/page/$page/size/$PAGE_SIZE?filters%5BdeviceTypes%5D%5B%5D=$DEVICE&filters%5Bsource%5D%5B%5D=official"
+    fun listUrl(page: Int, device: String = DEVICE): String =
+        "$API/api/v2/recipes/page/$page/size/$PAGE_SIZE?filters%5BdeviceTypes%5D%5B%5D=$device&filters%5Bsource%5D%5B%5D=official"
+
+    /**
+     * Clé de l'index de synchro : changer de langue ou de robot relit toutes les fiches. Pour le
+     * Connect, la langue seule comme avant (pas de resynchronisation complète à la mise à jour).
+     */
+    fun indexKey(language: String, device: String): String = if (device == DEVICE) language else "$language|$device"
+
+    /** Robots indiqués par le site pour une recette (liste « deviceTypes », ou « deviceType » seul). */
+    fun devicesOf(r: Map<String, Any?>): List<String> {
+        val list = r["deviceTypes"].list().mapNotNull { (it as? String)?.trim()?.takeIf { d -> d.isNotEmpty() } }
+        return list.ifEmpty { listOfNotNull(r.str("deviceType")?.trim()?.takeIf { it.isNotEmpty() }) }
+    }
 
     fun recipeUrl(apiId: Long): String = "$API/api/v2/recipes/$apiId"
 
@@ -215,6 +229,7 @@ object McOnline {
             rating = (r.double("rating") ?: 0.0).coerceIn(0.0, 5.0),
             ratingCount = (r.int("totalRating") ?: 0).coerceAtLeast(0),
             servingUnit = servingUnit,
+            devices = devicesOf(r),
         )
     }
 
@@ -354,6 +369,13 @@ object McOnline {
             mode == "steaming" -> StepMachine(program = StepProgram.STEAM, seconds = seconds)
             mode == "roasting" -> StepMachine(program = StepProgram.TOAST, seconds = seconds)
             mode.startsWith("kneading") -> StepMachine(program = StepProgram.KNEAD, seconds = seconds)
+            // Programmes du Monsieur Cuisine Smart (recettes « MC3.0 »), noms relevés par le portage
+            // Camybrith Cooking ; la température exacte (sous-vide, mijoter, fermenter) est gardée.
+            mode == "puree" -> StepMachine(program = StepProgram.MIXER, seconds = seconds)
+            mode == "smoothie" -> StepMachine(program = StepProgram.SMOOTHIE, seconds = seconds)
+            mode == "sous_vide" -> StepMachine(program = StepProgram.SOUS_VIDE, seconds = seconds, tempC = (st.int("temperature") ?: 0).coerceAtLeast(0))
+            mode == "slow_cooking" -> StepMachine(program = StepProgram.SLOW_COOK, seconds = seconds, tempC = (st.int("temperature") ?: 0).coerceAtLeast(0))
+            mode == "fermentation" -> StepMachine(program = StepProgram.FERMENT, seconds = seconds, tempC = (st.int("temperature") ?: 0).coerceAtLeast(0))
             else -> null
         }
     }

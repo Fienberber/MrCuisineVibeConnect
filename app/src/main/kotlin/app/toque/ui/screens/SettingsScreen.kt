@@ -44,7 +44,8 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private lateinit var syncText: TextView
     private lateinit var syncBtn: View
     private lateinit var stopSyncBtn: View
-    private lateinit var importBtn: View
+    /** Absent sur un robot dont la base de l'appli d'origine n'est pas encore lue (Smart). */
+    private var importBtn: View? = null
     private lateinit var bowlText: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
@@ -68,6 +69,13 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         columns.addView(left, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(18) })
         columns.addView(right, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         col.addView(columns)
+
+        // ---- Robot (fiche : protocole, programmes, recettes montrées)
+        val robot = section(left, tr("Robot"), Icon.Kind.POT)
+        robotText = Ui.text(c, "", 18f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
+        robot.addView(robotText, Ui.lp(t = 4))
+        robot.addView(Ui.button(c, tr("Changer de robot"), Ui.Style.SECONDARY, height = 52) { a.askRobot() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+        renderRobot()
 
         // ---- Machine
         val machine = section(left, tr("Machine"), Icon.Kind.POT)
@@ -170,8 +178,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
 
         // ---- Recettes Lidl
         val lidl = section(right, tr("Recettes Lidl"), Icon.Kind.SYNC)
-        lidl.addView(Ui.text(c, tr("Toque télécharge lui-même les recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com (sans compte)."),
-            16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        val chosen = a.prefs.robot
+        val lidlIntro = if (chosen.lidlDevice == "MC2.0") tr("Toque télécharge lui-même les recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com (sans compte).")
+            else tr("Toque télécharge lui-même les recettes officielles du %s sur monsieur-cuisine.com (sans compte).", chosen.displayName)
+        lidl.addView(Ui.text(c, lidlIntro, 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
         syncText = Ui.text(c, "", 16f, Ui.TEXT)
         lidl.addView(syncText, Ui.lp(t = 10))
         val b1 = Ui.horizontal(c)
@@ -181,14 +191,18 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         stopSyncBtn = Ui.button(c, tr("Arrêter"), Ui.Style.SECONDARY, Icon.Kind.STOP, height = 58) { SyncProgress.requestStop() }
         b1.addView(stopSyncBtn)
         lidl.addView(b1, Ui.lp(t = 12))
-        lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
-            14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
-        // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
-        // son texte se coupait au milieu d'un mot.
-        importBtn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
-        lidl.addView(importBtn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+        // Import depuis l'appli d'origine : seulement là où Toque sait lire sa base (pas encore le Smart).
+        if (chosen.stockImport) {
+            lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
+                14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+            // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
+            // son texte se coupait au milieu d'un mot.
+            val btn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
+            lidl.addView(btn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+            importBtn = btn
+        }
         lidl.addView(Ui.button(c, tr("Ouvrir l'appli d'origine"), Ui.Style.GHOST, Icon.Kind.LINK, height = 52) { a.openVendorApp() },
-            Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
+            Ui.lp(Ui.WRAP, Ui.WRAP, t = if (chosen.stockImport) 8 else 12))
         lidl.addView(Ui.text(c, tr("Langue des recettes"), 18f, Ui.TEXT), Ui.lp(t = 12))
         val recipeLangs = McOnline.RECIPE_LANGUAGES.map { code ->
             code to when (code) {
@@ -245,6 +259,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         val version = try { a.packageManager.getPackageInfo(a.packageName, 0).versionName } catch (_: Exception) { "?" }
         tools.addView(Ui.text(c, tr("Toque %s · protocole d'après le Monsieur Cuisine Developer SDK (licence MIT). " +
             "Projet indépendant, non affilié à Lidl ni à SilverCrest.", version), 14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+        a.prefs.robot.let { p -> p.credit?.let { who ->
+            tools.addView(Ui.text(c, tr("%s : protocole d'après %s (licence MIT).", p.displayName, who), 14f, Ui.TEXT3)
+                .apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 4))
+        } }
 
         return Ui.scroll(c, col)
     }
@@ -390,6 +408,15 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         return box
     }
 
+    private lateinit var robotText: TextView
+
+    private fun renderRobot() {
+        val p = a.prefs.robot
+        robotText.text = if (!a.prefs.robotConfirmed) tr("Pas encore choisi : la liaison avec la base reste fermée en « Machine réelle ».")
+            else p.displayName + " (" + p.models.joinToString(", ") + ")" + if (p.tested) "" else
+                "\n" + tr("En test : le projet ne l'a pas essayé lui-même, vos retours sont attendus sur GitHub.")
+    }
+
     private fun renderModes() {
         modeRow.removeAllViews()
         for (m in Prefs.Mode.values()) {
@@ -410,6 +437,12 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private fun applyMode() {
         if (a.snapshot.busy) {
             a.toast(tr("Arrêtez d'abord le programme en cours"), Ui.WARN)
+            return
+        }
+        if (mode == Prefs.Mode.HARDWARE && !a.prefs.robotConfirmed) {
+            // Jamais de trame vers la base sans savoir quel robot c'est.
+            a.toast(tr("Choisissez d'abord votre robot"), Ui.WARN)
+            a.askRobot()
             return
         }
         if (mode == Prefs.Mode.HARDWARE && a.prefs.mode != Prefs.Mode.HARDWARE) {
@@ -482,6 +515,11 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             a.toast(tr("Disponible une fois Toque installé sur le robot (mode Machine réelle)"), Ui.WARN)
             return
         }
+        if (!online && !a.prefs.robot.stockImport) {
+            // Base de l'appli d'origine du Smart : format pas encore relevé.
+            a.toast(tr("Pas encore possible sur ce robot : utilisez « Synchroniser »"), Ui.WARN)
+            return
+        }
         // L'avancement vit dans SyncProgress, pas dans cet écran : on peut le quitter et y revenir.
         SyncProgress.start(tr("Synchronisation en cours… (quelques minutes)"), stoppable = online)
         val app = a.app
@@ -537,7 +575,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         val running = progress != null
         // Pendant une synchronisation : rien à relancer, et un bouton pour l'arrêter.
         Ui.setButtonEnabled(syncBtn, !running)
-        Ui.setButtonEnabled(importBtn, !running)
+        importBtn?.let { Ui.setButtonEnabled(it, !running) }
         stopSyncBtn.visibility = if (running && SyncProgress.stoppable) View.VISIBLE else View.GONE
         Ui.setButtonEnabled(stopSyncBtn, !SyncProgress.stopRequested)
         val last = a.prefs.lastSyncResult
@@ -547,7 +585,11 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             else -> progress
         }
         // Le nombre de recettes reste affiché sous l'avancement : « Recettes : 343 / 1667 » compte les fiches relues, pas le catalogue.
-        syncText.text = first + "\n" + if (a.app.recipes.loaded) tr("%d recettes dans Toque", a.app.recipes.count) else tr("Chargement des recettes…")
+        val repo = a.app.recipes
+        syncText.text = first + "\n" + if (repo.loaded) tr("%d recettes dans Toque", repo.count) +
+            // Recettes enregistrées mais pas faisables sur ce robot (autre robot, programme absent).
+            (if (repo.hiddenCount > 0) "\n" + tr("%d recettes masquées : pas faites pour ce robot", repo.hiddenCount) else "")
+            else tr("Chargement des recettes…")
     }
 
     // ------------------------------------------------------------------ mises à jour
@@ -614,8 +656,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
+        renderRobot()
         refreshSync()
-        unsubRecipes = a.app.recipes.onChange { refreshSync() }
+        // Changement de robot : les recettes sont refiltrées, puis cet écran se met à jour.
+        unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync() }
         unsubSync = SyncProgress.onChange { refreshSync() }
     }
 

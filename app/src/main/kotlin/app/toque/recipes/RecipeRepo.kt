@@ -10,6 +10,8 @@ import app.toque.core.recipes.Recipe
 import app.toque.core.recipes.RecipeAdjustments
 import app.toque.core.recipes.RecipeCodec
 import app.toque.core.recipes.RecipeSource
+import app.toque.core.robot.RecipeCompat
+import app.toque.core.robot.RobotProfiles
 import app.toque.core.recipes.SearchIndex
 import app.toque.core.recipes.UserRecipes
 import app.toque.core.recipes.adjusted
@@ -49,6 +51,9 @@ class RecipeRepo(private val context: Context) {
         private set
     @Volatile var loaded = false
         private set
+    /** Recettes enregistrées mais pas faisables sur le robot choisi : pas montrées (voir [RecipeCompat]). */
+    @Volatile var hiddenCount = 0
+        private set
     private val favorites = HashSet<String>()
     /** Une recette cuisinée [count] fois, la dernière à [lastMs]. */
     class Usage(val count: Int, val lastMs: Long)
@@ -74,6 +79,8 @@ class RecipeRepo(private val context: Context) {
         val favs = HashSet<String>()
         db.rawQuery("SELECT id FROM favorites", null).use { c -> while (c.moveToNext()) favs += c.getString(0) }
         val list = ArrayList<Recipe>()
+        val robot = RobotProfiles.active
+        var hidden = 0
         db.rawQuery("SELECT json FROM recipes", null).use { c ->
             while (c.moveToNext()) {
                 val r = try {
@@ -81,9 +88,20 @@ class RecipeRepo(private val context: Context) {
                 } catch (_: Exception) {
                     null
                 } ?: continue
+                // Seulement les recettes que ce robot sait faire (programmes, températures, robots du site).
+                val ok = try {
+                    RecipeCompat.supports(r, robot)
+                } catch (_: Exception) {
+                    false
+                }
+                if (!ok) {
+                    hidden++
+                    continue
+                }
                 list += r.copy(favorite = r.id in favs)
             }
         }
+        hiddenCount = hidden
         synchronized(favorites) {
             favorites.clear()
             favorites += favs

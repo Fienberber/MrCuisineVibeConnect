@@ -6,6 +6,7 @@ import app.toque.core.recipes.RecipeCodec
 import app.toque.core.recipes.StepProgram
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -79,13 +80,28 @@ class McOnlineTest {
         assertEquals(600, s[4].machine!!.seconds)
         assertEquals(StepProgram.TOAST, s[5].machine!!.program)
         assertEquals(StepProgram.KNEAD, s[6].machine!!.program)
-        // Programme absent du Monsieur Cuisine connect : étape manuelle, signalée.
-        assertNull(s[7].machine)
-        assertTrue(s[7].text.startsWith("Cuire sous vide.\n"))
+        // Programme du Monsieur Cuisine Smart : gardé avec sa température ; absent du Connect.
+        with(s[7].machine!!) {
+            assertEquals(StepProgram.SOUS_VIDE, program); assertEquals(60, tempC); assertEquals(3600, seconds)
+        }
+        assertEquals("Cuire sous vide.", s[7].text)
         assertEquals("Servir.", s[8].text)
+        assertEquals(listOf("MC2.0", "MC3.0"), r.devices)
 
-        // Tous les réglages importés passent les règles de sécurité.
-        for (step in s) step.machine?.let { assertTrue("${it.summary} : ${it.violations()}", it.valid) }
+        // Sur le Connect, tous les réglages importés passent les règles de sécurité, sauf le sous-vide
+        // (absent de ce robot : la recette ne lui est pas montrée) ; sur le Smart, tous.
+        for (step in s) step.machine?.let { m ->
+            if (m.program == StepProgram.SOUS_VIDE) assertFalse(m.valid) else assertTrue("${m.summary} : ${m.violations()}", m.valid)
+        }
+        assertFalse(app.toque.core.robot.RecipeCompat.supports(r, app.toque.core.robot.RobotProfiles.MC_CONNECT))
+        assertTrue(app.toque.core.robot.RecipeCompat.reasons(r, app.toque.core.robot.RobotProfiles.MC_SMART).toString(),
+            app.toque.core.robot.RecipeCompat.supports(r, app.toque.core.robot.RobotProfiles.MC_SMART))
+        try {
+            app.toque.core.robot.RobotProfiles.active = app.toque.core.robot.RobotProfiles.MC_SMART
+            for (step in s) step.machine?.let { assertTrue("${it.summary} : ${it.violations()}", it.valid) }
+        } finally {
+            app.toque.core.robot.RobotProfiles.active = app.toque.core.robot.RobotProfiles.MC_CONNECT
+        }
     }
 
     @Test fun rampBecomesOneManualStepPerStage() {

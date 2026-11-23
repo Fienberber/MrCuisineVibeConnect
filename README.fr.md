@@ -2,6 +2,12 @@
 
 🇬🇧 **[English version](README.md)**
 
+> ⚠️ **Branche de test `test-mc-smart` : Monsieur Cuisine Smart (SKMS 1200).** Elle n'est pas dans
+> `main`. Je n'ai pas de Monsieur Cuisine Smart : **ce sont les propriétaires de Smart qui testent
+> et me font un retour** dans les [issues](https://github.com/Wuki60/MrCuisineVibeConnect/issues).
+> Leurs retours décident de son entrée dans `main`. Tout est expliqué dans
+> **[docs/SMART.md](docs/SMART.md)**.
+
 **Toque**, une interface moderne et rapide pour le robot **Monsieur Cuisine Connect** (SKMC 1200),
 qui remplace l'appli d'origine sur la tablette du robot tout en gardant **les recettes Lidl**.
 

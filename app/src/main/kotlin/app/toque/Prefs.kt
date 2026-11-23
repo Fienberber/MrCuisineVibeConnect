@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.i18n.trKey
+import app.toque.core.robot.RobotProfile
+import app.toque.core.robot.RobotProfiles
 
 /**
  * Réglages persistants, lisibles par les deux processus (interface et machine).
@@ -65,14 +67,31 @@ class Prefs(context: Context) {
             p.edit().putInt("twinPort", v).commit()
         }
 
+    /**
+     * Robot confirmé par la personne (identifiant de [RobotProfiles]) ; vide tant qu'elle ne l'a pas
+     * confirmé : la liaison avec la base reste alors fermée en « Machine réelle ».
+     */
+    var robotId: String
+        get() = p.getString("robotId", "") ?: ""
+        set(v) {
+            p.edit().putString("robotId", v).commit()
+        }
+
+    val robotConfirmed: Boolean get() = RobotProfiles.byId(robotId) != null
+
+    /** Fiche du robot choisi (le Connect tant que rien n'est confirmé, comme avant les fiches). */
+    val robot: RobotProfile get() = RobotProfiles.byId(robotId) ?: RobotProfiles.MC_CONNECT
+
+    /** Port série : réglage manuel sur le Connect (ancien réglage), sinon celui de la fiche. */
     var serialDevice: String
-        get() = p.getString("serialDevice", "/dev/ttyMT0") ?: "/dev/ttyMT0"
+        get() = (if (robot === RobotProfiles.MC_CONNECT) p.getString("serialDevice", null) else null) ?: robot.serialDevice
         set(v) {
             p.edit().putString("serialDevice", v).commit()
         }
 
+    /** Appli d'origine : réglage manuel sur le Connect (ancien réglage), sinon celle de la fiche. */
     var vendorPackage: String
-        get() = p.getString("vendorPackage", "de.silpion.mc2") ?: "de.silpion.mc2"
+        get() = (if (robot === RobotProfiles.MC_CONNECT) p.getString("vendorPackage", null) else null) ?: robot.vendorPackage
         set(v) {
             p.edit().putString("vendorPackage", v).commit()
         }
