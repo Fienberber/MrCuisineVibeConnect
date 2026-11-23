@@ -26,6 +26,7 @@ import app.toque.core.recipes.McOnline
 import app.toque.recipes.OnlineSync
 import app.toque.recipes.SyncProgress
 import app.toque.recipes.RecipeFiles
+import app.toque.core.recipes.CommunityRecipes
 import app.toque.core.recipes.UserRecipes
 import app.toque.ui.Icon
 import app.toque.ui.MainActivity
@@ -59,6 +60,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private var upd = Upd.IDLE
     private var release: Release? = null
     private var updMessage = ""
+    private lateinit var accountText: TextView
+    private lateinit var accountButtons: LinearLayout
+    private lateinit var siteText: TextView
+    private lateinit var siteBtn: View
 
     override fun build(): View {
         val col = Ui.vertical(c)
@@ -238,6 +243,28 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         files.addView(Ui.button(c, tr("Exporter"), Ui.Style.SECONDARY, Icon.Kind.UPLOAD, height = 52) { recipeFiles(export = true) }, Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
         files.addView(Ui.button(c, tr("Importer"), Ui.Style.SECONDARY, Icon.Kind.DOWNLOAD, height = 52) { recipeFiles(export = false) })
         mine.addView(files, Ui.lp(t = 12))
+
+        // ---- Compte Toque (toqueapp.org), facultatif
+        val account = section(left, tr("Compte Toque"), Icon.Kind.PEOPLE)
+        accountText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
+        account.addView(accountText)
+        accountButtons = Ui.horizontal(c)
+        account.addView(accountButtons, Ui.lp(t = 12))
+
+        // ---- Recettes de la communauté (toqueapp.org), sans compte
+        val community = section(left, tr("Recettes de la communauté"), Icon.Kind.GLOBE)
+        community.addView(Ui.text(c, tr("Les recettes partagées sur toqueapp.org, reçues sans compte. Celles que la communauté a traduites arrivent dans votre langue."),
+            16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        community.addView(toggle(tr("Recevoir les recettes de la communauté"), a.prefs.siteCommunity) { on ->
+            a.app.site.setCommunity(on)
+            refreshSite()
+        }, Ui.lp(t = 10))
+        siteText = Ui.text(c, "", 16f, Ui.TEXT)
+        community.addView(siteText, Ui.lp(t = 10))
+        siteBtn = Ui.button(c, tr("Synchroniser"), Ui.Style.SECONDARY, Icon.Kind.SYNC, height = 52) {
+            a.app.site.sync { r -> r?.let { a.toast(it.message, if (it.ok) Ui.OK else Ui.WARN) } }
+        }
+        community.addView(siteBtn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
 
         // ---- Mises à jour
         val updates = section(left, tr("Mises à jour"), Icon.Kind.INFO)
@@ -592,6 +619,41 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             else tr("Chargement des recettes…")
     }
 
+    // ------------------------------------------------------------------ toqueapp.org
+
+    private fun renderAccount() {
+        accountButtons.removeAllViews()
+        val prefs = a.prefs
+        if (prefs.siteLinked) {
+            accountText.text = tr("Relié au compte « %s ». Vos favoris du site arrivent sur le robot, et vous pouvez publier vos recettes.", prefs.siteUser)
+            accountButtons.addView(Ui.button(c, tr("Délier"), Ui.Style.GHOST, Icon.Kind.CLOSE, height = 52) {
+                a.confirm(tr("Délier le robot ?"), tr("Le robot ne recevra plus vos favoris du site. Les recettes déjà reçues restent."), tr("Délier")) {
+                    a.app.site.unlink()
+                    a.toast(tr("Robot délié du compte"))
+                }
+            })
+        } else {
+            accountText.text = tr("Aucun compte relié. Le compte est facultatif : relié, le robot reçoit vos favoris du site et vous pouvez publier vos recettes depuis le robot.")
+            accountButtons.addView(Ui.button(c, tr("Relier mon compte"), Ui.Style.PRIMARY, Icon.Kind.LINK, height = 52) { a.push(SiteLinkScreen(a)) })
+        }
+    }
+
+    private fun refreshSite() {
+        val site = a.app.site
+        val prefs = a.prefs
+        val on = prefs.siteCommunity || prefs.siteLinked
+        Ui.setButtonEnabled(siteBtn, on && !site.busy)
+        val last = prefs.siteLastResult
+        val first = when {
+            site.busy -> tr("Synchronisation en cours…")
+            last.isEmpty() -> tr("Jamais synchronisé")
+            else -> tr("Dernière synchro le %s", last)
+        }
+        val repo = a.app.recipes
+        val n = if (repo.loaded) repo.index.entries.count { CommunityRecipes.isCommunity(it.id) } else 0
+        siteText.text = first + if (repo.loaded) "\n" + tr("%d recettes de la communauté dans Toque", n) else ""
+    }
+
     // ------------------------------------------------------------------ mises à jour
 
     private fun renderUpdate() {
@@ -652,15 +714,19 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     /** Désabonnement du suivi des recettes (le nombre s'affiche une fois la base chargée). */
     private var unsubRecipes: (() -> Unit)? = null
     private var unsubSync: (() -> Unit)? = null
+    private var unsubSite: (() -> Unit)? = null
 
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
         renderRobot()
         refreshSync()
+        renderAccount()
+        refreshSite()
         // Changement de robot : les recettes sont refiltrées, puis cet écran se met à jour.
-        unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync() }
+        unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync(); refreshSite() }
         unsubSync = SyncProgress.onChange { refreshSync() }
+        unsubSite = a.app.site.onChange { renderAccount(); refreshSite() }
     }
 
     override fun onHide() {
@@ -668,6 +734,8 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         unsubRecipes = null
         unsubSync?.invoke()
         unsubSync = null
+        unsubSite?.invoke()
+        unsubSite = null
     }
 
     override fun onSnapshot(s: Snapshot) {
