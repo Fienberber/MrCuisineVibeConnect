@@ -556,6 +556,7 @@
   "tourner à droite": "nach rechts drehen",
   "tourner à gauche": "nach links drehen",
   "tr/min (niveau %d)": "U/min (Stufe %d)",
+  "non mesuré · vitesse demandée %d": "nicht gemessen · gewünschte Stufe %d",
   "vitesse %d": "Geschwindigkeit %d",
   "« %s » sera supprimée de ce robot, avec sa note et ses corrections.": "„%s“ wird mit Notiz und Korrekturen von diesem Gerät gelöscht.",
   "°C (consigne %d °C)": "°C (Soll %d °C)",

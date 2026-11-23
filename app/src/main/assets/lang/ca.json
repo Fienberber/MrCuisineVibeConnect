@@ -556,6 +556,7 @@
   "tourner à droite": "girar a la dreta",
   "tourner à gauche": "girar a l'esquerra",
   "tr/min (niveau %d)": "rpm (nivell %d)",
+  "non mesuré · vitesse demandée %d": "no mesurat · velocitat demanada %d",
   "vitesse %d": "velocitat %d",
   "« %s » sera supprimée de ce robot, avec sa note et ses corrections.": "«%s» se suprimirà d'aquest robot, amb la seva nota i les correccions.",
   "°C (consigne %d °C)": "°C (objectiu %d °C)",

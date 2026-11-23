@@ -552,6 +552,7 @@
   "tourner à droite": "повернути праворуч",
   "tourner à gauche": "повернути ліворуч",
   "tr/min (niveau %d)": "об/хв (рівень %d)",
+  "non mesuré · vitesse demandée %d": "не вимірюється · задана швидкість %d",
   "vitesse %d": "швидкість %d",
   "« %s » sera supprimée de ce robot, avec sa note et ses corrections.": "«%s» буде видалено з цього комбайна разом із примітками та виправленнями.",
   "°C (consigne %d °C)": "°C (ціль %d °C)",

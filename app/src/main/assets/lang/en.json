@@ -552,6 +552,7 @@
   "tourner à droite": "turn right",
   "tourner à gauche": "turn left",
   "tr/min (niveau %d)": "rpm (level %d)",
+  "non mesuré · vitesse demandée %d": "not measured · requested speed %d",
   "vitesse %d": "speed %d",
   "« %s » sera supprimée de ce robot, avec sa note et ses corrections.": "“%s” will be deleted from this robot, with its note and corrections.",
   "°C (consigne %d °C)": "°C (target %d °C)",
