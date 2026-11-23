@@ -84,6 +84,13 @@ class SiteTest {
         assertEquals(true, Json.parse(c.body!!).obj()["favorite"])
     }
 
+    @Test fun siteMessagesAskedInTheAppLanguage() {
+        val t = FakeSite()
+        t.replies["favorite"] = { ToqueSite.Reply(200, """{"ok":true,"favorite":true}""") }
+        ToqueSite(t).setFavorite("tok", "toqueapp-12", true)
+        assertEquals(app.toque.core.i18n.I18n.code, t.calls.single().headers["Accept-Language"])
+    }
+
     @Test fun communityRecipesAreAlwaysCommunityAndNeverFavorite() {
         val t = FakeSite()
         t.replies["community"] = {

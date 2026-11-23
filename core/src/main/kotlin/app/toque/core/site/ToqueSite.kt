@@ -1,5 +1,6 @@
 package app.toque.core.site
 
+import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.json.Json
 import app.toque.core.json.int
@@ -125,7 +126,8 @@ class ToqueSite(private val transport: Transport, val baseUrl: String = DEFAULT_
     ): Reply {
         val url = StringBuilder(baseUrl).append("/api.php?a=").append(action)
         for ((k, v) in query) url.append('&').append(k).append('=').append(URLEncoder.encode(v, "UTF-8"))
-        val headers = linkedMapOf("Accept" to "application/json")
+        // Messages du site dans la langue de l'appli (fr, en, de, es, ca, uk ; sinon français).
+        val headers = linkedMapOf("Accept" to "application/json", "Accept-Language" to I18n.code)
         if (token != null) {
             headers["Authorization"] = "Bearer $token"
             // Certains hébergeurs retirent l'en-tête Authorization : le site lit aussi celui-ci.

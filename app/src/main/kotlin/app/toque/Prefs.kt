@@ -173,11 +173,14 @@ class Prefs(context: Context) {
             p.edit().putLong("lastSyncMs", v).commit()
         }
 
+    /** Résultat de la dernière synchro, écrit dans la langue d'alors (lastSyncLang). */
     var lastSyncResult: String
         get() = p.getString("lastSyncResult", "") ?: ""
         set(v) {
-            p.edit().putString("lastSyncResult", v).commit()
+            p.edit().putString("lastSyncResult", v).putString("lastSyncLang", I18n.code).commit()
         }
+
+    val lastSyncLang: String get() = p.getString("lastSyncLang", "") ?: ""
 
     var vendorSession: Boolean
         get() = p.getBoolean("vendorSession", false)
@@ -380,11 +383,14 @@ class Prefs(context: Context) {
             p.edit().putLong("siteLastMs", v).commit()
         }
 
+    /** Résultat de la dernière synchro avec toqueapp.org, écrit dans la langue d'alors (siteLastLang). */
     var siteLastResult: String
         get() = p.getString("siteLastResult", "") ?: ""
         set(v) {
-            p.edit().putString("siteLastResult", v).commit()
+            p.edit().putString("siteLastResult", v).putString("siteLastLang", I18n.code).commit()
         }
+
+    val siteLastLang: String get() = p.getString("siteLastLang", "") ?: ""
 
     /** Favoris changés ici, pas encore envoyés au site : « toqueapp-12=1 », « toqueapp-7=0 ». */
     var sitePendingFavorites: Map<String, Boolean>

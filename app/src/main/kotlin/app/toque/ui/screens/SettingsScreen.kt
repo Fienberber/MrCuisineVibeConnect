@@ -607,7 +607,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         Ui.setButtonEnabled(stopSyncBtn, !SyncProgress.stopRequested)
         val last = a.prefs.lastSyncResult
         val first = when {
-            progress == null -> if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", last)
+            progress == null -> if (last.isEmpty()) tr("Jamais synchronisé") else tr("Dernière synchro le %s", lastLine(last, a.prefs.lastSyncLang, a.prefs.lastSyncMs))
             SyncProgress.stopRequested -> tr("Arrêt en cours…")
             else -> progress
         }
@@ -618,6 +618,15 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             (if (repo.hiddenCount > 0) "\n" + tr("%d recettes masquées : pas faites pour ce robot", repo.hiddenCount) else "")
             else tr("Chargement des recettes…")
     }
+
+    /**
+     * Ligne « date : résultat » d'une synchro. Écrite dans une autre langue que celle de l'appli
+     * (langue changée depuis) : seulement la date, dans la langue d'aujourd'hui, plutôt qu'un texte
+     * dans l'ancienne langue. Le résultat complet revient à la synchro suivante.
+     */
+    private fun lastLine(text: String, lang: String, ms: Long): String =
+        if (lang.isEmpty() || lang == I18n.code || ms <= 0) text
+        else java.text.SimpleDateFormat(tr("dd/MM à HH:mm"), I18n.locale).format(java.util.Date(ms))
 
     // ------------------------------------------------------------------ toqueapp.org
 
@@ -647,7 +656,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         val first = when {
             site.busy -> tr("Synchronisation en cours…")
             last.isEmpty() -> tr("Jamais synchronisé")
-            else -> tr("Dernière synchro le %s", last)
+            else -> tr("Dernière synchro le %s", lastLine(last, prefs.siteLastLang, prefs.siteLastMs))
         }
         val repo = a.app.recipes
         val n = if (repo.loaded) repo.index.entries.count { CommunityRecipes.isCommunity(it.id) } else 0
