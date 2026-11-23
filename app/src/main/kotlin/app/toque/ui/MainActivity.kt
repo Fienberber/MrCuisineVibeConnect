@@ -109,6 +109,23 @@ class MainActivity : Activity() {
         }
     }
 
+    /** Applique la couleur d'accent choisie : comme pour la langue, l'interface est reconstruite. */
+    fun applyAccent(color: Int) {
+        prefs.accentColor = color
+        Ui.setAccent(color)
+        reopenSettings = true
+        recreate()
+    }
+
+    /** Applique le thème clair ou sombre : l'interface est reconstruite, on revient aux réglages. */
+    fun applyTheme(light: Boolean) {
+        prefs.lightTheme = light
+        Ui.setTheme(light)
+        Ui.setAccent(prefs.accentColor)
+        reopenSettings = true
+        recreate()
+    }
+
     /** Applique la langue choisie dans les réglages : l'interface est reconstruite, on revient aux réglages. */
     fun applyLanguage() {
         I18n.select(I18n.resolve(prefs.language, Locale.getDefault().language).code)
