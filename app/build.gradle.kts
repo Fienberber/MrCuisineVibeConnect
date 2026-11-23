@@ -14,7 +14,7 @@ android {
         minSdk = 23          // Android 6.0, celui du Monsieur Cuisine Connect
         targetSdk = 28
         // Pour publier une mise à jour : augmenter les deux valeurs. Chaque version a deux APK, de la même
-        // source : Toque-x.y.z.apk (Connect) et Toque-x.y.z-smart.apk (gradlew -PtoqueSmart=true, Smart).
+        // source : Toque-x.y.z.apk (Connect) et Toque-smart-x.y.z.apk (gradlew -PtoqueSmart=true, Smart).
         // L'outil de mise à jour prend celui de son robot (Releases.parse).
         versionCode = 14
         versionName = "0.8.0"

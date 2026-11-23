@@ -41,12 +41,12 @@ class UpdateTest {
     @Test fun eachRobotTakesItsOwnApk() {
         val json = """{"tag_name":"v0.8.0","name":"Toque 0.8.0","body":"","assets":[
             {"name":"Toque-0.8.0.apk","size":10,"browser_download_url":"https://x/v0.8.0/Toque-0.8.0.apk"},
-            {"name":"Toque-0.8.0-smart.apk","size":11,"browser_download_url":"https://x/v0.8.0/Toque-0.8.0-smart.apk"}]}"""
+            {"name":"Toque-smart-0.8.0.apk","size":11,"browser_download_url":"https://x/v0.8.0/Toque-smart-0.8.0.apk"}]}"""
         assertEquals("Toque-0.8.0.apk", Releases.parse(json).apkName)
-        assertEquals("Toque-0.8.0-smart.apk", Releases.parse(json, smart = true).apkName)
+        assertEquals("Toque-smart-0.8.0.apk", Releases.parse(json, smart = true).apkName)
         assertEquals(11L, Releases.parse(json, smart = true).apkSize)
         // Smart déjà joint en premier : le Connect prend quand même le sien.
-        val swapped = json.replace("Toque-0.8.0.apk", "TMP").replace("Toque-0.8.0-smart.apk", "Toque-0.8.0.apk").replace("TMP", "Toque-0.8.0-smart.apk")
+        val swapped = json.replace("Toque-0.8.0.apk", "TMP").replace("Toque-smart-0.8.0.apk", "Toque-0.8.0.apk").replace("TMP", "Toque-smart-0.8.0.apk")
         assertEquals("Toque-0.8.0.apk", Releases.parse(swapped).apkName)
         // Version sans APK du Smart : pas de mise à jour pour lui (l'APK du Connect plante sur sa tablette).
         val connectOnly = """{"tag_name":"v0.8.1","assets":[{"name":"Toque-0.8.1.apk","browser_download_url":"https://x/a.apk"}]}"""

@@ -12,10 +12,10 @@ and still uses **the official Lidl recipes**.
 |---|---|---|---|
 | Monsieur Cuisine **Connect** | SKMC 1200 (A1, B2, C3) | Supported | [AI agent](AGENTS.md) or [install guide](docs/INSTALLATION.md), then `Toque-x.y.z.apk` |
 | Monsieur Cuisine **Connect** | SKMC 1100 A1 | Supported | Same, with one more step, `own-twrp`: TWRP rebuilt around the robot's own kernel ([#10](https://github.com/Wuki60/MrCuisineVibeConnect/issues/10)) |
-| Monsieur Cuisine **Smart** | SKMS 1200 | **In test**: tested by Smart owners, reports in [#59](https://github.com/Wuki60/MrCuisineVibeConnect/issues/59) | [Smart guide](docs/SMART.en.md), then `Toque-x.y.z-smart.apk` |
+| Monsieur Cuisine **Smart** | SKMS 1200 | **In test**: tested by Smart owners, reports in [#59](https://github.com/Wuki60/MrCuisineVibeConnect/issues/59) | [Smart guide](docs/SMART.en.md), then `Toque-smart-x.y.z.apk` |
 
 Each [release](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest) has two APKs built from
-the same code: **`Toque-x.y.z.apk` for the Connect** and **`Toque-x.y.z-smart.apk` for the Smart**
+the same code: **`Toque-x.y.z.apk` for the Connect** and **`Toque-smart-x.y.z.apk` for the Smart**
 (its Android 8.1 needs the virtual machine's safe mode, which would slow the Connect down). Once Toque
 is installed, *Settings › Updates* takes the right one by itself. On first start, Toque recognises the
 robot without sending anything to its motor base and asks you to confirm it.
@@ -212,8 +212,8 @@ on any PC or by GitHub installs over the previous version. Only install APKs fro
 releases.
 
 Without GitHub Actions: `gradlew assembleRelease` (copy `app-release.apk` to `Toque-X.Y.Z.apk`), then
-`gradlew assembleRelease -PtoqueSmart=true` (copy it to `Toque-X.Y.Z-smart.apk`), then
-`powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-X.Y.Z.apk -SmartApk Toque-X.Y.Z-smart.apk`
+`gradlew assembleRelease -PtoqueSmart=true` (copy it to `Toque-smart-X.Y.Z.apk`), then
+`powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-X.Y.Z.apk -SmartApk Toque-smart-X.Y.Z.apk`
 creates the `vX.Y.Z` release and attaches both APKs (GitHub token: `GH_TOKEN`, `gh`, or the credentials
 already stored for git).
 

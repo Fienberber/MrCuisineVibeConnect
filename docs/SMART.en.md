@@ -55,11 +55,11 @@ follow [Camybrith Cooking's](https://github.com/Tidusneo24150/camybrith-cooking/
 1. Another port (Camybrith Cooking, Ratatouille Edition) has the same package name `app.toque` with
    a different signature: **uninstall it first** (`adb uninstall app.toque`). Its settings and own
    recipes are erased: export your recipes first if needed.
-2. Download **`Toque-x.y.z-smart.apk`** from the
-   [latest release](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest) (the one **ending in
-   `-smart`**: the other APK is the Connect's and does not work on the Smart's tablet), then, from the
+2. Download **`Toque-smart-x.y.z.apk`** from the
+   [latest release](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest) (the one **starting with
+   `Toque-smart`**: the other APK is the Connect's and does not work on the Smart's tablet), then, from the
    repository folder:
-   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-x.y.z-smart.apk`
+   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-smart-x.y.z.apk`
    (or `adb install -r`, then `tools/robot/setup-root.sh` as root). After that, Settings › Updates
    takes the Smart APK by itself.
 

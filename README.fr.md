@@ -12,10 +12,10 @@ gardant **les recettes Lidl**.
 |---|---|---|---|
 | Monsieur Cuisine **Connect** | SKMC 1200 (A1, B2, C3) | Pris en charge | [Agent IA](AGENTS.md) ou [guide d'installation](docs/INSTALLATION.fr.md), puis `Toque-x.y.z.apk` |
 | Monsieur Cuisine **Connect** | SKMC 1100 A1 | Pris en charge | Pareil, avec une étape de plus, `own-twrp` : TWRP reconstruit autour du noyau du robot ([#10](https://github.com/Wuki60/MrCuisineVibeConnect/issues/10)) |
-| Monsieur Cuisine **Smart** | SKMS 1200 | **En test** : essayé par des propriétaires de Smart, retours dans [#59](https://github.com/Wuki60/MrCuisineVibeConnect/issues/59) | [Guide du Smart](docs/SMART.md), puis `Toque-x.y.z-smart.apk` |
+| Monsieur Cuisine **Smart** | SKMS 1200 | **En test** : essayé par des propriétaires de Smart, retours dans [#59](https://github.com/Wuki60/MrCuisineVibeConnect/issues/59) | [Guide du Smart](docs/SMART.md), puis `Toque-smart-x.y.z.apk` |
 
 Chaque [version](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest) a deux APK faits du
-même code : **`Toque-x.y.z.apk` pour le Connect** et **`Toque-x.y.z-smart.apk` pour le Smart** (son
+même code : **`Toque-x.y.z.apk` pour le Connect** et **`Toque-smart-x.y.z.apk` pour le Smart** (son
 Android 8.1 a besoin du mode sûr de la machine virtuelle, qui ralentirait le Connect). Une fois Toque
 installé, *Réglages › Mises à jour* prend tout seul le bon. Au premier démarrage, Toque reconnaît le
 robot sans rien envoyer à sa base moteur et demande de le confirmer.
@@ -219,8 +219,8 @@ compilé sur n'importe quel PC ou par GitHub s'installe par-dessus la version pr
 les APK publiés sur ce dépôt.
 
 Sans GitHub Actions : `gradlew assembleRelease` (copier `app-release.apk` en `Toque-X.Y.Z.apk`), puis
-`gradlew assembleRelease -PtoqueSmart=true` (le copier en `Toque-X.Y.Z-smart.apk`), puis
-`powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-X.Y.Z.apk -SmartApk Toque-X.Y.Z-smart.apk`
+`gradlew assembleRelease -PtoqueSmart=true` (le copier en `Toque-smart-X.Y.Z.apk`), puis
+`powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-X.Y.Z.apk -SmartApk Toque-smart-X.Y.Z.apk`
 crée la version `vX.Y.Z` et y joint les deux APK (jeton GitHub : `GH_TOKEN`, `gh`, ou les identifiants
 déjà enregistrés pour git).
 

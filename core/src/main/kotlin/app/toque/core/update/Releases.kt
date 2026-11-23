@@ -38,12 +38,16 @@ object Releases {
     private fun parts(v: String): List<Int> =
         versionOf(v).split('.').map { p -> p.takeWhile { it.isDigit() }.toIntOrNull() ?: 0 }
 
-    /** Suffixe de l'APK du Monsieur Cuisine Smart (mode sûr de la machine virtuelle) dans une version. */
-    const val SMART_SUFFIX = "-smart.apk"
+    /**
+     * Marque de l'APK du Monsieur Cuisine Smart (mode sûr de la machine virtuelle) dans une version :
+     * « Toque-smart-x.y.z.apk ». Rangé après « Toque-x.y.z.apk » par date d'envoi comme par ordre
+     * alphabétique : les anciennes versions de Toque, qui prennent le premier APK, prennent celui du Connect.
+     */
+    const val SMART_PREFIX = "Toque-smart-"
 
     /**
      * Analyse la réponse de `GET /repos/{dépôt}/releases/latest`. Une version porte deux APK de la même
-     * source : celui du Connect et celui du Smart ([SMART_SUFFIX]). [smart] : prendre celui du Smart,
+     * source : celui du Connect et celui du Smart ([SMART_PREFIX]). [smart] : prendre celui du Smart,
      * et seulement lui (sans lui, pas de mise à jour : l'APK du Connect plante sur sa tablette).
      * Les anciennes versions de Toque prennent le premier APK : celui du Connect doit être joint en premier.
      */
@@ -55,8 +59,8 @@ object Releases {
         val assets = (o["assets"] as? List<Any?>).orEmpty().mapNotNull { it as? Map<String, Any?> }
         fun name(a: Map<String, Any?>) = (a["name"] as? String).orEmpty()
         val apks = assets.filter { name(it).endsWith(".apk", ignoreCase = true) }
-        val apk = if (smart) apks.firstOrNull { name(it).endsWith(SMART_SUFFIX, ignoreCase = true) }
-        else apks.firstOrNull { !name(it).endsWith(SMART_SUFFIX, ignoreCase = true) }
+        val apk = if (smart) apks.firstOrNull { name(it).startsWith(SMART_PREFIX, ignoreCase = true) }
+        else apks.firstOrNull { !name(it).startsWith(SMART_PREFIX, ignoreCase = true) }
         return Release(
             tag = tag,
             version = versionOf(tag),

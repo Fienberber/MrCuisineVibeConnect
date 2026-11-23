@@ -2,10 +2,10 @@
 # when GitHub Actions is available): tag vX.Y.Z, release notes from the commits, the APK attached.
 # Robots then find it in Settings > Updates, and toque-setup.ps1 downloads it.
 #
-#   powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-0.8.0.apk -SmartApk Toque-0.8.0-smart.apk [-RepoInfo]
+#   powershell -ExecutionPolicy Bypass -File tools\publish-release.ps1 -Apk Toque-0.8.0.apk -SmartApk Toque-smart-0.8.0.apk [-RepoInfo]
 #
 # -Apk: the Connect APK (gradlew assembleRelease), attached first: older Toque versions take the first APK.
-# -SmartApk: the Smart APK (gradlew assembleRelease -PtoqueSmart=true), attached as Toque-X.Y.Z-smart.apk.
+# -SmartApk: the Smart APK (gradlew assembleRelease -PtoqueSmart=true), attached as Toque-smart-X.Y.Z.apk.
 #
 # Token: $env:GH_TOKEN, else $env:GITHUB_TOKEN, else "gh auth token", else the github.com
 # credential already stored for git (Git Credential Manager). It is never printed.
@@ -81,7 +81,7 @@ if (-not ($release.assets | Where-Object { $_.name -eq $name })) {
     Write-Host "$name already attached."
 }
 if ($SmartApk) {
-    $smartName = "Toque-$version-smart.apk"
+    $smartName = "Toque-smart-$version.apk"
     $release = Invoke-RestMethod -Uri "$api/releases/$($release.id)" -Headers $h
     if (-not ($release.assets | Where-Object { $_.name -eq $smartName })) {
         $upload = "https://uploads.github.com/repos/$Repo/releases/$($release.id)/assets?name=$smartName"
