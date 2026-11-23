@@ -1,5 +1,6 @@
 package app.toque.core
 
+import app.toque.core.recipes.McCategories
 import app.toque.core.recipes.McOnline
 import app.toque.core.recipes.RecipeCodec
 import app.toque.core.recipes.StepProgram
@@ -123,6 +124,32 @@ class McOnlineTest {
         assertEquals(36, McOnline.reviewHeaders("fr-FR")["X-Request-Id"]!!.length)
         val updated = McOnline.withScore(McOnline.parseRecipe(fixture("mc-online-recipe.json"))!!, McOnline.Entry(900001, "", "", "", 4.6, 510))
         assertEquals(4.6, updated.rating, 0.001); assertEquals(510, updated.ratingCount); assertEquals("Chef d'essai", updated.author)
+    }
+
+    @Test fun foreignCategoriesTakeTheNamesOfTheRecipeLanguage() {
+        val es = McCategories.parse(
+            """{"code":0,"data":{"categories":[{"id":313,"name":"Postres","order":11},{"id":487,"name":"Cocina francesa","order":18},""" +
+                """{"id":265,"name":"Platos principales","order":6},{"id":"582","name":"Vegetariano","order":0}]}}""",
+        )
+        assertEquals(mapOf(313L to "Postres", 487L to "Cocina francesa", 265L to "Platos principales", 582L to "Vegetariano"), es)
+        // Française : dessert (307), cuisine française (467) ; revue sans équivalent (497) ; anglaise : végétarien (581).
+        assertEquals("Postres", McCategories.localName(307, es))
+        assertEquals("Cocina francesa", McCategories.localName(467, es))
+        assertEquals("Vegetariano", McCategories.localName(581, es))
+        assertNull(McCategories.localName(497, es))
+        assertNull(McCategories.localName(999999, es))
+        // Même langue : son propre nom.
+        assertEquals("Postres", McCategories.localName(313, es))
+
+        val json = """{"data":{"recipe":{"id":1,"name":"Fondant","categories":[{"id":307,"name":"Dessert"},""" +
+            """{"id":467,"name":"Cuisine française"},{"id":497,"name":"Mon Robot & Moi"},{"id":259,"name":"Plats principaux"}]}}}"""
+        val r = McOnline.parseRecipe(json, es)!!
+        assertEquals("Postres", r.category)
+        assertEquals(listOf("Cocina francesa", "Mon Robot & Moi", "Platos principales"), r.tags)
+        // Sans liste (recette dans la langue des recettes) : les noms de la fiche.
+        val same = McOnline.parseRecipe(json)!!
+        assertEquals("Dessert", same.category)
+        assertEquals(listOf("Cuisine française", "Mon Robot & Moi", "Plats principaux"), same.tags)
     }
 
     @Test fun unusable() {

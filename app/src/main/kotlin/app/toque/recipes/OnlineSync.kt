@@ -11,6 +11,7 @@ import app.toque.core.json.Json
 import app.toque.core.json.int
 import app.toque.core.json.obj
 import app.toque.core.json.str
+import app.toque.core.recipes.McCategories
 import app.toque.core.recipes.McOnline
 import app.toque.core.recipes.Recipe
 import app.toque.core.recipes.UserRecipes
@@ -126,6 +127,15 @@ class OnlineSync(private val context: Context, private val prefs: Prefs, private
             if (rescored.size >= 100) save(rescored, index, language)
         }
         save(rescored, index, language)
+        // Noms des catégories dans la langue des recettes, pour les fiches prises dans une autre langue.
+        var categoryNames = emptyMap<Long, String>()
+        if (todo.any { it.language.isNotBlank() && it.language != language }) {
+            try {
+                categoryNames = McCategories.parse(get(McCategories.url(), language))
+            } catch (e: IOException) {
+                log.write("synchro", "catégories : ${e.message}")
+            }
+        }
         val batch = ArrayList<Recipe>()
         var failures = 0
         var inARow = 0
@@ -137,7 +147,7 @@ class OnlineSync(private val context: Context, private val prefs: Prefs, private
             progress(tr("Recettes : %d / %d", i + 1, todo.size))
             try {
                 val lang = e.language.ifBlank { language }
-                val r = McOnline.parseRecipe(get(McOnline.recipeUrl(e.apiId), lang))
+                val r = McOnline.parseRecipe(get(McOnline.recipeUrl(e.apiId), lang), if (lang != language) categoryNames else emptyMap())
                 if (r != null) batch += if (lang != language) r.copy(language = lang) else r
                 index[e.apiId.toString()] = e.stamp
                 inARow = 0
