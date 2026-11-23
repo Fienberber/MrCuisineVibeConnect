@@ -2,6 +2,9 @@
 
 🇫🇷 **[Version française](INSTALLATION.fr.md)**
 
+> **On macOS?** See [docs/MACOS.en.md](MACOS.en.md) (`mtkclient` and `tools/setup/toque-setup.sh`
+> instead of SP Flash Tool and PowerShell).
+
 > **With an AI agent** (Claude, ChatGPT…) that operates your PC: give it the repository link and
 > ask it to follow [AGENTS.md](../AGENTS.md). The script
 > [`tools/setup/toque-setup.ps1`](../tools/setup/toque-setup.ps1) automates the steps below; you can
