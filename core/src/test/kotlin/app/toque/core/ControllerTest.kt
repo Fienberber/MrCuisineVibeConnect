@@ -451,6 +451,9 @@ class ControllerTest {
         assertTrue(b.c.startJob(Programs.yogurt(6 * h)).ok)
         b.step(10_000)
         assertEquals(JobState.RUNNING.name, b.snap.jobState)
+        // L'interface le sait (écran manuel : limite de 12 h pendant un yaourt, pas 99 min).
+        assertTrue(b.snap.jobFerment)
+        assertEquals(b.snap, app.toque.core.machine.Snapshot.fromMap(b.snap.toMap()))
         assertFalse(b.c.adjust(speed = 1).ok)
         assertFalse(b.c.adjust(temperatureLevel = Mcc.levelForCelsius(50)).ok)
         assertFalse(b.c.adjust(totalMs = 12 * h + 15 * 60_000).ok)

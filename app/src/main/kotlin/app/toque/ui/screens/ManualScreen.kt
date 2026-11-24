@@ -127,6 +127,16 @@ class ManualScreen(
         return root
     }
 
+    /**
+     * Durée maximale réglable ici. Pendant une fermentation (yaourt), ouverte depuis cet écran, sa
+     * propre limite : sinon toucher un réglage ramènerait un yaourt de 8 h à 99 min.
+     */
+    private fun maxSeconds(): Int = ((when {
+        live && a.snapshot.jobFerment -> Limits.MAX_MS_FERMENT
+        speed > 6 -> Limits.MAX_MS_HIGH_SPEED
+        else -> Limits.MAX_MS_DEFAULT
+    }) / 1000).toInt()
+
     private val tempSteps: IntArray get() = intArrayOf(0) + caps.temperaturesC.toIntArray()
 
     private fun nextSeconds(s: Int, dir: Int): Int {
@@ -135,7 +145,7 @@ class ManualScreen(
             dir > 0 && s < 600 || dir < 0 && s <= 600 -> 30
             else -> 60
         }
-        val max = ((if (speed > 6) Limits.MAX_MS_HIGH_SPEED else Limits.MAX_MS_DEFAULT) / 1000).toInt()
+        val max = maxSeconds()
         return (s + dir * step).coerceIn(5, max)
     }
 
@@ -170,7 +180,7 @@ class ManualScreen(
                 capNoStirTemperature()
             }
         }
-        val maxS = ((if (speed > 6) Limits.MAX_MS_HIGH_SPEED else Limits.MAX_MS_DEFAULT) / 1000).toInt()
+        val maxS = maxSeconds()
         if (seconds > maxS) seconds = maxS
         val liveEdit = live && s.kind?.name == "MANUAL"
         if (liveEdit) {
