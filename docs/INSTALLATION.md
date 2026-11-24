@@ -118,11 +118,12 @@ disconnect the USB cable and perform all subsequent steps and updates over Wi-Fi
 
 ## 4. First run — EMPTY bowl
 
-1. In Toque: **Settings › Machine › Real machine › Apply**. Toque turns off the stock app's motor service (reversible) and opens the
+1. In Toque: **Settings › Advanced › Machine › Real machine › Apply** (in demo mode, the card at the top of
+   Settings, *Go to the setting*, leads there). Toque turns off the stock app's motor service (reversible) and opens the
    serial port.
 2. Success: the badge at the top right must read Ready with **no Demo or Twin marker** **and** the
    journal must show the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; `Démo (base simulée)`
-   means the mode was not applied. If not: Settings › Tools › Motor base diagnostics (are frames
+   means the mode was not applied. If not: Settings › Advanced › Motor base diagnostics (are frames
    received?) and Log.
 3. Empty bowl, lid closed, **hand near the main switch**:
    - Manual cooking: 10 s, speed 2 → the motor runs, then stops on its own.
@@ -156,7 +157,7 @@ Lidl's servers; come back with the **Back to Toque** button. If that import fail
 
 ## Going back to the stock app
 
-- From Toque: Settings › Tools › Back to the stock app.
+- From Toque: Settings › Advanced › Back to the stock app.
 - From the PC: `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`
 
 Toque changes neither the system nor the stock app: it only disables its motor service, which

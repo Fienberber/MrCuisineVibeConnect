@@ -203,12 +203,12 @@ From the command line: `gradlew assembleDebug` (and `gradlew :core:test` for the
 ## Try it without the robot
 
 1. **Demo mode** (default): install the APK on any Android device (or the Android Studio
-   emulator, in landscape). The motor board is simulated; *Settings › Tools › Motor base
+   emulator, in landscape). The motor board is simulated; *Settings › Advanced › Motor base
    diagnostics* lets you open the lid or trigger an error to see the safety
    features. *Settings › Lidl recipes › Sync* downloads the recipes on any device too.
 2. **Digital twin**: the twin from the [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk)
    reproduces the real protocol independently of Toque.
-   Run `python tools/twin.py --sdk <SDK folder>`, then in Toque choose *Settings › Machine ›
+   Run `python tools/twin.py --sdk <SDK folder>`, then in Toque choose *Settings › Advanced › Machine ›
    Twin (PC)* (emulator: host `10.0.2.2`; real device: `adb reverse tcp:8765 tcp:8765` and host
    `127.0.0.1`). `python tools/twin.py --send "lid 1"` opens the lid, etc.
 

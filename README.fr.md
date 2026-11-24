@@ -211,12 +211,12 @@ En ligne de commande : `gradlew assembleDebug` (et `gradlew :core:test` pour les
 ## Tester sans le robot
 
 1. **Mode Démo** (par défaut) : installer l'APK sur n'importe quel Android (ou l'émulateur
-   d'Android Studio, en paysage). La base moteur est simulée ; Réglages › Outils › Diagnostic
+   d'Android Studio, en paysage). La base moteur est simulée ; Réglages › Avancé › Diagnostic
    permet d'ouvrir le couvercle ou de provoquer une erreur pour voir les sécurités.
    Réglages › Recettes Lidl › Synchroniser télécharge les recettes sur n'importe quel appareil.
 2. **Jumeau numérique** : le jumeau du [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk)
    reproduit le protocole réel indépendamment de Toque.
-   `python tools/twin.py --sdk <dossier du SDK>` puis, dans Toque, Réglages › Machine ›
+   `python tools/twin.py --sdk <dossier du SDK>` puis, dans Toque, Réglages › Avancé › Machine ›
    Jumeau (émulateur : hôte `10.0.2.2` ; appareil réel : `adb reverse tcp:8765 tcp:8765` et
    hôte `127.0.0.1`). `python tools/twin.py --send "lid 1"` ouvre le couvercle, etc.
 

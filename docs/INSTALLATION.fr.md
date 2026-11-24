@@ -122,12 +122,13 @@ mises à jour par Wi-Fi (`tools\install-robot.ps1 -Ip <IP du robot>`).
 
 ## 4. Premier essai — bol VIDE
 
-1. Dans Toque : **Réglages › Machine › Machine réelle › Appliquer**. Toque coupe l'appli
+1. Dans Toque : **Réglages › Avancé › Machine › Machine réelle › Appliquer** (en mode Démo, la carte
+   en haut des Réglages, « Aller au réglage », y mène). Toque coupe l'appli
    d'origine du moteur (réversible) et ouvre le port série.
 2. Réussite : la pastille en haut à droite doit afficher « Prête » **sans marqueur Démo ni Jumeau**
    **et** le journal doit afficher la liaison réelle, par ex. `liaison ouverte : Base moteur (/dev/ttyMT…)` ;
-   `Démo (base simulée)` signifie que le mode n'a pas été appliqué. Sinon : Réglages › Outils ›
-   Diagnostic (trames reçues ?) et Journal.
+   `Démo (base simulée)` signifie que le mode n'a pas été appliqué. Sinon : Réglages › Avancé ›
+   Diagnostic de la base moteur (trames reçues ?) et Journal.
 3. Bol vide, couvercle fermé, **main près de l'interrupteur principal** :
    - Cuisson manuelle : 10 s, vitesse 2 → le moteur tourne puis s'arrête seul.
    - Ouvrir le couvercle pendant un essai → arrêt immédiat, « Pause : couvercle ouvert ».
@@ -163,7 +164,7 @@ décrit la base d'origine.
 
 ## Revenir à l'appli d'origine
 
-- Depuis Toque : Réglages › Outils › « Revenir à l'appli d'origine ».
+- Depuis Toque : Réglages › Avancé › « Revenir à l'appli d'origine ».
 - Depuis le PC : `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`
 
 Toque ne modifie ni le système ni l'appli d'origine : il désactive seulement son service moteur,

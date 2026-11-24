@@ -178,7 +178,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
             ing.addView(section(tr("Ingrédients")), Ui.lp(t = 8))
         }
         if (shown.allIngredients.any { it.qty.isNotBlank() } || shown.steps.any { it.weigh != null }) {
-            ing.addView(Ui.text(c, tr("Touchez une quantité pour l'adapter : les étapes suivent."), 14f, Ui.TEXT3), Ui.lp(t = 4))
+            ing.addView(Ui.text(c, tr("Touchez une quantité pour l'adapter : les étapes suivent."), 16f, Ui.TEXT2), Ui.lp(t = 4))
         }
         var index = 0
         for (g in shown.ingredients) {

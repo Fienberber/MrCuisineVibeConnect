@@ -50,6 +50,11 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private lateinit var bowlText: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
+    private lateinit var modeNotice: LinearLayout
+    private lateinit var modeNoticeTitle: TextView
+    private lateinit var machineBox: LinearLayout
+    private lateinit var languageCard: LinearLayout
+    private lateinit var scroller: ScrollView
     private var settingTime = false
     private var mode = a.prefs.mode
 
@@ -68,6 +73,22 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun build(): View {
         val col = Ui.vertical(c)
         col.setPadding(Ui.u(24), Ui.u(6), Ui.u(24), Ui.u(24))
+
+        // ---- Bandeau du mode : tant que Toque ne pilote pas le vrai moteur, le chemin vers « Machine »
+        // reste en haut (première installation : Réglages › Avancé › Machine › Machine réelle).
+        modeNotice = Ui.horizontal(c)
+        modeNotice.background = Ui.round(Ui.SURFACE, 24f, Ui.ACCENT, 1.5f)
+        modeNotice.setPadding(Ui.u(20), Ui.u(14), Ui.u(16), Ui.u(14))
+        modeNotice.addView(Icon(c, Icon.Kind.INFO, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(26), Ui.u(26)).apply { rightMargin = Ui.u(14) })
+        val noticeText = Ui.vertical(c)
+        modeNoticeTitle = Ui.text(c, "", 19f, Ui.TEXT, Ui.MEDIUM).apply { setLineSpacing(0f, 1.1f) }
+        noticeText.addView(modeNoticeTitle)
+        noticeText.addView(hint(tr("Sur le robot, choisissez « Machine réelle » dans Avancé › Machine, puis Appliquer.")), Ui.lp(t = 4))
+        modeNotice.addView(noticeText, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(14) })
+        modeNotice.addView(Ui.button(c, tr("Aller au réglage"), Ui.Style.SECONDARY, Icon.Kind.CHEVRON, height = 56, textSize = 18f) { showMachine() })
+        col.addView(modeNotice, Ui.lp(b = 16))
+
+        // Les réglages de tous les jours d'abord, sur deux colonnes ; le technique dans « Avancé », à la fin.
         val columns = Ui.horizontal(c, Gravity.TOP)
         val left = Ui.vertical(c)
         val right = Ui.vertical(c)
@@ -75,141 +96,34 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         columns.addView(right, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         col.addView(columns)
 
-        // ---- Robot (fiche : protocole, programmes, recettes montrées)
-        val robot = section(left, tr("Robot"), Icon.Kind.POT)
-        robotText = Ui.text(c, "", 18f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
-        robot.addView(robotText, Ui.lp(t = 4))
-        robot.addView(Ui.button(c, tr("Changer de robot"), Ui.Style.SECONDARY, height = 52) { a.askRobot() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
-        renderRobot()
-
-        // ---- Machine
-        val machine = section(left, tr("Machine"), Icon.Kind.POT)
-        modeRow = Ui.horizontal(c)
-        machine.addView(modeRow, Ui.lp(t = 4))
-        twinBox = Ui.horizontal(c)
-        host = field(a.prefs.twinHost, tr("Hôte"))
-        port = field(a.prefs.twinPort.toString(), "Port").apply { inputType = InputType.TYPE_CLASS_NUMBER }
-        twinBox.addView(host, LinearLayout.LayoutParams(0, Ui.u(58), 1f).apply { rightMargin = Ui.u(10) })
-        twinBox.addView(port, LinearLayout.LayoutParams(Ui.u(120), Ui.u(58)))
-        machine.addView(twinBox, Ui.lp(t = 12))
-        linkText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
-        machine.addView(linkText, Ui.lp(t = 12))
-        machine.addView(Ui.button(c, tr("Appliquer"), Ui.Style.PRIMARY, Icon.Kind.CHECK, height = 58) { applyMode() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 14))
-        renderModes()
-
-        // ---- Sécurité
-        val safety = section(left, tr("Sécurité"), Icon.Kind.WARNING)
-        safety.addView(toggle(tr("Exiger la détection du bol"), a.prefs.requireBowl) { on ->
-            a.prefs.requireBowl = on
-            a.machine.reconfigure { a.refusal(it) }
-        })
-        bowlText = Ui.text(c, "", 15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }
-        safety.addView(bowlText, Ui.lp(t = 6))
-        safety.addView(toggle(tr("Inverser le capteur du bol"), a.prefs.invertBowl) { on ->
-            a.prefs.invertBowl = on
-            a.machine.reconfigure { a.refusal(it) }
-        }, Ui.lp(t = 10))
-        safety.addView(Ui.text(c, tr("À activer si le capteur indique « bol détecté » quand le bol est retiré, et l'inverse quand il est en place."),
-            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
-        safety.addView(toggle(tr("Montée progressive de la vitesse si le contenu est chaud"), a.prefs.hotRamp) { on ->
-            a.prefs.hotRamp = on
-            a.machine.reconfigure { a.refusal(it) }
-        }, Ui.lp(t = 10))
-        safety.addView(Ui.text(c, tr("À partir de 60 °C, la lame atteint sa vitesse en 2 à 3 secondes pour éviter les projections. À froid, elle y va directement."),
-            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
-        safety.addView(toggle(tr("Enchaîner les étapes machine des recettes"), a.prefs.chainSteps) { a.prefs.chainSteps = it }, Ui.lp(t = 10))
-        safety.addView(Ui.text(c, tr("Les réglages qui se suivent sans geste à faire entre eux partent ensemble d'un seul appui sur Lancer : la lame passe directement à la vitesse et à la température suivantes."),
-            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
-        safety.addView(toggle(tr("Sons"), a.prefs.sound) { a.prefs.sound = it }, Ui.lp(t = 10))
-        safety.addView(Ui.text(c, tr("Son quand la quantité à peser est atteinte"), 18f, Ui.TEXT), Ui.lp(t = 10))
-        safety.addView(dropdown(Sounds.WEIGH_SOUNDS.map { it.first to tr(it.second) }, a.prefs.weighSound) { k ->
-            a.prefs.weighSound = k
-            Sounds.weighReached(k)
-        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
-
-        // ---- Balance
-        safety.addView(toggle(tr("Tare automatique aux étapes de pesée des recettes"), a.prefs.autoTareSteps) { a.prefs.autoTareSteps = it }, Ui.lp(t = 14))
-        safety.addView(Ui.text(c, tr("En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme."),
-            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
-        safety.addView(toggle(tr("Remettre la balance à zéro quand le bol vide est replacé"), a.prefs.bowlAutoZero) { on ->
-            a.prefs.bowlAutoZero = on
-            a.machine.reconfigure { a.refusal(it) }
-        }, Ui.lp(t = 10))
-        val bowlScaleText = Ui.text(c, "", 15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }
-        fun showBowl() {
-            val g = a.prefs.emptyBowlG
-            bowlScaleText.text = tr("Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.") + "\n" +
-                (if (g > 0) tr("Bol vide mémorisé : %d g.", g)
-                else tr("Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare."))
-        }
-        showBowl()
-        safety.addView(bowlScaleText, Ui.lp(t = 6))
-        safety.addView(Ui.button(c, tr("Oublier le bol vide mémorisé"), Ui.Style.SECONDARY, height = 52) {
-            a.prefs.emptyBowlG = 0
-            a.machine.forgetEmptyBowl()
-            showBowl()
-        }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
-
-        // ---- Langue (titre bilingue : trouvable quelle que soit la langue affichée)
-        val language = section(right, "Langue · Language", Icon.Kind.INFO)
-        val options = listOf(I18n.AUTO to tr("Automatique (langue du système)")) + I18n.languages.map { it.code to it.name }
-        language.addView(dropdown(options, a.prefs.language) { code ->
-            a.prefs.language = code
-            a.applyLanguage()
-        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 4))
-
-        // ---- Apparence : thème sombre/clair + couleur d'accent
-        val look = section(right, tr("Apparence"), Icon.Kind.STAR)
-        look.addView(Ui.text(c, tr("Thème"), 18f, Ui.TEXT))
-        val themes = listOf("dark" to tr("Mode sombre"), "light" to tr("Mode clair"))
-        look.addView(dropdown(themes, if (a.prefs.lightTheme) "light" else "dark") { code ->
-            val light = code == "light"
-            if (light != a.prefs.lightTheme) a.applyTheme(light)
-        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
-        look.addView(Ui.text(c, tr("Couleur des boutons, des icônes et des repères."), 15f, Ui.TEXT3)
-            .apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
-        for (rowIndex in 0 until 2) {
-            val row = Ui.horizontal(c, Gravity.CENTER)
-            for (i in rowIndex * 5 until rowIndex * 5 + 5) {
-                row.addView(swatch(Ui.ACCENTS[i]), LinearLayout.LayoutParams(0, Ui.u(60), 1f))
-            }
-            look.addView(row, Ui.lp(t = if (rowIndex == 0) 12 else 6))
-        }
-
         // ---- Écran
-        val screen = section(right, tr("Écran"), Icon.Kind.CLOCK)
+        val screen = section(left, tr("Écran"), Icon.Kind.CLOCK)
         val delays = listOf("0" to tr("Jamais")) + listOf(2, 5, 10, 15, 30).map { it.toString() to tr("Après %d min", it) }
         screen.addView(Ui.text(c, tr("Mise en veille"), 18f, Ui.TEXT))
         screen.addView(dropdown(delays, a.prefs.standbyMinutes.toString()) { m -> a.prefs.standbyMinutes = m.toInt() },
             Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
-        screen.addView(Ui.text(c, tr("Sans geste ni programme en cours, l'écran s'assombrit et n'affiche plus que l'heure. Touchez-le ou tournez le bouton pour reprendre ; le couvercle et la balance le réveillent aussi."),
-            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 8))
+        screen.addView(hint(tr("Sans geste ni programme en cours, l'écran s'assombrit et n'affiche plus que l'heure. Touchez-le ou tournez le bouton pour reprendre ; le couvercle et la balance le réveillent aussi.")),
+            Ui.lp(t = 8))
         val knob = listOf("normal" to tr("Normale"), "dim" to tr("Plus légère"), "off" to tr("Éteinte"))
         screen.addView(Ui.text(c, tr("Molette pendant la veille"), 18f, Ui.TEXT), Ui.lp(t = 12))
         screen.addView(dropdown(knob, a.prefs.standbyKnob) { a.prefs.standbyKnob = it },
             Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
 
-        // ---- Date et heure
-        val time = section(right, tr("Date et heure"), Icon.Kind.CLOCK)
-        val zones = listOf(ZoneLookup.AUTO to tr("Automatique (d'après la connexion Internet)")) +
-            (ZoneLookup.COMMON + listOf(TimeSync.current(), a.prefs.timeZone))
-                .filter { it != ZoneLookup.AUTO }.distinct().map { it to it.replace('_', ' ') }
-        time.addView(dropdown(zones, a.prefs.timeZone) { z ->
-            a.prefs.timeZone = z
-            setClock()
-        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 4))
-        timeText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
-        time.addView(timeText, Ui.lp(t = 10))
-        time.addView(Ui.button(c, tr("Mettre à l'heure"), Ui.Style.SECONDARY, Icon.Kind.SYNC, height = 52) { setClock() },
-            Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
-        refreshTime()
+        // ---- Sons
+        val sounds = section(right, tr("Sons"), Icon.Kind.BELL)
+        sounds.addView(toggle(tr("Activer les sons"), a.prefs.sound) { a.prefs.sound = it })
+        sounds.addView(Ui.text(c, tr("Son quand la quantité à peser est atteinte"), 18f, Ui.TEXT), Ui.lp(t = 10))
+        sounds.addView(dropdown(Sounds.WEIGH_SOUNDS.map { it.first to tr(it.second) }, a.prefs.weighSound) { k ->
+            a.prefs.weighSound = k
+            Sounds.weighReached(k)
+        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
 
         // ---- Recettes Lidl
-        val lidl = section(right, tr("Recettes Lidl"), Icon.Kind.SYNC)
+        val lidl = section(left, tr("Recettes Lidl"), Icon.Kind.SYNC)
         val chosen = a.prefs.robot
         val lidlIntro = if (chosen.lidlDevice == "MC2.0") tr("Toque télécharge lui-même les recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com (sans compte).")
             else tr("Toque télécharge lui-même les recettes officielles du %s sur monsieur-cuisine.com (sans compte).", chosen.displayName)
-        lidl.addView(Ui.text(c, lidlIntro, 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        lidl.addView(hint(lidlIntro))
         syncText = Ui.text(c, "", 16f, Ui.TEXT)
         lidl.addView(syncText, Ui.lp(t = 10))
         val b1 = Ui.horizontal(c)
@@ -221,8 +135,8 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         lidl.addView(b1, Ui.lp(t = 12))
         // Import depuis l'appli d'origine : seulement là où Toque sait lire sa base (pas encore le Smart).
         if (chosen.stockImport) {
-            lidl.addView(Ui.text(c, tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site)."),
-                14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+            lidl.addView(hint(tr("Autre source : les recettes déjà présentes dans l'appli d'origine du robot (remplacent celles du site).")),
+                Ui.lp(t = 12))
             // Un bouton par ligne : côte à côte, « Ouvrir l'appli d'origine » n'avait plus la place et
             // son texte se coupait au milieu d'un mot.
             val btn = Ui.button(c, tr("Importer de l'appli d'origine"), Ui.Style.SECONDARY, height = 52) { sync(online = false) }
@@ -255,13 +169,12 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             a.prefs.foreignRecipes = it
             a.toast(tr("Pris en compte à la prochaine synchronisation"))
         }, Ui.lp(t = 10))
-        lidl.addView(Ui.text(c, tr("Ajoute les recettes qui n'existent pas dans votre langue, prises en anglais, français, allemand, espagnol… Chacune n'apparaît qu'une fois, avec sa langue sur la vignette."),
-            14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
+        lidl.addView(hint(tr("Ajoute les recettes qui n'existent pas dans votre langue, prises en anglais, français, allemand, espagnol… Chacune n'apparaît qu'une fois, avec sa langue sur la vignette.")),
+            Ui.lp(t = 6))
 
-        // ---- Mes recettes
-        val mine = section(right, tr("Mes recettes"), Icon.Kind.EDIT)
-        mine.addView(Ui.text(c, tr("Sauvegardez vos recettes, ou passez-les à un autre robot, avec le fichier %s du dossier Download.", UserRecipes.FILE_NAME),
-            16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        // ---- Mes recettes (sous les recettes Lidl)
+        val mine = section(left, tr("Mes recettes"), Icon.Kind.EDIT)
+        mine.addView(hint(tr("Sauvegardez vos recettes, ou passez-les à un autre robot, avec le fichier %s du dossier Download.", UserRecipes.FILE_NAME)))
         val files = Ui.horizontal(c)
         files.addView(Ui.button(c, tr("Exporter"), Ui.Style.SECONDARY, Icon.Kind.UPLOAD, height = 52) { recipeFiles(export = true) }, Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
         files.addView(Ui.button(c, tr("Importer"), Ui.Style.SECONDARY, Icon.Kind.DOWNLOAD, height = 52) { recipeFiles(export = false) })
@@ -276,8 +189,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
 
         // ---- Recettes de la communauté (toqueapp.org), sans compte
         val community = section(left, tr("Recettes de la communauté"), Icon.Kind.GLOBE)
-        community.addView(Ui.text(c, tr("Les recettes partagées sur toqueapp.org, reçues sans compte. Celles que la communauté a traduites arrivent dans votre langue."),
-            16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) })
+        community.addView(hint(tr("Les recettes partagées sur toqueapp.org, reçues sans compte. Celles que la communauté a traduites arrivent dans votre langue.")))
         community.addView(toggle(tr("Recevoir les recettes de la communauté"), a.prefs.siteCommunity) { on ->
             a.app.site.setCommunity(on)
             refreshSite()
@@ -289,6 +201,95 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         }
         community.addView(siteBtn, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
 
+        // ---- Sécurité
+        val safety = section(right, tr("Sécurité"), Icon.Kind.WARNING)
+        safety.addView(toggle(tr("Exiger la détection du bol"), a.prefs.requireBowl) { on ->
+            a.prefs.requireBowl = on
+            a.machine.reconfigure { a.refusal(it) }
+        })
+        bowlText = hint("")
+        safety.addView(bowlText, Ui.lp(t = 6))
+        safety.addView(toggle(tr("Inverser le capteur du bol"), a.prefs.invertBowl) { on ->
+            a.prefs.invertBowl = on
+            a.machine.reconfigure { a.refusal(it) }
+        }, Ui.lp(t = 10))
+        safety.addView(hint(tr("À activer si le capteur indique « bol détecté » quand le bol est retiré, et l'inverse quand il est en place.")),
+            Ui.lp(t = 6))
+        safety.addView(toggle(tr("Montée progressive de la vitesse si le contenu est chaud"), a.prefs.hotRamp) { on ->
+            a.prefs.hotRamp = on
+            a.machine.reconfigure { a.refusal(it) }
+        }, Ui.lp(t = 10))
+        safety.addView(hint(tr("À partir de 60 °C, la lame atteint sa vitesse en 2 à 3 secondes pour éviter les projections. À froid, elle y va directement.")),
+            Ui.lp(t = 6))
+        safety.addView(toggle(tr("Enchaîner les étapes machine des recettes"), a.prefs.chainSteps) { a.prefs.chainSteps = it }, Ui.lp(t = 10))
+        safety.addView(hint(tr("Les réglages qui se suivent sans geste à faire entre eux partent ensemble d'un seul appui sur Lancer : la lame passe directement à la vitesse et à la température suivantes.")),
+            Ui.lp(t = 6))
+
+        // ---- Balance
+        safety.addView(toggle(tr("Tare automatique aux étapes de pesée des recettes"), a.prefs.autoTareSteps) { a.prefs.autoTareSteps = it }, Ui.lp(t = 14))
+        safety.addView(hint(tr("En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme.")),
+            Ui.lp(t = 6))
+        safety.addView(toggle(tr("Remettre la balance à zéro quand le bol vide est replacé"), a.prefs.bowlAutoZero) { on ->
+            a.prefs.bowlAutoZero = on
+            a.machine.reconfigure { a.refusal(it) }
+        }, Ui.lp(t = 10))
+        val bowlScaleText = hint("")
+        fun showBowl() {
+            val g = a.prefs.emptyBowlG
+            bowlScaleText.text = tr("Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.") + "\n" +
+                (if (g > 0) tr("Bol vide mémorisé : %d g.", g)
+                else tr("Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare."))
+        }
+        showBowl()
+        safety.addView(bowlScaleText, Ui.lp(t = 6))
+        safety.addView(Ui.button(c, tr("Oublier le bol vide mémorisé"), Ui.Style.SECONDARY, height = 52) {
+            a.prefs.emptyBowlG = 0
+            a.machine.forgetEmptyBowl()
+            showBowl()
+        }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
+
+        // ---- Langue (titre bilingue : trouvable quelle que soit la langue affichée)
+        languageCard = section(right, "Langue · Language", Icon.Kind.INFO)
+        val options = listOf(I18n.AUTO to tr("Automatique (langue du système)")) + I18n.languages.map { it.code to it.name }
+        languageCard.addView(dropdown(options, a.prefs.language) { code ->
+            a.prefs.language = code
+            // L'activité est recréée : les réglages rouverts reviennent sur cette carte.
+            backToLanguage = true
+            a.applyLanguage()
+        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 4))
+
+        // ---- Date et heure
+        val time = section(right, tr("Date et heure"), Icon.Kind.CLOCK)
+        val zones = listOf(ZoneLookup.AUTO to tr("Automatique (d'après la connexion Internet)")) +
+            (ZoneLookup.COMMON + listOf(TimeSync.current(), a.prefs.timeZone))
+                .filter { it != ZoneLookup.AUTO }.distinct().map { it to it.replace('_', ' ') }
+        time.addView(dropdown(zones, a.prefs.timeZone) { z ->
+            a.prefs.timeZone = z
+            setClock()
+        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 4))
+        timeText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
+        time.addView(timeText, Ui.lp(t = 10))
+        time.addView(Ui.button(c, tr("Mettre à l'heure"), Ui.Style.SECONDARY, Icon.Kind.SYNC, height = 52) { setClock() },
+            Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+        refreshTime()
+
+        // ---- Apparence : thème sombre/clair + couleur d'accent
+        val look = section(right, tr("Apparence"), Icon.Kind.STAR)
+        look.addView(Ui.text(c, tr("Thème"), 18f, Ui.TEXT))
+        val themes = listOf("dark" to tr("Mode sombre"), "light" to tr("Mode clair"))
+        look.addView(dropdown(themes, if (a.prefs.lightTheme) "light" else "dark") { code ->
+            val light = code == "light"
+            if (light != a.prefs.lightTheme) a.applyTheme(light)
+        }, Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
+        look.addView(hint(tr("Couleur des boutons, des icônes et des repères.")), Ui.lp(t = 12))
+        for (rowIndex in 0 until 2) {
+            val row = Ui.horizontal(c, Gravity.CENTER)
+            for (i in rowIndex * 5 until rowIndex * 5 + 5) {
+                row.addView(swatch(Ui.ACCENTS[i]), LinearLayout.LayoutParams(0, Ui.u(60), 1f))
+            }
+            look.addView(row, Ui.lp(t = if (rowIndex == 0) 12 else 6))
+        }
+
         // ---- Mises à jour
         val updates = section(left, tr("Mises à jour"), Icon.Kind.INFO)
         updText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
@@ -299,22 +300,85 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         a.updates.available?.let { release = it; upd = Upd.AVAILABLE }
         renderUpdate()
 
-        // ---- Outils
-        val tools = section(right, tr("Outils"), Icon.Kind.SETTINGS)
-        tools.addView(link(tr("Diagnostic de la base moteur")) { a.push(DiagnosticsScreen(a)) })
+        // ---- Avancé : ce qu'on règle à l'installation ou pour un dépannage, sur toute la largeur.
+        val advanced = section(col, tr("Avancé"), Icon.Kind.SETTINGS)
+        val inner = Ui.horizontal(c, Gravity.TOP)
+        advanced.addView(inner)
+        machineBox = Ui.vertical(c)
+        inner.addView(machineBox, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(36) })
+        // Robot (fiche : protocole, programmes, recettes montrées), choisi au premier démarrage.
+        val robotHead = Ui.horizontal(c)
+        robotHead.addView(Icon(c, Icon.Kind.POT, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(22), Ui.u(22)).apply { rightMargin = Ui.u(10) })
+        robotHead.addView(Ui.text(c, tr("Robot"), 19f, Ui.TEXT, Ui.MEDIUM))
+        machineBox.addView(robotHead, Ui.lp(t = 4))
+        robotText = Ui.text(c, "", 18f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
+        machineBox.addView(robotText, Ui.lp(t = 8))
+        machineBox.addView(Ui.button(c, tr("Changer de robot"), Ui.Style.SECONDARY, height = 52) { a.askRobot() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+        renderRobot()
+
+        // Machine : Démo, Jumeau (PC) ou Machine réelle.
+        val machineHead = Ui.horizontal(c)
+        machineHead.addView(Icon(c, Icon.Kind.POT, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(22), Ui.u(22)).apply { rightMargin = Ui.u(10) })
+        machineHead.addView(Ui.text(c, tr("Machine"), 19f, Ui.TEXT, Ui.MEDIUM))
+        machineBox.addView(machineHead, Ui.lp(t = 24))
+        modeRow = Ui.horizontal(c)
+        machineBox.addView(modeRow, Ui.lp(t = 12))
+        twinBox = Ui.horizontal(c)
+        host = field(a.prefs.twinHost, tr("Hôte"))
+        port = field(a.prefs.twinPort.toString(), "Port").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        twinBox.addView(host, LinearLayout.LayoutParams(0, Ui.u(58), 1f).apply { rightMargin = Ui.u(10) })
+        twinBox.addView(port, LinearLayout.LayoutParams(Ui.u(120), Ui.u(58)))
+        machineBox.addView(twinBox, Ui.lp(t = 12))
+        linkText = Ui.text(c, "", 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
+        machineBox.addView(linkText, Ui.lp(t = 12))
+        machineBox.addView(Ui.button(c, tr("Appliquer"), Ui.Style.PRIMARY, Icon.Kind.CHECK, height = 58) { applyMode() }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 14))
+        renderModes()
+
+        // Outils
+        val tools = Ui.vertical(c)
+        inner.addView(tools, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        tools.addView(link(tr("Paramètres Android")) { a.openAndroidSettings() })
         tools.addView(link(tr("Bouton rotatif")) { a.push(KnobScreen(a)) })
         tools.addView(link(tr("Journal")) { a.push(LogScreen(a)) })
-        tools.addView(link(tr("Paramètres Android")) { a.openAndroidSettings() })
+        tools.addView(link(tr("Diagnostic de la base moteur")) { a.push(DiagnosticsScreen(a)) })
         tools.addView(link(tr("Revenir à l'appli d'origine")) { restoreVendor() })
         val version = try { a.packageManager.getPackageInfo(a.packageName, 0).versionName } catch (_: Exception) { "?" }
-        tools.addView(Ui.text(c, tr("Toque %s · protocole d'après le Monsieur Cuisine Developer SDK (licence MIT). " +
-            "Projet indépendant, non affilié à Lidl ni à SilverCrest.", version), 14f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 12))
+        advanced.addView(hint(tr("Toque %s · protocole d'après le Monsieur Cuisine Developer SDK (licence MIT). " +
+            "Projet indépendant, non affilié à Lidl ni à SilverCrest.", version)), Ui.lp(t = 16))
         a.prefs.robot.let { p -> p.credit?.let { who ->
-            tools.addView(Ui.text(c, tr("%s : protocole d'après %s (licence MIT).", p.displayName, who), 14f, Ui.TEXT3)
-                .apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 4))
+            advanced.addView(hint(tr("%s : protocole d'après %s (licence MIT).", p.displayName, who)), Ui.lp(t = 4))
         } }
 
-        return Ui.scroll(c, col)
+        scroller = Ui.scroll(c, col)
+        renderModeNotice()
+        return scroller
+    }
+
+    /** Texte d'explication : gris clair, 16 px au moins, lisible à bout de bras. */
+    private fun hint(s: String): TextView = Ui.text(c, Ui.guillemets(s), 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }
+
+    /** Bandeau du haut : visible tant que le mode appliqué n'est pas la machine réelle. */
+    private fun renderModeNotice() {
+        val m = a.prefs.mode
+        modeNotice.visibility = if (m == Prefs.Mode.HARDWARE) View.GONE else View.VISIBLE
+        modeNoticeTitle.text = tr("Mode %s : le moteur du robot n'est pas piloté.", m.label)
+    }
+
+    /** Fait défiler la page jusqu'à [v] (une carte, ou le bloc Machine d'« Avancé »). */
+    private fun scrollTo(v: View) {
+        var top = 0
+        var x: View = v
+        while (x.parent !== scroller && x.parent is View) {
+            top += x.top
+            x = x.parent as View
+        }
+        scroller.scrollTo(0, maxOf(0, top - Ui.u(12)))
+    }
+
+    /** Le bouton du bandeau : descend jusqu'au choix de la machine. */
+    private fun showMachine() {
+        a.hideKeyboard()
+        scrollTo(machineBox)
     }
 
     private fun section(parent: LinearLayout, title: String, icon: Icon.Kind): LinearLayout {
@@ -515,6 +579,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         a.prefs.twinPort = port.text.toString().trim().toIntOrNull() ?: 8765
         a.machine.reconfigure { v -> if (v.ok) a.toast(tr("Mode : %s", mode.label), Ui.OK) else a.refusal(v) }
         a.refreshTitle()
+        renderModeNotice()
     }
 
     private fun prepareHardware() {
@@ -545,6 +610,9 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         ) {
             a.prefs.mode = Prefs.Mode.DEMO
             a.prefs.bootLaunch = false
+            mode = Prefs.Mode.DEMO
+            renderModes()
+            renderModeNotice()
             a.machine.reconfigure {
                 Thread {
                     val sync = LidlSync(a, a.prefs, a.app.recipes, a.app.log)
@@ -751,6 +819,12 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun onShow() {
         mode = a.prefs.mode
         renderModes()
+        renderModeNotice()
+        if (backToLanguage) {
+            backToLanguage = false
+            // Une fois la page mise en place : avant, les cartes n'ont pas encore de position.
+            view.post { scrollTo(languageCard) }
+        }
         renderRobot()
         refreshSync()
         renderAccount()
@@ -773,5 +847,10 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun onSnapshot(s: Snapshot) {
         bowlText.text = if (s.hasSample) tr("Capteur du bol en ce moment : %s. Vérifiez qu'il change quand vous retirez le bol avant d'activer cette option.",
             if (s.bowlDetected) tr("bol détecté") else tr("bol NON détecté")) else tr("Base non connectée")
+    }
+
+    companion object {
+        /** Posé avant le changement de langue : les réglages rouverts par l'activité recréée reviennent sur la carte Langue. */
+        private var backToLanguage = false
     }
 }
