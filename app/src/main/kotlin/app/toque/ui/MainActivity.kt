@@ -64,6 +64,16 @@ class MainActivity : Activity() {
         private set
     private var swallowTouch = false
     var knobListener: ((KeyEvent) -> Unit)? = null
+    private lateinit var timerAlarm: TimerAlarm
+    private var unsubscribeTimers: (() -> Unit)? = null
+    /** La fenêtre ouverte laisse la barre machine (et son bouton Stop) hors du voile. */
+    private var overlaySparesBar = false
+
+    /** Molette d'une fenêtre ouverte : tourner ([turn]) et appuyer ([press]). */
+    class OverlayKnob(val turn: (Int) -> Unit, val press: () -> Unit)
+
+    /** Ce que fait la molette dans la fenêtre ouverte ; effacé quand elle se ferme. Sans lui, la molette n'y fait rien. */
+    var overlayKnob: OverlayKnob? = null
 
     val prefs: Prefs get() = app.prefs
     val machine get() = app.machine
@@ -93,6 +103,7 @@ class MainActivity : Activity() {
         overlay.visibility = View.GONE
         root.addView(overlay, Ui.flp())
         setContentView(root)
+        timerAlarm = TimerAlarm(this, root)
         standby = Standby(this, root)
         updates = UpdateAlert(this)
         standby.onWake = { updates.onWake() }
@@ -268,11 +279,51 @@ class MainActivity : Activity() {
             machineBar.update(s)
             stack.lastOrNull()?.onSnapshot(s)
             standby.onSnapshot(s)
+            spareMachineBar()
         }
         unsubscribeEvents = app.machine.onEvent { e -> onMachineEvent(e) }
         topBar.startClock()
         standby.start()
         updates.onStart()
+        startTimers()
+    }
+
+    // ------------------------------------------------------------------ minuteurs de cuisine
+
+    /** Pastille de la barre du haut, message de fin ; les minuteurs eux-mêmes tournent sans l'activité ([Timers]). */
+    private fun startTimers() {
+        val timers = Timers.of(this)
+        unsubscribeTimers = timers.listen {
+            topBar.showTimers(timers)
+            // Tant que la sonnerie joue, l'écran ne se met pas en veille.
+            if (timers.alarmActive) standby.poke()
+        }
+        timers.onRing = {
+            standby.poke()
+            timerAlarm.refresh()
+        }
+        topBar.showTimers(timers)
+        timerAlarm.refresh()
+        if (timers.lost.isNotEmpty()) {
+            toast(tr("Minuteur arrêté par le redémarrage du robot : %s", timers.lost.joinToString(", ") { it.label }), Ui.WARN)
+            timers.lost = emptyList()
+        }
+    }
+
+    /** Hauteur de la barre machine quand elle est affichée (à laisser libre), 0 sinon. */
+    fun machineBarSpace(): Int = if (machineBar.visibility == View.VISIBLE) machineBar.height else 0
+
+    private fun spareMachineBar() {
+        val bottom = machineBarSpace()
+        timerAlarm.spare(bottom)
+        if (overlay.visibility == View.VISIBLE) {
+            val lp = overlay.layoutParams as FrameLayout.LayoutParams
+            val want = if (overlaySparesBar) bottom else 0
+            if (lp.bottomMargin != want) {
+                lp.bottomMargin = want
+                overlay.layoutParams = lp
+            }
+        }
     }
 
     override fun onResume() {
@@ -284,6 +335,9 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        unsubscribeTimers?.invoke()
+        unsubscribeTimers = null
+        Timers.of(this).onRing = null
         unsubscribe?.invoke()
         unsubscribeEvents?.invoke()
         topBar.stopClock()
@@ -362,6 +416,7 @@ class MainActivity : Activity() {
     }
 
     override fun onBackPressed() {
+        if (timerAlarm.shown) return
         if (overlay.visibility == View.VISIBLE) {
             closeOverlay()
             return
@@ -391,6 +446,18 @@ class MainActivity : Activity() {
             if (event.action == KeyEvent.ACTION_DOWN) l(event)
             return true
         }
+        // Message de fin de minuteur, ou fenêtre ouverte : la molette agit sur eux, jamais sur l'écran dessous ;
+        // une fenêtre sans réglage de molette (confirmation) ne se valide pas d'un appui de molette.
+        if (!isBack && (timerAlarm.shown || overlay.visibility == View.VISIBLE) && currentFocus !is android.widget.EditText) {
+            val k = knobKind(event.keyCode)
+            if (k != 0) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (timerAlarm.shown) { if (k == PRESS) timerAlarm.ok() }
+                    else overlayKnob?.let { if (k == PRESS) it.press() else it.turn(k) }
+                }
+                return true
+            }
+        }
         if (!isBack && event.action == KeyEvent.ACTION_DOWN && overlay.visibility != View.VISIBLE) {
             val k = event.keyCode
             // Par défaut : les flèches, et les touches du bouton du robot (clavier mtk-kpd :
@@ -415,12 +482,32 @@ class MainActivity : Activity() {
         return super.dispatchKeyEvent(event)
     }
 
+    /** -1 / 1 : un cran de la molette, [PRESS] : son appui, 0 : une autre touche. */
+    private fun knobKind(k: Int): Int {
+        val left = prefs.knobLeft.let { if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_F7 }
+        val right = prefs.knobRight.let { if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_F6 }
+        val press = prefs.knobPress.let {
+            if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_F5
+        }
+        return when {
+            press -> PRESS
+            left -> -1
+            right -> 1
+            else -> 0
+        }
+    }
+
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && standby.onKnob()) return true
         if (event.action == MotionEvent.ACTION_SCROLL) {
             // Encodeur rotatif (AXIS_SCROLL) ou molette (AXIS_VSCROLL)
             val v = event.getAxisValue(AXIS_SCROLL).let { if (it == 0f) -event.getAxisValue(MotionEvent.AXIS_VSCROLL) else it }
             val now = System.currentTimeMillis()
+            if (v != 0f && (timerAlarm.shown || overlay.visibility == View.VISIBLE)) {
+                if (!timerAlarm.shown && now - lastKnobMs > 40) overlayKnob?.turn(if (v > 0) 1 else -1)
+                lastKnobMs = now
+                return true
+            }
             if (v != 0f && now - lastKnobMs > 40) {
                 lastKnobMs = now
                 if (!prefs.knobSetupDone) prefs.knobSetupDone = true
@@ -499,9 +586,14 @@ class MainActivity : Activity() {
         if (!v.ok) toast(v.message, Ui.WARN)
     }
 
-    /** Affiche une carte modale au centre de l'écran. */
-    fun showOverlay(card: View, width: Int = 640, dismissOnScrim: Boolean = true) {
+    /**
+     * Affiche une carte modale au centre de l'écran. [spareMachineBar] : la barre machine reste hors du voile
+     * (son bouton Stop reste à portée) quand un programme tourne.
+     */
+    fun showOverlay(card: View, width: Int = 640, dismissOnScrim: Boolean = true, spareMachineBar: Boolean = false) {
         hideKeyboard()
+        overlayKnob = null
+        overlaySparesBar = spareMachineBar
         overlay.removeAllViews()
         overlay.setBackgroundColor(Ui.SCRIM)
         overlay.isClickable = true
@@ -509,6 +601,7 @@ class MainActivity : Activity() {
         card.isClickable = true
         overlay.addView(card, Ui.flp(Ui.u(width), Ui.WRAP, Gravity.CENTER))
         overlay.visibility = View.VISIBLE
+        spareMachineBar()
         overlay.alpha = 0f
         overlay.animate().alpha(1f).setDuration(120).start()
     }
@@ -516,11 +609,13 @@ class MainActivity : Activity() {
     fun closeOverlay() {
         overlay.visibility = View.GONE
         overlay.removeAllViews()
+        overlayKnob = null
+        overlaySparesBar = false
     }
 
     /** Dialogue de confirmation. */
     fun confirm(title: String, message: String, yes: String, no: String = tr("Annuler"),
-                danger: Boolean = false, icon: Icon.Kind = Icon.Kind.WARNING, onYes: () -> Unit) {
+                danger: Boolean = false, icon: Icon.Kind = Icon.Kind.WARNING, spareMachineBar: Boolean = false, onYes: () -> Unit) {
         val card = Ui.card(this, 28f, Ui.SURFACE2)
         card.setPadding(Ui.u(32), Ui.u(28), Ui.u(32), Ui.u(26))
         val head = Ui.horizontal(this)
@@ -536,7 +631,7 @@ class MainActivity : Activity() {
             onYes()
         })
         card.addView(row)
-        showOverlay(card, 680)
+        showOverlay(card, 680, spareMachineBar = spareMachineBar)
     }
 
     /**
@@ -674,6 +769,7 @@ class MainActivity : Activity() {
     companion object {
         private var reopenSettings = false
         private const val STORAGE_REQUEST = 7
+        private const val PRESS = 2
 
         /** MotionEvent.AXIS_SCROLL (API 26), valeur fixe pour Android 6. */
         private const val AXIS_SCROLL = 26

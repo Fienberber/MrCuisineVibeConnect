@@ -22,8 +22,9 @@ import app.toque.ui.Ui
 /**
  * Programmes automatiques : pétrir, vapeur, rissoler (ceux de l'appli d'origine), nettoyage (+ Turbo).
  * Seulement ceux du robot choisi : le Smart a en plus ses propres programmes (mixer, sous-vide…).
+ * [openOnCleaning] : ouvert sur le nettoyage (fin de recette) ; le programme part comme d'habitude, par « Démarrer » ou la molette.
  */
-class ProgramsScreen(a: MainActivity) : Screen(a) {
+class ProgramsScreen(a: MainActivity, openOnCleaning: Boolean = false) : Screen(a) {
     override val title = tr("Programmes")
 
     private class Prog(
@@ -74,7 +75,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
     )
     private val progs = all.filter { RobotProfiles.active.capabilities.has(it.feature) }
     private val cleaning = progs.indexOfFirst { it.feature == Feature.CLEANING }
-    private var selected = 0
+    private var selected = if (openOnCleaning && cleaning >= 0) cleaning else 0
     private lateinit var turbo: HoldButton
 
     override fun build(): View {

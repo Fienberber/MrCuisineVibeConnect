@@ -291,7 +291,8 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         renderSteps()
     }
 
-    private fun editNote() = editor(
+    /** Ouvre l'éditeur de la note (aussi depuis la fin d'une recette guidée). */
+    fun editNote() = editor(
         title = tr("Ma note sur cette recette"),
         detail = tr("Elle reste sur ce robot, même après une synchronisation des recettes."),
         value = adjustments.note,

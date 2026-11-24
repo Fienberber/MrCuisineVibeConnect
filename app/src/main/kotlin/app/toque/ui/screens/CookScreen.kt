@@ -1,5 +1,6 @@
 package app.toque.ui.screens
 
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -15,13 +16,21 @@ import app.toque.core.machine.MachineEvent
 import app.toque.core.machine.SafetyPolicy
 import app.toque.core.machine.Snapshot
 import app.toque.core.protocol.Mcc
+import app.toque.core.recipes.Portions
 import app.toque.core.recipes.Recipe
+import app.toque.core.recipes.Step
+import app.toque.core.recipes.StepDurations
+import app.toque.core.recipes.StepIngredients
 import app.toque.core.recipes.StepProgram
+import app.toque.core.time.KitchenTimerList
 import app.toque.ui.HoldButton
 import app.toque.ui.Icon
+import app.toque.ui.IngredientsCard
 import app.toque.ui.MainActivity
 import app.toque.ui.ProgressLine
 import app.toque.ui.Screen
+import app.toque.ui.TimerPanel
+import app.toque.ui.Timers
 import app.toque.ui.Ui
 
 /**
@@ -33,6 +42,11 @@ import app.toque.ui.Ui
 class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : Screen(a) {
     override val title = recipe.title
     private var index = startStep.coerceIn(0, maxOf(0, recipe.steps.size - 1))
+    /** Ouverture de l'écran, pour la durée affichée à la fin (seulement si la recette a été suivie depuis le début). */
+    private val openedAt = SystemClock.elapsedRealtime()
+    private val fromStart = index == 0
+    /** « Arrêter la recette » confirmé : plus rien ne part d'ici (étape enchaînée en attente comprise). */
+    private var stopped = false
     private val reviewed = HashSet<Int>().apply {
         // Réglages importés déjà vérifiés lors d'une cuisson précédente de cette recette.
         val known = a.prefs.reviewedSteps
@@ -70,6 +84,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
     private lateinit var prevBtn: LinearLayout
     private lateinit var nextBtn: LinearLayout
     private lateinit var nextLabel: TextView
+    private lateinit var ingredientsBtn: View
 
     override fun build(): View {
         val root = Ui.vertical(c)
@@ -80,9 +95,17 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         val body = Ui.horizontal(c, Gravity.TOP)
         val left = Ui.vertical(c)
         counter = Ui.text(c, "", 17f, Ui.TEXT2, Ui.MEDIUM).apply { letterSpacing = 0.06f }
-        left.addView(counter)
+        // « Ingrédients » à côté du numéro d'étape, sur les étapes machine (le panneau d'une étape à la main a le sien).
+        val counterRow = Ui.horizontal(c)
+        counterRow.addView(counter, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        ingredientsBtn = Ui.button(c, tr("Ingrédients"), Ui.Style.GHOST, Icon.Kind.BOOK, height = 56, textSize = 17f) {
+            IngredientsCard.show(a, recipe)
+        }
+        counterRow.addView(ingredientsBtn, Ui.lp(Ui.WRAP, Ui.WRAP, l = 12))
+        counterRow.minimumHeight = Ui.u(56)
+        left.addView(counterRow)
         text = Ui.text(c, "", 31f, Ui.TEXT, Ui.LIGHT).apply { setLineSpacing(0f, 1.18f) }
-        left.addView(Ui.scroll(c, text), LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { topMargin = Ui.u(12) })
+        left.addView(Ui.scroll(c, text), LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { topMargin = Ui.u(4) })
 
         weighBox = Ui.vertical(c)
         weighBox.background = Ui.round(Ui.SURFACE, 22f)
@@ -109,6 +132,9 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         val nav = Ui.horizontal(c)
         prevBtn = Ui.button(c, tr("Précédent"), Ui.Style.GHOST, Icon.Kind.BACK, height = 64) { go(index - 1) }
         nav.addView(prevBtn)
+        // Au milieu, loin de « Suivant » et du Stop de la barre machine (à droite) ; demande confirmation.
+        nav.addView(Ui.spacer(c, weight = 1f), LinearLayout.LayoutParams(0, 1, 1f))
+        nav.addView(Ui.button(c, tr("Arrêter la recette"), Ui.Style.GHOST, Icon.Kind.STOP, height = 60, textSize = 18f) { askStop() })
         nav.addView(Ui.spacer(c, weight = 1f), LinearLayout.LayoutParams(0, 1, 1f))
         nextBtn = Ui.button(c, tr("Suivant"), Ui.Style.SECONDARY, Icon.Kind.CHEVRON, height = 64) { next() }
         nextLabel = nextBtn.getChildAt(1) as TextView
@@ -123,10 +149,40 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             countCooked()
             a.prefs.guidedRecipe = ""
             a.chime(1)
-            a.toast(tr("Bon appétit !"), Ui.OK)
-            a.back()
+            // « Bon appétit ! » et la suite : nettoyage, note, Terminer.
+            val seconds = if (fromStart) ((SystemClock.elapsedRealtime() - openedAt) / 1000).toInt() else 0
+            a.replace(RecipeDoneScreen(a, recipe.id, recipe.title, seconds))
         } else go(index + 1)
     }
+
+    /** « Arrêter la recette » : confirmation d'abord (rouge), « Continuer » ne change rien. */
+    private fun askStop() {
+        val running = launchedActive(a.snapshot)
+        a.confirm(tr("Arrêter la recette ?"),
+            if (running) tr("Le programme en cours s'arrête, et la recette ne sera plus proposée sur l'accueil.")
+            else tr("La recette ne sera plus proposée sur l'accueil."),
+            tr("Arrêter la recette"), no = tr("Continuer"), danger = true, icon = Icon.Kind.STOP, spareMachineBar = true) { stopRecipe() }
+    }
+
+    /**
+     * Arrête la recette (après la confirmation de [askStop]) : le programme lancé par cette recette
+     * s'arrête (jamais un autre), « Reprendre » disparaît de l'accueil et l'écran se ferme. La recette
+     * n'est pas comptée comme cuisinée (sauf si un de ses programmes l'avait déjà été en démarrant).
+     */
+    private fun stopRecipe() {
+        if (stopped) return
+        stopped = true
+        if (launchedActive(a.snapshot)) a.machine.stop()
+        launchedStep = -1
+        launchedCount = 1
+        a.prefs.guidedRecipe = ""
+        a.toast(tr("Recette arrêtée"), Ui.TEXT2)
+        if (a.current === this) a.back()
+    }
+
+    /** Le programme lancé depuis cette recette est en cours (ni terminé ni arrêté). */
+    private fun launchedActive(s: Snapshot): Boolean =
+        launchedStep >= 0 && s.jobActive && s.state != JobState.FINISHED && s.state != JobState.ABORTED
 
     private fun go(i: Int) {
         if (i < 0 || i >= recipe.steps.size) return
@@ -160,6 +216,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         }
         if (n == 0) {
             counter.text = ""
+            ingredientsBtn.visibility = View.INVISIBLE
             text.text = tr("Cette recette ne contient pas d'étapes.")
             weighBox.visibility = View.GONE
             panel.removeAllViews()
@@ -174,6 +231,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             weighLabel.text = (if (w.originalGrams > 0) tr("Pesez %d g (recette : %d g)", w.grams, w.originalGrams) else tr("Pesez %d g", w.grams)) +
                 if (w.label.isNotBlank()) " · ${w.label}" else ""
         }
+        ingredientsBtn.visibility = if (step.machine != null && IngredientsCard.has(recipe)) View.VISIBLE else View.INVISIBLE
         Ui.setButtonEnabled(prevBtn, index > 0)
         nextLabel.text = if (index == n - 1) tr("Terminer") else tr("Suivant")
         buildPanel()
@@ -189,14 +247,10 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         panel.removeAllViews()
         turboBtn = null
         reviewBtn = null
+        offerBox = null
         val m = recipe.steps[index].machine
         if (m == null) {
-            val box = Ui.vertical(c, Gravity.CENTER)
-            box.addView(Icon(c, Icon.Kind.CHECK, Ui.TEXT3), LinearLayout.LayoutParams(Ui.u(48), Ui.u(48)))
-            box.addView(Ui.text(c, tr("Pas de réglage machine pour cette étape"), 18f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, Ui.lp(t = 12))
-            panel.addView(box, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
-            startBtn = Ui.button(c, tr("Étape suivante"), Ui.Style.SECONDARY, Icon.Kind.CHEVRON, height = 70) { next() }
-            panel.addView(startBtn)
+            handPanel(recipe.steps[index])
             return
         }
         // Haut du panneau (titre, réglages, enchaînement, avertissement) : défile s'il manque de la
@@ -299,7 +353,114 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         Ui.setButtonEnabled(startBtn, !blocked)
     }
 
+    // ------------------------------------------------------------------ étape à la main
+
+    /** Bouton du minuteur proposé, et l'état qu'il montre (« offer » ou l'identifiant du minuteur en cours). */
+    private var offerBox: FrameLayout? = null
+    private var offerState = ""
+    private var offerTime: TextView? = null
+    private var offerSeconds = 0
+    private var unsubTimers: (() -> Unit)? = null
+
+    /** Libellé du minuteur lancé depuis l'étape [i] (le nom de la recette et le numéro de l'étape). */
+    private fun timerLabel(i: Int): String = tr("Étape %d · %s", i + 1, recipe.title)
+
+    /**
+     * Étape sans réglage machine : les ingrédients qu'elle nomme (quantités adaptées), le minuteur de la
+     * durée qu'elle donne, et la liste complète. Rien de reconnu : la coche, comme avant.
+     */
+    private fun handPanel(step: Step) {
+        val all = recipe.allIngredients
+        val matched = StepIngredients.mentioned(all, step.text)
+        val seconds = StepDurations.find(step.text) ?: 0
+        offerSeconds = seconds
+        val noMachine = tr("Pas de réglage machine pour cette étape")
+        if (matched.isEmpty() && seconds == 0) {
+            val box = Ui.vertical(c, Gravity.CENTER)
+            box.addView(Icon(c, Icon.Kind.CHECK, Ui.TEXT3), LinearLayout.LayoutParams(Ui.u(48), Ui.u(48)))
+            box.addView(Ui.text(c, noMachine, 18f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, Ui.lp(t = 12))
+            // Pas de bouton « Étape suivante » : « Suivant », juste en dessous, passe déjà à la suite (comme la molette).
+            panel.addView(box, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
+        } else {
+            val top = Ui.horizontal(c, Gravity.TOP)
+            top.addView(Icon(c, Icon.Kind.CHECK, Ui.TEXT3), LinearLayout.LayoutParams(Ui.u(18), Ui.u(18)).apply { rightMargin = Ui.u(8) })
+            top.addView(Ui.ellipsize(Ui.text(c, noMachine, 16f, Ui.TEXT2), 2), LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+            panel.addView(top)
+            if (matched.isNotEmpty()) {
+                panel.addView(Ui.text(c, tr("Pour cette étape"), 20f, Ui.TEXT, Ui.MEDIUM), Ui.lp(t = 14))
+                val list = Ui.vertical(c)
+                for (k in matched) {
+                    val i = all[k]
+                    list.addView(IngredientsCard.row(c, IngredientsCard.quantity(i), IngredientsCard.name(i), i.originalQty.isNotBlank(),
+                        22f, 18f, Ui.TEXT2, qtyWidth = 92))
+                }
+                panel.addView(Ui.scroll(c, list).apply { isFillViewport = false }, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { topMargin = Ui.u(4) })
+                if (recipe.servings > 0 && matched.any { all[it].qty.isNotBlank() }) {
+                    panel.addView(Ui.text(c, tr("Quantités pour %s", Portions.label(recipe.servings, recipe.servingUnit)), 16f, Ui.TEXT2), Ui.lp(t = 4))
+                }
+            } else {
+                // Une durée seulement : en grand.
+                val box = Ui.vertical(c, Gravity.CENTER)
+                box.addView(Icon(c, Icon.Kind.TIMER, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(56), Ui.u(56)))
+                box.addView(Ui.text(c, Ui.clock(seconds * 1000L), 44f, Ui.TEXT, Ui.LIGHT), Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+                box.addView(Ui.text(c, tr("Durée lue dans l'étape"), 16f, Ui.TEXT2), Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
+                panel.addView(box, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
+            }
+        }
+        if (seconds > 0) {
+            val box = FrameLayout(c)
+            offerBox = box
+            offerState = ""
+            panel.addView(box, Ui.lp(t = 10))
+            refreshOffer()
+        }
+        if (IngredientsCard.has(recipe)) {
+            panel.addView(Ui.button(c, tr("Tous les ingrédients"), Ui.Style.GHOST, Icon.Kind.BOOK, height = 56, textSize = 17f) {
+                IngredientsCard.show(a, recipe)
+            }, Ui.lp(t = 8))
+        }
+    }
+
+    /** « Minuteur 30 min » à lancer, ou celui de cette étape qui tourne (un appui ouvre les minuteurs). */
+    private fun refreshOffer() {
+        val box = offerBox ?: return
+        val timers = Timers.of(a)
+        val label = timerLabel(index)
+        val mine = timers.running.firstOrNull { it.label == label }
+        val state = mine?.id?.toString() ?: "offer"
+        if (state != offerState) {
+            offerState = state
+            box.removeAllViews()
+            offerTime = null
+            if (mine == null) {
+                box.addView(Ui.button(c, tr("Minuteur %s", StepDurations.label(offerSeconds)), Ui.Style.PRIMARY, Icon.Kind.TIMER, height = 60, textSize = 20f) {
+                    if (!timers.canAdd()) a.toast(tr("%d minuteurs au plus en même temps", KitchenTimerList.MAX), Ui.WARN)
+                    else timers.start(label, offerSeconds * 1000L)
+                }, Ui.flp(Ui.MATCH, Ui.WRAP))
+            } else {
+                val b = Ui.button(c, "", Ui.Style.SECONDARY, Icon.Kind.TIMER, height = 60, textSize = 20f) { TimerPanel.open(a) }
+                val t = Ui.text(c, "", 20f, Ui.ACCENT, Ui.MEDIUM)
+                b.addView(t)
+                offerTime = t
+                box.addView(b, Ui.flp(Ui.MATCH, Ui.WRAP))
+            }
+        }
+        if (mine != null) offerTime?.text = tr("Minuteur · %s", Ui.clock(mine.remaining(timers.now())))
+    }
+
+    override fun onShow() {
+        unsubTimers?.invoke()
+        unsubTimers = Timers.of(a).listen { refreshOffer() }
+        refreshOffer()
+    }
+
+    override fun onHide() {
+        unsubTimers?.invoke()
+        unsubTimers = null
+    }
+
     private fun launch() {
+        if (stopped) return
         val first = index
         val m = recipe.steps[first].machine ?: return
         val series = series(first)
@@ -446,7 +607,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             // Étapes non réunissables en un programme (vapeur puis réglage…) : la suivante part seule.
             val chain = a.prefs.chainSteps && continues(finished + 1)
             view.postDelayed({
-                if (index == finished) {
+                if (index == finished && !stopped) {
                     a.machine.clearFinished()
                     if (index < recipe.steps.size - 1) {
                         // Étape enchaînée : le réglage a été vu avec la première étape de la série.
