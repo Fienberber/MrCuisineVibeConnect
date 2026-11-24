@@ -29,6 +29,7 @@ import app.toque.core.machine.PauseReason
 import app.toque.core.machine.SafetyPolicy
 import app.toque.core.machine.Snapshot
 import app.toque.core.machine.Verdict
+import app.toque.core.ring.RingColour
 import app.toque.core.robot.DeviceFacts
 import app.toque.core.robot.RobotDetector
 import app.toque.core.robot.RobotProfile
@@ -88,7 +89,7 @@ class MainActivity : Activity() {
         root.background = Ui.background()
         val column = Ui.vertical(this)
         topBar = TopBar(this)
-        column.addView(topBar, Ui.lp(Ui.MATCH, Ui.u(60)))
+        column.addView(topBar, Ui.lp(Ui.MATCH, Ui.u(TopBar.HEIGHT)))
         content = FrameLayout(this)
         column.addView(content, Ui.lp(Ui.MATCH, 0, 1f))
         machineBar = MachineBar(this)
@@ -102,6 +103,7 @@ class MainActivity : Activity() {
         splash = Splash(this, root)
         updates = UpdateAlert(this)
         standby.onWake = { updates.onWake() }
+        KnobLight.log = { m -> app.log.write("molette", m) }
 
         try {
             tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 85)
@@ -281,6 +283,7 @@ class MainActivity : Activity() {
             stack.lastOrNull()?.onSnapshot(s)
             standby.onSnapshot(s)
             splash.onSnapshot(s, app.machine.heard)
+            knobRing(s)
         }
         unsubscribeEvents = app.machine.onEvent { e -> onMachineEvent(e) }
         topBar.startClock()
@@ -301,8 +304,15 @@ class MainActivity : Activity() {
         unsubscribeEvents?.invoke()
         topBar.stopClock()
         standby.stop()
+        // Toque n'est plus à l'écran (appli d'origine, paramètres Android…) : blanc du robot.
+        KnobLight.release()
         updates.onStop()
         super.onStop()
+    }
+
+    /** Code couleur de l'anneau de la molette ; KnobLight n'écrit que quand la couleur change. */
+    private fun knobRing(s: Snapshot) {
+        KnobLight.show(if (prefs.knobColours) RingColour.of(s, current?.cookWaiting == true) else null)
     }
 
     override fun onDestroy() {

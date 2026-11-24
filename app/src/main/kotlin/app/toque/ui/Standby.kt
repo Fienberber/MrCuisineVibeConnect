@@ -9,7 +9,6 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
-import app.toque.TimeSync
 import app.toque.core.i18n.tr
 import app.toque.core.machine.Snapshot
 import kotlin.random.Random
@@ -49,6 +48,14 @@ class Standby(private val a: MainActivity, private val root: FrameLayout) {
             refresh()
             move()
             main.postDelayed(this, 60_000)
+        }
+    }
+
+    /** Heure pas encore réglée : on regarde souvent, pour la montrer dès qu'elle l'est (le reste attend la minute). */
+    private val clockTick = object : Runnable {
+        override fun run() {
+            clock?.text = WallClock.text(a)
+            if (!WallClock.known(a) && view != null) main.postDelayed(this, WallClock.UNKNOWN_TICK_MS)
         }
     }
 
@@ -129,11 +136,13 @@ class Standby(private val a: MainActivity, private val root: FrameLayout) {
             "off" -> KnobLight.start(0)
         }
         main.postDelayed(tick, 60_000)
+        if (!WallClock.known(a)) main.postDelayed(clockTick, WallClock.UNKNOWN_TICK_MS)
     }
 
     private fun wake() {
         val v = view ?: return
         main.removeCallbacks(tick)
+        main.removeCallbacks(clockTick)
         v.animate().cancel()
         root.removeView(v)
         view = null
@@ -146,7 +155,7 @@ class Standby(private val a: MainActivity, private val root: FrameLayout) {
     }
 
     private fun refresh() {
-        clock?.text = if (TimeSync.showClock(a)) MainActivity.now() else ""
+        clock?.text = WallClock.text(a)
         val temp = a.snapshot.actualTempC
         hot?.let {
             it.text = if (temp >= 50) tr("Bol chaud : %d °C", temp) else ""

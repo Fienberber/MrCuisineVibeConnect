@@ -4,7 +4,6 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import app.toque.TimeSync
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.machine.Snapshot
@@ -15,6 +14,7 @@ import app.toque.ui.MachineBar
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
 import app.toque.ui.Ui
+import app.toque.ui.WallClock
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -30,6 +30,9 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private lateinit var resumeCard: LinearLayout
     private lateinit var resumeText: TextView
     private lateinit var knobChip: LinearLayout
+    private lateinit var searchHint: TextView
+    /** Titre de la recette guidée cherché dans la base (catalogue pas encore chargé) : une fois par recette. */
+    private var titleLookup = ""
     private var unsub: (() -> Unit)? = null
     /** Ce qui s'adapte dans une tuile quand la barre du bas lui prend de la hauteur. */
     private class TileParts(val top: View, val text: View, val sub: TextView)
@@ -38,7 +41,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private val tick = object : Runnable {
         override fun run() {
             refreshClock()
-            view.postDelayed(this, 10_000)
+            // Heure pas encore réglée : on regarde souvent, pour l'afficher dès qu'elle l'est.
+            view.postDelayed(this, WallClock.nextMs(a, 10_000))
         }
     }
 
@@ -64,7 +68,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         search.setPadding(Ui.u(24), 0, Ui.u(24), 0)
         search.background = Ui.pressable(Ui.round(Ui.SURFACE, 36f, Ui.STROKE, 1f), 36f)
         search.addView(Icon(c, Icon.Kind.SEARCH, Ui.TEXT2), LinearLayout.LayoutParams(Ui.u(28), Ui.u(28)).apply { rightMargin = Ui.u(14) })
-        search.addView(Ui.text(c, tr("Rechercher une recette…"), 21f, Ui.TEXT3))
+        searchHint = Ui.ellipsize(Ui.text(c, tr("Rechercher une recette…"), 21f, Ui.TEXT3))
+        search.addView(searchHint, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         search.isClickable = true
         search.setOnClickListener { a.push(RecipesScreen(a, focusSearch = true)) }
         left.addView(search, Ui.lp(Ui.MATCH, Ui.u(72), t = 34))
@@ -133,7 +138,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         val t = Ui.vertical(c, Gravity.CENTER_HORIZONTAL)
         t.setPadding(Ui.u(14), Ui.u(14), Ui.u(14), Ui.u(14))
         t.background = Ui.pressable(Ui.round(Ui.SURFACE, 26f, Ui.STROKE, 1f), 26f)
-        t.addView(View(c), LinearLayout.LayoutParams(1, 0, 2f))
+        t.addView(View(c), LinearLayout.LayoutParams(1, 0, 1f))
         val badge = android.widget.FrameLayout(c)
         badge.background = Ui.round(Ui.ACCENT_DIM, 44f)
         badge.addView(Icon(c, icon, Ui.ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
@@ -142,7 +147,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         text.addView(Ui.text(c, title, 22f, Ui.TEXT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))
         val s = Ui.ellipsize(Ui.text(c, sub, 15f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, 2)
         if (hasSub) text.addView(s, Ui.lp(Ui.WRAP, Ui.WRAP, t = 4))
-        t.addView(text, LinearLayout.LayoutParams(Ui.MATCH, 0, 3f))
+        // Deux tiers de la place libre au texte : deux lignes de sous-titre y tiennent en entier.
+        t.addView(text, LinearLayout.LayoutParams(Ui.MATCH, 0, 2f))
         t.isClickable = true
         t.setOnClickListener { onClick() }
         tiles += TileParts(t.getChildAt(0), text, s)
@@ -167,11 +173,14 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     override fun onSnapshot(s: Snapshot) = setCompact(MachineBar.shownFor(s))
 
     private fun refreshClock() {
-        // Heure et date masquées tant qu'elles ne sont pas réglées (voir TimeSync.showClock) ; la
-        // place reste réservée pour que l'accueil ne saute pas quand elles apparaissent.
-        val show = TimeSync.showClock(a)
-        clock.visibility = if (show) View.VISIBLE else View.INVISIBLE
-        date.visibility = if (show) View.VISIBLE else View.INVISIBLE
+        // Après une coupure de courant, la tablette se croit en 2010 : rien de faux tant que l'heure n'est pas réglée.
+        if (!WallClock.known(a)) {
+            clock.text = WallClock.UNKNOWN
+            date.text = tr("Réglage de l'heure…")
+            // Salut neutre : « Bonjour » se traduit ailleurs par « Good morning ».
+            greeting.text = tr("Bonjour !")
+            return
+        }
         clock.text = MainActivity.now()
         date.text = SimpleDateFormat(tr("EEEE d MMMM"), I18n.locale).format(Date()).replaceFirstChar { it.uppercaseChar() }
         val h = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
@@ -198,15 +207,49 @@ class HomeScreen(a: MainActivity) : Screen(a) {
             ).joinToString("\n")
         }
         val favs = repo.index.entries.count { it.favorite }
-        favSub.text = if (favs == 0) tr("Aucun favori") else if (favs == 1) tr("1 favori") else tr("%d favoris", favs)
+        favSub.text = when {
+            !repo.loaded -> tr("Chargement…")
+            favs == 0 -> tr("Aucun favori")
+            favs == 1 -> tr("1 favori")
+            else -> tr("%d favoris", favs)
+        }
+        searchHint.text = if (repo.loaded) tr("Rechercher une recette…") else tr("Catalogue en préparation…")
         knobChip.visibility = if (a.prefs.knobReady) View.GONE else View.VISIBLE
         val update = a.updates.available
         settingsSub.text = if (update != null) tr("Version %s disponible", update.version) else ""
         settingsSub.visibility = if (update != null) View.VISIBLE else View.GONE
-        val guided = a.prefs.guidedRecipe
-        val title = if (guided.isEmpty()) null else repo.index.entries.firstOrNull { it.id == guided }?.title
+        val title = guidedTitle()
         resumeCard.visibility = if (title != null) View.VISIBLE else View.GONE
         if (title != null) resumeText.text = tr("Reprendre « %s » — étape %d", title, a.prefs.guidedStep + 1)
+    }
+
+    /**
+     * Titre de la recette guidée en cours, ou null (aucune, ou retirée du catalogue). Catalogue pas
+     * encore chargé : le titre gardé dans les préférences, sinon lu dans la base à part (une ligne),
+     * pour que la carte « Reprendre » soit là tout de suite.
+     */
+    private fun guidedTitle(): String? {
+        val guided = a.prefs.guidedRecipe
+        if (guided.isEmpty()) return null
+        val repo = a.app.recipes
+        if (repo.loaded) {
+            val title = repo.index.entries.firstOrNull { it.id == guided }?.title ?: return null
+            if (a.prefs.guidedTitle != "$guided\t$title") a.prefs.guidedTitle = "$guided\t$title"
+            return title
+        }
+        val kept = a.prefs.guidedTitle
+        if (kept.startsWith("$guided\t")) return kept.substring(guided.length + 1)
+        if (titleLookup != guided) {
+            titleLookup = guided
+            Thread {
+                val title = try { repo.get(guided)?.title } catch (_: Exception) { null }
+                if (title != null) {
+                    a.prefs.guidedTitle = "$guided\t$title"
+                    view.post { if (a.current === this) refresh() }
+                }
+            }.apply { name = "toque-reprise" }.start()
+        }
+        return null
     }
 
     override fun onShow() {
@@ -215,7 +258,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         unsub = a.app.recipes.onChange { refresh() }
         a.updates.onChange = { refresh() }
         view.removeCallbacks(tick)
-        view.postDelayed(tick, 10_000)
+        view.postDelayed(tick, WallClock.nextMs(a, 10_000))
     }
 
     override fun onHide() {

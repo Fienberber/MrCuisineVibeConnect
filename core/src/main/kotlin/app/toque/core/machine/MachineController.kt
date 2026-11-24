@@ -24,7 +24,7 @@ object MonotonicClock : Clock {
 enum class LinkState(private val fr: String) {
     OFFLINE(trKey("Base non connectée")),
     ARMING(trKey("Connexion…")),
-    READY(trKey("Prête")),
+    READY(trKey("Base prête")),
     LOST(trKey("Connexion perdue"));
 
     val label: String get() = tr(fr)

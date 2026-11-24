@@ -193,6 +193,9 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         screen.addView(Ui.text(c, tr("Molette pendant la veille"), 18f, Ui.TEXT), Ui.lp(t = 12))
         screen.addView(dropdown(knob, a.prefs.standbyKnob) { a.prefs.standbyKnob = it },
             Ui.lp(Ui.MATCH, Ui.u(58), t = 8))
+        screen.addView(toggle(tr("Couleurs sur la molette"), a.prefs.knobColours) { a.prefs.knobColours = it }, Ui.lp(t = 14))
+        screen.addView(Ui.text(c, tr("L'anneau de la molette montre l'état du robot : rouge pour un problème, orange pendant une pause, vert quand c'est à vous, cyan pendant un programme, blanc sinon."),
+            15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
 
         // ---- Date et heure
         val time = section(right, tr("Date et heure"), Icon.Kind.CLOCK)

@@ -436,6 +436,17 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         }
     }
 
+    /**
+     * La recette attend la personne (pesée, étape à la main, étape à lancer, mixage à chaud à
+     * confirmer, fin de recette) : tout sauf le programme lancé d'ici, en cours ou en pause.
+     */
+    override val cookWaiting: Boolean
+        get() {
+            val s = a.snapshot
+            val launchedActive = launchedStep >= 0 && s.jobActive && s.state != JobState.FINISHED && s.state != JobState.ABORTED
+            return recipe.steps.isNotEmpty() && !launchedActive
+        }
+
     private fun reviewKey(i: Int): String = "${recipe.id}|$i|${recipe.steps[i].machine?.summary ?: ""}"
 
     /** Le programme qui se termine est le dernier réglage machine de la recette. */
