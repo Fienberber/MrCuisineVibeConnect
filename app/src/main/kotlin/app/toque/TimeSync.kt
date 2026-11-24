@@ -121,7 +121,8 @@ class TimeSync(private val context: Context, private val prefs: Prefs, private v
 
     companion object {
         /** 1er janvier 2025 : en dessous, l'heure d'un serveur n'est pas crédible. */
-        private const val MIN_PLAUSIBLE_MS = 1_735_689_600_000L
+        /** Même limite que pour le fuseau (ZoneLookup) : une seule « date plausible » dans Toque. */
+        private const val MIN_PLAUSIBLE_MS = ZoneLookup.PLAUSIBLE_SINCE_MS
         private val available: Set<String> by lazy { TimeZone.getAvailableIDs().toHashSet() }
 
         /** Une seule ligne de journal neutre par processus pendant l'attente de NTP. */
