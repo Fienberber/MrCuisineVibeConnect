@@ -826,5 +826,6 @@
   "Connexion à %s…": "Conectando con %s…",
   "Yaourt": "Yogur",
   "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentación: cuchilla parada, %d °C máximo",
-  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Leche tibia con el fermento, tapa cerrada. Mantiene %d °C sin remover: la cuchilla no se mueve."
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Leche tibia con el fermento, tapa cerrada. Mantiene %d °C sin remover: la cuchilla no se mueve.",
+  "Pétrir, vapeur, rissoler, yaourt, nettoyage": "Amasar, vapor, sofreír, yogur, limpieza"
 }

@@ -826,5 +826,6 @@
   "Connexion à %s…": "Connecting to %s…",
   "Yaourt": "Yogurt",
   "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentation: blade stopped, %d °C maximum",
-  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lukewarm milk with the starter, lid closed. Holds %d °C without stirring: the blade stays still."
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lukewarm milk with the starter, lid closed. Holds %d °C without stirring: the blade stays still.",
+  "Pétrir, vapeur, rissoler, yaourt, nettoyage": "Knead, steam, brown, yogurt, cleaning"
 }

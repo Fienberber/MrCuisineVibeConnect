@@ -826,5 +826,6 @@
   "Connexion à %s…": "Підключення до %s…",
   "Yaourt": "Йогурт",
   "Fermentation : lame à l'arrêt, %d °C maximum": "Ферментація: ніж нерухомий, не більше %d °C",
-  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Тепле молоко із закваскою, кришка закрита. Тримає %d °C без перемішування: ніж нерухомий."
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Тепле молоко із закваскою, кришка закрита. Тримає %d °C без перемішування: ніж нерухомий.",
+  "Pétrir, vapeur, rissoler, yaourt, nettoyage": "Автоматичні режими"
 }
