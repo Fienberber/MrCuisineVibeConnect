@@ -15,7 +15,9 @@ import app.toque.core.machine.MachineEvent
 import app.toque.core.machine.SafetyPolicy
 import app.toque.core.machine.Snapshot
 import app.toque.core.protocol.Mcc
+import app.toque.core.recipes.PermittedSetting
 import app.toque.core.recipes.Recipe
+import app.toque.core.recipes.StepMachine
 import app.toque.core.recipes.StepProgram
 import app.toque.ui.HoldButton
 import app.toque.ui.Icon
@@ -38,6 +40,25 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         val known = a.prefs.reviewedSteps
         recipe.steps.forEachIndexed { i, st -> if (st.needsReview && reviewKey(i) in known) add(i) }
     }
+    /**
+     * Étapes dont le réglage refusé est remplacé par le réglage permis le plus proche, adopté d'un
+     * appui (« Utiliser … ») : c'est lui qui part et qui s'enchaîne.
+     */
+    private val adopted = HashMap<Int, StepMachine>().apply {
+        // Adoptés lors d'une cuisson précédente : repris seulement si la proposition est toujours la même.
+        val known = a.prefs.adaptedSteps
+        recipe.steps.forEachIndexed { i, st ->
+            val m = st.machine ?: return@forEachIndexed
+            val p = PermittedSetting.of(m) ?: return@forEachIndexed
+            if (adaptKey(i, m, p) in known) {
+                put(i, p)
+                reviewed += i
+            }
+        }
+    }
+
+    /** Réglage qui partira pour l'étape [i] : l'adopté s'il y en a un, sinon celui de la recette. */
+    private fun machine(i: Int): StepMachine? = adopted[i] ?: recipe.steps.getOrNull(i)?.machine
     /** Bip de pesée : armé tant que le poids est sous la quantité, joué une fois en l'atteignant. */
     private var weighArmed = false
     /** Cuisson déjà comptée (« Récentes », « Les plus cuisinées ») pendant cet écran. */
@@ -189,8 +210,8 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         panel.removeAllViews()
         turboBtn = null
         reviewBtn = null
-        val m = recipe.steps[index].machine
-        if (m == null) {
+        val orig = recipe.steps[index].machine
+        if (orig == null) {
             val box = Ui.vertical(c, Gravity.CENTER)
             box.addView(Icon(c, Icon.Kind.CHECK, Ui.TEXT3), LinearLayout.LayoutParams(Ui.u(48), Ui.u(48)))
             box.addView(Ui.text(c, tr("Pas de réglage machine pour cette étape"), 18f, Ui.TEXT2).apply { gravity = Gravity.CENTER }, Ui.lp(t = 12))
@@ -199,6 +220,16 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             panel.addView(startBtn)
             return
         }
+        val m = machine(index)!!
+        // Réglage refusé pour lequel un réglage permis existe, pas encore adopté.
+        val proposal = if (index in adopted) null else PermittedSetting.of(orig)
+        val violations = m.violations()
+        val step = recipe.steps[index]
+        // Réglage importé, permis, pas encore vérifié ici : « J'ai vérifié ce réglage » avant « Lancer ».
+        val toReview = step.needsReview && index !in reviewed && violations.isEmpty()
+        // En réglage manuel, le titre le dit, à la place de la pastille et de la phrase sous les réglages :
+        // durée, température, vitesse et sens tiennent ainsi tous au-dessus des boutons, sans rien de coupé.
+        val reviewTitle = toReview && m.program == StepProgram.MANUAL
         // Haut du panneau (titre, réglages, enchaînement, avertissement) : défile s'il manque de la
         // place (barre de programme en cours affichée), les boutons restent toujours visibles en bas.
         val info = Ui.vertical(c)
@@ -226,7 +257,11 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             StepProgram.TURBO -> JobKind.TURBO.label
             StepProgram.MIXER, StepProgram.SMOOTHIE, StepProgram.SOUS_VIDE, StepProgram.SLOW_COOK, StepProgram.FERMENT -> m.program.label
         }, 22f, Ui.TEXT, Ui.MEDIUM))
-        info.addView(head)
+        // À vérifier : le titre le dit. Proposition : sans titre, la place va à ce que demande la
+        // recette, au refus et au bouton.
+        if (reviewTitle) info.addView(Ui.text(c, tr("Réglage à vérifier"), 20f, Ui.WARN, Ui.MEDIUM))
+        else if (proposal == null) info.addView(head)
+        if (index in adopted) info.addView(adaptedRow(orig, m), Ui.lp(t = 12))
 
         val grid = Ui.vertical(c)
         fun line(icon: Icon.Kind, label: String, value: String, color: Int = Ui.TEXT) {
@@ -236,7 +271,11 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             r.addView(Ui.text(c, value, 24f, color, Ui.LIGHT))
             grid.addView(r, Ui.lp(t = 10))
         }
-        if (m.program == StepProgram.TURBO) {
+        if (proposal != null) {
+            // Ce que demande la recette, en une ligne : la place reste au motif du refus et à la proposition.
+            grid.addView(Ui.text(c, tr("La recette demande :"), 16f, Ui.TEXT2))
+            grid.addView(Ui.text(c, PermittedSetting.asked(orig), 22f, Ui.TEXT, Ui.LIGHT).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 2))
+        } else if (m.program == StepProgram.TURBO) {
             line(Icon.Kind.BOLT, tr("Impulsions"), if (m.pulses > 0) "× ${m.pulses}" else tr("au besoin"))
         } else {
             line(Icon.Kind.CLOCK, tr("Durée"), Ui.duration(m.seconds))
@@ -251,7 +290,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         info.addView(grid, Ui.lp(t = 6))
         val chained = if (a.prefs.chainSteps) chainLength(index) else 0
         if (chained > 0) {
-            val next = (index + 1..index + chained).map { recipe.steps[it].machine!!.summary }
+            val next = (index + 1..index + chained).map { machine(it)!!.summary + if (it in adopted) " · " + tr("adapté") else "" }
             val list = next.take(4).joinToString("\n") { "• $it" } +
                 if (next.size > 4) "\n" + tr("… et %d autres", next.size - 4) else ""
             info.addView(Ui.text(c, tr("Puis, enchaînés automatiquement :") + "\n" + list, 15f, Ui.TEXT2)
@@ -261,13 +300,12 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         info.addView(panelState, Ui.lp(t = 12))
         panel.addView(Ui.scroll(c, info), LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
 
-        val violations = m.violations()
-        val step = recipe.steps[index]
         panelInfo = ""
         if (violations.isNotEmpty()) {
-            panelInfo = tr("Réglage refusé par la sécurité : %s. Utilisez la cuisson manuelle.", violations.first().message)
+            panelInfo = if (proposal != null) tr("Refusé par la sécurité : %s.", violations.first().message)
+            else tr("Réglage refusé par la sécurité : %s. Utilisez la cuisson manuelle.", violations.first().message)
         }
-        if (step.needsReview && index !in reviewed && violations.isEmpty()) {
+        if (toReview) {
             val rb = Ui.button(c, tr("J'ai vérifié ce réglage"), Ui.Style.GHOST, Icon.Kind.CHECK, height = 56, textSize = 17f) {
                 reviewed += index
                 a.prefs.reviewedSteps = a.prefs.reviewedSteps + reviewKey(index)
@@ -276,9 +314,22 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             }
             reviewBtn = rb
             panel.addView(rb, Ui.lp(t = 8, b = 8))
-            panelInfo = tr("Réglage importé : vérifiez-le avant de lancer.")
+            // Les programmes gardent leur nom en titre (c'est lui qu'on vérifie) et la phrase : leur seule ligne laisse la place.
+            if (!reviewTitle) panelInfo = tr("Réglage importé : vérifiez-le avant de lancer.")
         }
         panelState?.text = panelInfo
+        if (proposal != null) {
+            // Au-dessus de « Lancer », pas à sa place : un double appui n'adopte pas puis ne lance pas.
+            val b = Ui.button(c, tr("Utiliser %s", proposal.summary), Ui.Style.COOL, Icon.Kind.CHECK, height = 64, textSize = 18f) {
+                adopt(index, orig, proposal)
+            }
+            (b.getChildAt(b.childCount - 1) as TextView).apply {
+                gravity = Gravity.CENTER
+                setLineSpacing(0f, 1.05f)
+            }
+            b.setPadding(Ui.u(16), Ui.u(8), Ui.u(16), Ui.u(8))
+            panel.addView(b, Ui.lp(t = 8, b = 8))
+        }
         if (m.program == StepProgram.TURBO) {
             val t = HoldButton(c, tr("Maintenir pour Turbo"), onDown = {
                 a.turboDown(m.accessory)
@@ -292,6 +343,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         }
         if (m.program == StepProgram.MANUAL) {
             panel.addView(Ui.button(c, tr("Ajuster à la main"), Ui.Style.GHOST, height = 46, textSize = 16f) {
+                // Réglage adopté : la cuisson manuelle part de lui (sinon celui de la recette, comme avant).
                 a.push(ManualScreen(a, m))
             }, Ui.lp(t = 6))
         }
@@ -299,9 +351,58 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         Ui.setButtonEnabled(startBtn, !blocked)
     }
 
+    /**
+     * « Utiliser … » : le réglage permis le plus proche remplace celui de la recette pour cette étape.
+     * Le bouton nomme le réglage : l'appui vaut vérification (« J'ai vérifié ce réglage »). Rien ne part.
+     */
+    private fun adopt(i: Int, from: StepMachine, to: StepMachine) {
+        if (i != index || i in adopted) return
+        adopted[i] = to
+        reviewed += i
+        a.prefs.adaptedSteps = a.prefs.adaptedSteps + adaptKey(i, from, to)
+        buildPanel()
+        onSnapshot(a.snapshot)
+    }
+
+    /** « Réglage adapté : vitesse 3 au lieu de 4 » ; un appui montre le réglage de la recette. */
+    private fun adaptedRow(from: StepMachine, to: StepMachine): View {
+        val row = Ui.horizontal(c)
+        row.minimumHeight = Ui.u(56)
+        row.setPadding(Ui.u(14), Ui.u(8), Ui.u(10), Ui.u(8))
+        row.background = Ui.pressable(Ui.round(Ui.SURFACE2, 16f), 16f)
+        row.addView(Icon(c, Icon.Kind.INFO, Ui.COOL), LinearLayout.LayoutParams(Ui.u(22), Ui.u(22)).apply { rightMargin = Ui.u(10) })
+        row.addView(Ui.text(c, tr("Réglage adapté : %s", PermittedSetting.changes(from, to)), 16f, Ui.COOL).apply { setLineSpacing(0f, 1.1f) },
+            LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        row.addView(Icon(c, Icon.Kind.CHEVRON, Ui.TEXT2), LinearLayout.LayoutParams(Ui.u(18), Ui.u(18)).apply { leftMargin = Ui.u(6) })
+        row.isClickable = true
+        row.setOnClickListener { showRecipeSetting(from, to) }
+        return row
+    }
+
+    /** Le réglage écrit dans la recette, pourquoi il est refusé et celui qui le remplace. */
+    private fun showRecipeSetting(from: StepMachine, to: StepMachine) {
+        val card = Ui.card(c, 28f, Ui.SURFACE2)
+        card.setPadding(Ui.u(32), Ui.u(28), Ui.u(32), Ui.u(26))
+        val head = Ui.horizontal(c)
+        head.addView(Icon(c, Icon.Kind.INFO, Ui.COOL), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
+        head.addView(Ui.text(c, tr("Réglage de la recette"), 26f, Ui.TEXT, Ui.MEDIUM))
+        card.addView(head)
+        card.addView(Ui.text(c, tr("La recette demande : %s", PermittedSetting.asked(from)), 20f, Ui.TEXT), Ui.lp(t = 18))
+        from.violations().firstOrNull()?.let {
+            card.addView(Ui.text(c, tr("Refusé par la sécurité : %s.", it.message), 18f, Ui.WARN), Ui.lp(t = 10))
+        }
+        card.addView(Ui.text(c, tr("Toque utilise : %s", to.summary), 20f, Ui.TEXT), Ui.lp(t = 10))
+        if (from.program == StepProgram.MANUAL)
+            card.addView(Ui.text(c, tr("Pour un autre réglage : « Ajuster à la main »."), 17f, Ui.TEXT2), Ui.lp(t = 14))
+        val row = Ui.horizontal(c, Gravity.END or Gravity.CENTER_VERTICAL)
+        row.addView(Ui.button(c, tr("Fermer"), Ui.Style.SECONDARY, height = 60) { a.closeOverlay() })
+        card.addView(row, Ui.lp(t = 22))
+        a.showOverlay(card, 680)
+    }
+
     private fun launch() {
         val first = index
-        val m = recipe.steps[first].machine ?: return
+        val m = machine(first) ?: return
         val series = series(first)
         val job = series ?: m.toJob(tr("Étape %d · %s", first + 1, recipe.title), hotBlendConfirmed = hotBlendOk) ?: return
         val count = series?.phases?.size ?: 1
@@ -326,7 +427,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         if (!a.prefs.chainSteps) return null
         val n = chainLength(first)
         if (n == 0) return null
-        val machines = (first..first + n).map { recipe.steps[it].machine ?: return null }
+        val machines = (first..first + n).map { machine(it) ?: return null }
         if (machines.any { it.program != StepProgram.MANUAL || it.accessory != machines[0].accessory }) return null
         val phases = machines.map { it.toJob("", hotBlendOk)?.phases?.singleOrNull() ?: return null }
         val spec = JobSpec(
@@ -347,10 +448,12 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
      */
     private fun continues(i: Int): Boolean {
         val s = recipe.steps.getOrNull(i) ?: return false
-        val m = s.machine ?: return false
-        val prev = recipe.steps.getOrNull(i - 1)?.machine ?: return false
+        val written = s.machine ?: return false
+        // Réglage adopté à la place d'un réglage refusé : il s'enchaîne ; un refusé non adopté, jamais.
+        val m = machine(i) ?: return false
+        val prev = machine(i - 1) ?: return false
         return m.program != StepProgram.TURBO && prev.program != StepProgram.TURBO && s.weigh == null &&
-            (s.text.isBlank() || s.text == m.summary) && m.violations().isEmpty()
+            (s.text.isBlank() || s.text == written.summary) && m.violations().isEmpty()
     }
 
     /** Nombre d'étapes qui s'enchaîneront après l'étape [i]. */
@@ -389,7 +492,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
                 return
             }
         }
-        val m = recipe.steps.getOrNull(index)?.machine ?: return
+        val m = machine(index) ?: return
         val mine = running && index >= launchedStep && index < launchedStep + launchedCount
         val ps = panelState
         if (m.program != StepProgram.TURBO && ::startBtn.isInitialized) {
@@ -422,6 +525,12 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             t.alpha = if (t.isEnabled) 1f else 0.35f
         }
     }
+
+    /** Réglage en clair, indépendant de la langue (la clé des réglages adoptés). */
+    private fun code(m: StepMachine): String =
+        "${m.program.key}/${m.seconds}/${m.speed}/${m.tempC}/${if (m.reverse) 1 else 0}/${m.accessory.name}/${m.pulses}"
+
+    private fun adaptKey(i: Int, from: StepMachine, to: StepMachine): String = "${recipe.id}|$i|${code(from)}>${code(to)}"
 
     private fun reviewKey(i: Int): String = "${recipe.id}|$i|${recipe.steps[i].machine?.summary ?: ""}"
 
@@ -465,7 +574,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
     }
 
     override fun onKnobPress(): Boolean {
-        val m = recipe.steps.getOrNull(index)?.machine
+        val m = machine(index)
         if (m == null) next() else if (m.program != StepProgram.TURBO && startBtn.isEnabled && startBtn.visibility == View.VISIBLE) launch()
         return true
     }

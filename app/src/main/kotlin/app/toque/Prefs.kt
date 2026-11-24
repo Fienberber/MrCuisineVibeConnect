@@ -296,6 +296,16 @@ class Prefs(context: Context) {
             p.edit().putStringSet("reviewedSteps", HashSet(v)).commit()
         }
 
+    /**
+     * Réglages refusés remplacés d'un appui par le réglage permis le plus proche (« Utiliser … »),
+     * clé = recette, étape, réglage de la recette et réglage adopté.
+     */
+    var adaptedSteps: Set<String>
+        get() = HashSet(p.getStringSet("adaptedSteps", emptySet()) ?: emptySet())
+        set(v) {
+            p.edit().putStringSet("adaptedSteps", HashSet(v)).commit()
+        }
+
     /** Son joué quand la quantité à peser est atteinte (voir Sounds.WEIGH_SOUNDS). */
     var weighSound: String
         get() = p.getString("weighSound", "ding") ?: "ding"
