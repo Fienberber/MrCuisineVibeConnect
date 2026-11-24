@@ -667,7 +667,11 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         return row
     }
 
-    /** Menu déroulant : la valeur choisie, et la liste qui s'ouvre en dessous. */
+    /**
+     * Menu déroulant : la valeur choisie, et la liste qui s'ouvre sous la case, ou au-dessus quand la place
+     * manque en dessous (voir [listPlace]). Android 6 l'ouvrait toujours en dessous : une case en bas de page
+     * ne montrait qu'un choix, le reste hors de l'écran.
+     */
     private fun dropdown(options: List<Pair<String, String>>, selected: String, onPick: (String) -> Unit): View {
         val box = Ui.horizontal(c)
         box.setPadding(Ui.u(16), 0, Ui.u(14), 0)
@@ -704,10 +708,11 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
                 addView(list)
                 background = Ui.round(Ui.SURFACE3, 16f, Ui.STROKE, 1f)
             }
-            val height = if (options.size > 7) Ui.u(400) else ViewGroup.LayoutParams.WRAP_CONTENT
-            val popup = PopupWindow(scroll, box.width, height, false)
+            val popup = PopupWindow(scroll, box.width, ViewGroup.LayoutParams.WRAP_CONTENT, false)
+            var chosen: View? = null
             for ((code, name) in options) {
                 val row = Ui.text(c, name, 19f, if (code == current) Ui.ACCENT_INK else Ui.TEXT)
+                if (code == current) chosen = row
                 row.setPadding(Ui.u(16), Ui.u(14), Ui.u(16), Ui.u(14))
                 row.background = Ui.pressable(Ui.round(0, 0f), 0f)
                 row.isClickable = true
@@ -733,7 +738,21 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
                 if (openList === popup) openList = null
             }
             popup.elevation = Ui.uf(8f)
-            popup.showAsDropDown(box, 0, Ui.u(6))
+            // La liste reste dans la zone de l'écran des réglages : ni sur la barre du haut, ni hors de l'écran.
+            scroll.measure(View.MeasureSpec.makeMeasureSpec(box.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
+            val at = IntArray(2)
+            box.getLocationInWindow(at)
+            val area = IntArray(2)
+            view.getLocationInWindow(area)
+            val (y, height) = listPlace(at[1], at[1] + box.height, minOf(scroll.measuredHeight, Ui.u(LIST_MAX)),
+                area[1] + Ui.u(LIST_MARGIN), area[1] + view.height - Ui.u(LIST_MARGIN), Ui.u(6))
+            popup.height = height
+            popup.showAtLocation(box, Gravity.TOP or Gravity.START, at[0], y)
+            // Une liste plus longue que sa fenêtre s'ouvre sur le choix en cours, au milieu.
+            val row = chosen
+            if (row != null && scroll.measuredHeight > height)
+                scroll.post { scroll.scrollTo(0, maxOf(0, row.top + row.height / 2 - height / 2)) }
             shown = popup
             openList = popup
         }
@@ -1099,8 +1118,29 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
          */
         fun reopened(a: MainActivity) = SettingsScreen(a, last)
 
+        /**
+         * Où ouvrir une liste déroulante haute de [wanted], pour une case allant de [anchorTop] à
+         * [anchorBottom], dans la zone de [top] à [bottom] (tout en pixels, dans la fenêtre) : sous la case
+         * si elle y tient ; sinon au-dessus si elle y tient ; sinon remontée juste assez pour finir en bas de
+         * la zone (elle recouvre alors la case), et pas plus haute que la zone (elle défile).
+         * @return le haut de la liste et sa hauteur.
+         */
+        internal fun listPlace(anchorTop: Int, anchorBottom: Int, wanted: Int, top: Int, bottom: Int, gap: Int): Pair<Int, Int> {
+            val height = minOf(wanted, bottom - top).coerceAtLeast(0)
+            val below = anchorBottom + gap
+            val above = anchorTop - gap - height
+            return when {
+                below + height <= bottom -> below to height
+                above >= top -> above to height
+                else -> maxOf(top, bottom - height) to height
+            }
+        }
+
         /** Hauteur d'une ligne du menu, en pixels de référence. */
         private const val ENTRY = 52
+        /** Hauteur la plus grande d'une liste déroulante (au-delà elle défile), et sa marge avec le bord de l'écran. */
+        private const val LIST_MAX = 400
+        private const val LIST_MARGIN = 8
         /** Défilement d'un cran de molette, en pixels de référence. */
         private const val KNOB_STEP = 120
     }
