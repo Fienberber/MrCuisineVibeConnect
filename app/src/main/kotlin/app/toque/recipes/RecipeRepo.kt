@@ -486,9 +486,18 @@ class RecipeRepo(private val context: Context, private val log: Logbook? = null)
         return adjustments[id] ?: RecipeAdjustments()
     }
 
+    private val adjustedListeners = ArrayList<(String) -> Unit>()
+
+    /** Adaptations d'une recette changées (page de la recette, ou téléphone) ; rappel sur le fil principal. */
+    fun onAdjusted(l: (String) -> Unit): () -> Unit {
+        synchronized(adjustedListeners) { adjustedListeners += l }
+        return { synchronized(adjustedListeners) { adjustedListeners -= l } }
+    }
+
     fun setAdjustments(id: String, a: RecipeAdjustments) {
         if (!adjustmentsLoaded) loadAdjustments(helper.writableDatabase)
         if (a.isEmpty) adjustments.remove(id) else adjustments[id] = a
+        main.post { for (l in synchronized(adjustedListeners) { ArrayList(adjustedListeners) }) l(id) }
         exec.execute {
             val db = helper.writableDatabase
             if (a.isEmpty) db.delete("adjustments", "id = ?", arrayOf(id))

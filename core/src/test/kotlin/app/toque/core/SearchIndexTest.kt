@@ -1,8 +1,12 @@
 package app.toque.core
 
+import app.toque.core.companion.CatalogFilter
+import app.toque.core.companion.CatalogQuery
+import app.toque.core.companion.CatalogSearch
 import app.toque.core.recipes.Ingredient
 import app.toque.core.recipes.IngredientGroup
 import app.toque.core.recipes.Recipe
+import app.toque.core.recipes.RecipeChip
 import app.toque.core.recipes.RecipeFilter
 import app.toque.core.recipes.RecipeSource
 import app.toque.core.recipes.SearchIndex
@@ -144,15 +148,21 @@ class SearchIndexTest {
         for (q in queries) assertEquals(q, sig(rebuilt.search(q)), sig(idx.search(q)))
     }
 
-    @Test fun listHasNoLimit() {
+    @Test fun robotListHasNoLimitPhonePagesUnchanged() {
         val list = catalogue(1700)
         val idx = SearchIndex(list)
-        // La grille du robot (search sans limite) : toute la liste, avec ou sans texte.
-        assertEquals(1700, idx.search("").size)
+        // Robot : toute la liste, avec ou sans texte.
+        assertEquals(1700, RecipeChip.select(idx, RecipeChip.ALL, "").size)
         // « min » : un mot de chaque étape, donc toutes les recettes.
-        val all = idx.search("hacher min")
+        val all = RecipeChip.select(idx, RecipeChip.ALL, "hacher min")
         assertTrue(all.size > 500)
         assertEquals(LegacySearchIndex(list).search("hacher min", RecipeFilter(), Int.MAX_VALUE).map { it.entry.id }, all.map { it.entry.id })
+        // Téléphone : page par page, le total compte tout.
+        val page = CatalogSearch.page(idx, CatalogQuery("", CatalogFilter.ALL, offset = 0, limit = 24))
+        assertEquals(1700, page.total)
+        assertEquals(24, page.items.size)
+        val next = CatalogSearch.page(idx, CatalogQuery("", CatalogFilter.ALL, offset = 24, limit = 24))
+        assertEquals(RecipeChip.select(idx, RecipeChip.ALL, "").drop(24).take(24).map { it.entry.id }, next.items.map { it.id })
     }
 
     @Test fun storedWordsRoundTrip() {

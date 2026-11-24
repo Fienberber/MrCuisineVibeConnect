@@ -16,6 +16,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import app.toque.Prefs
 import app.toque.TimeSync
+import app.toque.companion.RobotCompanion
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.machine.RootShell
@@ -44,7 +45,7 @@ import app.toque.update.Updater
  */
 class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Screen(a) {
     /** Les familles de réglages, dans l'ordre du menu : le quotidien d'abord, le technique à la fin. */
-    enum class Family { SCREEN, KNOB_SOUNDS, RECIPES, COOKING, SAFETY, LANGUAGE_TIME, UPDATES, ADVANCED }
+    enum class Family { SCREEN, KNOB_SOUNDS, RECIPES, COOKING, SAFETY, PHONE, LANGUAGE_TIME, UPDATES, ADVANCED }
 
     /** D'où viennent les recettes : une pastille chacune, en haut de la famille « Recettes ». */
     private enum class Source { LIDL, COMMUNITY, MINE, STOCK }
@@ -77,9 +78,11 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
     private lateinit var invertHint: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
+    private lateinit var companionText: TextView
     /** Point sur « Avancé » et phrase au-dessus de « Machine » : tant que Toque ne pilote pas le vrai moteur. */
     private lateinit var modeDot: View
     private lateinit var modeText: TextView
+    private var unsubCompanion: (() -> Unit)? = null
     private var settingTime = false
     private var mode = a.prefs.mode
 
@@ -121,6 +124,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
                 Family.RECIPES -> recipesPage(page)
                 Family.COOKING -> cookingPage(page)
                 Family.SAFETY -> safetyPage(page)
+                Family.PHONE -> phonePage(page)
                 Family.LANGUAGE_TIME -> languageAndTimePage(page)
                 Family.UPDATES -> updatesPage(page)
                 Family.ADVANCED -> advancedPage(page)
@@ -146,6 +150,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         Family.RECIPES -> tr("Recettes")
         Family.COOKING -> tr("Cuisson et balance")
         Family.SAFETY -> tr("Sécurité")
+        Family.PHONE -> tr("Téléphone")
         Family.LANGUAGE_TIME -> tr("Langue et heure")
         Family.UPDATES -> tr("Mises à jour")
         Family.ADVANCED -> tr("Avancé")
@@ -157,6 +162,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         Family.RECIPES -> Icon.Kind.BOOK
         Family.COOKING -> Icon.Kind.POT
         Family.SAFETY -> Icon.Kind.WARNING
+        Family.PHONE -> Icon.Kind.PHONE
         Family.LANGUAGE_TIME -> Icon.Kind.GLOBE   // le globe se reconnaît quelle que soit la langue affichée
         Family.UPDATES -> Icon.Kind.DOWNLOAD
         Family.ADVANCED -> Icon.Kind.SETTINGS
@@ -169,7 +175,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         row.addView(Icon(c, icon(f), Ui.TEXT2), LinearLayout.LayoutParams(Ui.u(24), Ui.u(24)).apply { rightMargin = Ui.u(12) })
         row.addView(Ui.fitText(c, 18f, 14f, Ui.TEXT, Ui.MEDIUM).apply { text = name(f) }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         if (f == Family.ADVANCED) {
-            modeDot = View(c).apply { background = Ui.round(Ui.ACCENT, 5f) }
+            modeDot = View(c).apply { background = Ui.round(Ui.ACCENT_INK, 5f) }
             row.addView(modeDot, LinearLayout.LayoutParams(Ui.u(10), Ui.u(10)).apply { leftMargin = Ui.u(8) })
         }
         row.isClickable = true
@@ -229,18 +235,19 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
             if (light != a.prefs.lightTheme) a.applyTheme(light)
         }), Ui.lp(t = 8, b = 8))
         line(p)
-        // Couleur d'accent : les dix couleurs sur une ligne.
-        p.addView(Ui.text(c, tr("Couleur"), 18f, Ui.TEXT), Ui.lp(t = 12))
-        p.addView(hint(tr("Couleur des boutons, des icônes et des repères.")), Ui.lp(t = 4))
+        // Couleur d'accent : les dix d'origine sur une ligne ; toute autre couleur par la roue. Une couleur
+        // prise sur la roue est montrée cochée, devant le bouton.
+        val colour = Ui.vertical(c)
+        colour.addView(Ui.text(c, tr("Couleur"), 18f, Ui.TEXT))
+        colour.addView(hint(tr("Couleur des boutons, des icônes et des repères.")), Ui.lp(t = 4))
+        val wheel = Ui.horizontal(c)
+        if (Ui.ACCENT !in Ui.ACCENTS)
+            wheel.addView(swatch(Ui.ACCENT) { openWheel() }, LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)).apply { rightMargin = Ui.u(12) })
+        wheel.addView(Ui.button(c, tr("Roue des couleurs"), Ui.Style.SECONDARY, height = 52, textSize = 18f) { openWheel() })
+        p.addView(setting(colour, wheel), Ui.lp(t = 8))
         val ten = Ui.horizontal(c)
         for (color in Ui.ACCENTS) ten.addView(swatch(color), LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)).apply { rightMargin = Ui.u(12) })
-        p.addView(ten, Ui.lp(t = 10, b = 4))
-        // Toute autre couleur : la roue. Une couleur prise sur la roue est montrée cochée, devant le bouton.
-        val wheelRow = Ui.horizontal(c, Gravity.CENTER_VERTICAL)
-        if (Ui.ACCENT !in Ui.ACCENTS)
-            wheelRow.addView(swatch(Ui.ACCENT) { openWheel() }, LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)).apply { rightMargin = Ui.u(12) })
-        wheelRow.addView(Ui.button(c, tr("Roue des couleurs"), Ui.Style.SECONDARY, height = 52, textSize = 18f) { openWheel() }, Ui.lp(Ui.WRAP, Ui.WRAP))
-        p.addView(wheelRow, Ui.lp(t = 4, b = 10))
+        p.addView(ten, Ui.lp(t = 10, b = 10))
         // L'image de l'anneau se prépare déjà (une fois par processus) : la roue s'ouvre complète.
         AccentWheel.Ring.get(Ui.u(AccentWheelScreen.RING)) {}
 
@@ -447,10 +454,11 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
             showInvertHint(a.snapshot)
         }, Ui.lp(t = 8))
         p.addView(hint(tr("À activer si le capteur indique « bol détecté » quand le bol est retiré, et l'inverse quand il est en place.")),
-            Ui.lp(t = 4, b = 8))
+            Ui.lp(t = 4))
         // Affiché seulement quand le réglage contredit ce que le robot montre (voir onSnapshot).
-        invertHint = Ui.text(c, "", 16f, Ui.WARN).apply { setLineSpacing(0f, 1.15f); visibility = View.GONE }
-        p.addView(invertHint, Ui.lp(t = 0, b = 8))
+        invertHint = hint("").apply { setTextColor(Ui.WARN); visibility = View.GONE }
+        p.addView(invertHint, Ui.lp(t = 6))
+        p.addView(Ui.spacer(c, h = 8))
         line(p)
         p.addView(toggle(tr("Montée progressive de la vitesse si le contenu est chaud"), a.prefs.hotRamp) { on ->
             a.prefs.hotRamp = on
@@ -458,6 +466,20 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         }, Ui.lp(t = 8))
         p.addView(hint(tr("À partir de 60 °C, la lame atteint sa vitesse en 2 à 3 secondes pour éviter les projections. À froid, elle y va directement.")),
             Ui.lp(t = 4, b = 8))
+    }
+
+    /** Les téléphones du Wi-Fi de la maison (application Toque Compagnon). */
+    private fun phonePage(p: LinearLayout) {
+        companionText = Ui.text(c, "", 18f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
+        p.addView(setting(companionText, Ui.button(c, tr("Appairer un téléphone"), Ui.Style.SECONDARY, Icon.Kind.PHONE, height = 52, textSize = 18f) {
+            if (a.app.companion != null) a.push(PairingScreen(a)) else a.toast(tr("Compagnon indisponible : voyez le journal"), Ui.WARN)
+        }), Ui.lp(t = 10, b = 8))
+        line(p)
+        p.addView(toggle(tr("Lancement depuis le téléphone"), a.prefs.remoteStart) { on ->
+            val comp = a.app.companion
+            if (comp != null) comp.setRemoteStart(on) else a.prefs.remoteStart = on
+        }, Ui.lp(t = 8))
+        p.addView(hint(tr("Un téléphone appairé peut lancer une cuisson manuelle, couvercle fermé et bol en place.")), Ui.lp(t = 4, b = 8))
     }
 
     private fun languageAndTimePage(p: LinearLayout) {
@@ -1077,6 +1099,24 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync(); refreshSite() }
         unsubSync = SyncProgress.onChange { refreshSync() }
         unsubSite = a.app.site.onChange { renderAccount(); refreshSite() }
+        refreshCompanion()
+        unsubCompanion = a.app.companion?.onChange { ch ->
+            if (ch == RobotCompanion.Change.PHONES || ch == RobotCompanion.Change.SERVER) refreshCompanion()
+        }
+    }
+
+    private fun refreshCompanion() {
+        val comp = a.app.companion
+        val n = comp?.hub?.pairing?.list?.size ?: 0
+        companionText.text = when (n) {
+            0 -> tr("Aucun téléphone appairé")
+            1 -> tr("1 téléphone appairé")
+            else -> tr("%d téléphones appairés", n)
+        }
+        val error = comp?.serverError.orEmpty()
+        companionText.setTextColor(if (error.isNotEmpty() && n > 0) Ui.WARN else Ui.TEXT)
+        if (comp == null) companionText.text = tr("Compagnon indisponible : voyez le journal")
+        else if (error.isNotEmpty() && n > 0) companionText.text = companionText.text.toString() + "\n" + tr("Les téléphones ne joignent pas le robot pour l'instant : nouvel essai toutes les 30 s.")
     }
 
     override fun onHide() {
@@ -1085,6 +1125,8 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         unsubRecipes = null
         unsubSync?.invoke()
         unsubSync = null
+        unsubCompanion?.invoke()
+        unsubCompanion = null
         unsubSite?.invoke()
         unsubSite = null
     }
