@@ -48,6 +48,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     /** Absent sur un robot dont la base de l'appli d'origine n'est pas encore lue (Smart). */
     private var importBtn: View? = null
     private lateinit var bowlText: TextView
+    private lateinit var invertHint: TextView
     private lateinit var linkText: TextView
     private lateinit var timeText: TextView
     private var settingTime = false
@@ -108,9 +109,13 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         safety.addView(toggle(tr("Inverser le capteur du bol"), a.prefs.invertBowl) { on ->
             a.prefs.invertBowl = on
             a.machine.reconfigure { a.refusal(it) }
+            showInvertHint(a.snapshot)
         }, Ui.lp(t = 10))
         safety.addView(Ui.text(c, tr("À activer si le capteur indique « bol détecté » quand le bol est retiré, et l'inverse quand il est en place."),
             15f, Ui.TEXT3).apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 6))
+        // Affiché seulement quand le réglage contredit ce que le robot montre (voir onSnapshot).
+        invertHint = Ui.text(c, "", 15f, Ui.WARN).apply { setLineSpacing(0f, 1.1f); visibility = View.GONE }
+        safety.addView(invertHint, Ui.lp(t = 6))
         safety.addView(toggle(tr("Montée progressive de la vitesse si le contenu est chaud"), a.prefs.hotRamp) { on ->
             a.prefs.hotRamp = on
             a.machine.reconfigure { a.refusal(it) }
@@ -773,5 +778,18 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     override fun onSnapshot(s: Snapshot) {
         bowlText.text = if (s.hasSample) tr("Capteur du bol en ce moment : %s. Vérifiez qu'il change quand vous retirez le bol avant d'activer cette option.",
             if (s.bowlDetected) tr("bol détecté") else tr("bol NON détecté")) else tr("Base non connectée")
+        showInvertHint(s)
+    }
+
+    /**
+     * Le sens du capteur a été constaté couvercle fermé (le bol y est forcément) : signale un réglage
+     * contraire. Seulement avec la vraie base : le réglage est fait pour elle, pas pour la démo.
+     */
+    private fun showInvertHint(s: Snapshot) {
+        val wrong = a.prefs.mode == Prefs.Mode.HARDWARE && s.bowlSenseKnown && s.bowlSenseInverted != a.prefs.invertBowl
+        invertHint.visibility = if (wrong) View.VISIBLE else View.GONE
+        if (wrong) invertHint.text =
+            if (s.bowlSenseInverted) tr("Sur ce robot, le capteur du bol se lit à l'envers : activez « Inverser le capteur du bol ».")
+            else tr("Sur ce robot, le capteur du bol se lit à l'endroit : désactivez « Inverser le capteur du bol ».")
     }
 }
