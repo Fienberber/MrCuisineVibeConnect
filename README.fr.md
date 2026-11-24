@@ -79,8 +79,8 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 
 - **Interface sombre, bleu nuit**, pensée pour l'écran 7" et le bouton rotatif du robot, fluide sur sa
   tablette d'origine (1 Go de RAM, Android 6) : pas de bibliothèque lourde, images
-  sous-échantillonnées, vues recyclées. Dix couleurs d'accent et un thème clair dans
-  *Réglages › Écran*.
+  sous-échantillonnées, vues recyclées. Dix couleurs d'accent, une roue des couleurs pour toute autre
+  couleur lisible, et un thème clair dans *Réglages › Écran*.
 - **Une appli, plusieurs robots** : chaque robot a sa fiche (port, protocole, programmes,
   températures) et ne montre que les programmes et les recettes qu'il sait faire. Sur le **Smart** :
   cuisson manuelle avec ses 21 températures (40 °C compris), Pétrir, Vapeur, Rissoler, Turbo,

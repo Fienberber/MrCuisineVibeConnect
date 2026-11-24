@@ -229,7 +229,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
             StepProgram.SOUS_VIDE -> Icon.Kind.THERMO
             StepProgram.FERMENT -> Icon.Kind.TIMER
         }
-        badge.addView(Icon(c, kindIcon, Ui.ACCENT), Ui.flp(Ui.u(28), Ui.u(28), Gravity.CENTER))
+        badge.addView(Icon(c, kindIcon, Ui.ACCENT_INK), Ui.flp(Ui.u(28), Ui.u(28), Gravity.CENTER))
         head.addView(badge, LinearLayout.LayoutParams(Ui.u(48), Ui.u(48)).apply { rightMargin = Ui.u(12) })
         head.addView(Ui.text(c, when (m.program) {
             StepProgram.MANUAL -> tr("Réglage machine")

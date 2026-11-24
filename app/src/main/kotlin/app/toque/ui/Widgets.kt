@@ -71,8 +71,8 @@ class ValueCard(c: Context, label: String, icon: Icon.Kind) : LinearLayout(c) {
     }
 
     private fun refreshBg() {
-        background = Ui.round(Ui.SURFACE, 26f, if (isSel) Ui.ACCENT else Ui.STROKE, if (isSel) 2.5f else 1f)
-        iconView.color = if (isSel) Ui.ACCENT else Ui.TEXT2
+        background = Ui.round(Ui.SURFACE, 26f, if (isSel) Ui.ACCENT_INK else Ui.STROKE, if (isSel) 2.5f else 1f)
+        iconView.color = if (isSel) Ui.ACCENT_INK else Ui.TEXT2
     }
 
     companion object {

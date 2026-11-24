@@ -29,6 +29,7 @@ import app.toque.recipes.SyncProgress
 import app.toque.recipes.RecipeFiles
 import app.toque.core.recipes.CommunityRecipes
 import app.toque.core.recipes.UserRecipes
+import app.toque.ui.AccentWheel
 import app.toque.ui.Icon
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
@@ -189,7 +190,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
             val row = entries[x.ordinal]
             row.background = if (on) Ui.round(Ui.SURFACE3, 16f, Ui.STROKE, 1f) else Ui.pressable(Ui.round(0, 16f), 16f)
             row.isSelected = on
-            (row.getChildAt(0) as Icon).color = if (on) Ui.ACCENT else Ui.TEXT2
+            (row.getChildAt(0) as Icon).color = if (on) Ui.ACCENT_INK else Ui.TEXT2
             (row.getChildAt(1) as TextView).typeface = if (on) Ui.BOLD else Ui.MEDIUM
         }
         pane.scrollTo(0, 0)
@@ -233,7 +234,15 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         p.addView(hint(tr("Couleur des boutons, des icônes et des repères.")), Ui.lp(t = 4))
         val ten = Ui.horizontal(c)
         for (color in Ui.ACCENTS) ten.addView(swatch(color), LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)).apply { rightMargin = Ui.u(12) })
-        p.addView(ten, Ui.lp(t = 10, b = 10))
+        p.addView(ten, Ui.lp(t = 10, b = 4))
+        // Toute autre couleur : la roue. Une couleur prise sur la roue est montrée cochée, devant le bouton.
+        val wheelRow = Ui.horizontal(c, Gravity.CENTER_VERTICAL)
+        if (Ui.ACCENT !in Ui.ACCENTS)
+            wheelRow.addView(swatch(Ui.ACCENT) { openWheel() }, LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)).apply { rightMargin = Ui.u(12) })
+        wheelRow.addView(Ui.button(c, tr("Roue des couleurs"), Ui.Style.SECONDARY, height = 52, textSize = 18f) { openWheel() }, Ui.lp(Ui.WRAP, Ui.WRAP))
+        p.addView(wheelRow, Ui.lp(t = 4, b = 10))
+        // L'image de l'anneau se prépare déjà (une fois par processus) : la roue s'ouvre complète.
+        AccentWheel.Ring.get(Ui.u(AccentWheelScreen.RING)) {}
 
         group(p, tr("Veille"))
         val delays = listOf("0" to tr("Jamais")) + listOf(2, 5, 10, 15, 30).map { it.toString() to tr("Après %d min", it) }
@@ -499,7 +508,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         line(p)
 
         // Machine : la base simulée, le jumeau sur un PC, ou le vrai moteur. Rien ne change avant « Appliquer ».
-        modeText = hint("").apply { setTextColor(Ui.ACCENT) }
+        modeText = hint("").apply { setTextColor(Ui.ACCENT_INK) }
         p.addView(modeText, Ui.lp(t = 8))
         modeRow = Ui.horizontal(c)
         p.addView(setting(Ui.text(c, tr("Machine"), 18f, Ui.TEXT), modeRow), Ui.lp(t = 4))
@@ -594,15 +603,17 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         modeText.text = text
     }
 
+    private fun openWheel() = a.push(AccentWheelScreen(a))
+
     /** Pastille de couleur : un disque, entouré et coché quand c'est la couleur en cours. */
-    private fun swatch(color: Int): View {
+    private fun swatch(color: Int, onPick: (() -> Unit)? = null): View {
         val box = android.widget.FrameLayout(c)
         val selected = color == Ui.ACCENT
         val dot = android.widget.FrameLayout(c).apply {
             background = Ui.pressable(Ui.round(color, 26f, if (selected) Ui.TEXT else 0, if (selected) 3f else 0f), 26f)
             if (selected) addView(Icon(c, Icon.Kind.CHECK, Ui.ON_ACCENT), Ui.flp(Ui.u(24), Ui.u(24), Gravity.CENTER))
             isClickable = true
-            setOnClickListener { if (!selected) a.applyAccent(color) }
+            setOnClickListener { if (onPick != null) onPick() else if (!selected) a.applyAccent(color) }
         }
         box.addView(dot, Ui.flp(Ui.u(52), Ui.u(52), Gravity.CENTER))
         return box
@@ -696,7 +707,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
             val height = if (options.size > 7) Ui.u(400) else ViewGroup.LayoutParams.WRAP_CONTENT
             val popup = PopupWindow(scroll, box.width, height, false)
             for ((code, name) in options) {
-                val row = Ui.text(c, name, 19f, if (code == current) Ui.ACCENT else Ui.TEXT)
+                val row = Ui.text(c, name, 19f, if (code == current) Ui.ACCENT_INK else Ui.TEXT)
                 row.setPadding(Ui.u(16), Ui.u(14), Ui.u(16), Ui.u(14))
                 row.background = Ui.pressable(Ui.round(0, 0f), 0f)
                 row.isClickable = true

@@ -96,7 +96,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         }
         // Recette perso, compte toqueapp.org relié : où elle en est sur le site ; toucher pour choisir.
         if (recipe.source == RecipeSource.USER) SitePublish.status(a, recipe)?.let { line ->
-            val t = Ui.ellipsize(Ui.text(c, line, 16f, Ui.ACCENT))
+            val t = Ui.ellipsize(Ui.text(c, line, 16f, Ui.ACCENT_INK))
             t.setPadding(0, Ui.u(6), 0, Ui.u(6))
             t.isClickable = true
             t.setOnClickListener { SitePublish.ask(a, recipe) { t.text = SitePublish.status(a, recipe) ?: "" } }
@@ -219,8 +219,8 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         servingsChip?.let { chip ->
             val changed = shown.servings != recipe.servings
             Ui.chipText(chip).text = people(shown.servings)
-            Ui.chipText(chip).setTextColor(if (changed) Ui.ACCENT else Ui.TEXT2)
-            (chip.getChildAt(0) as Icon).color = if (changed) Ui.ACCENT else Ui.TEXT2
+            Ui.chipText(chip).setTextColor(if (changed) Ui.ACCENT_INK else Ui.TEXT2)
+            (chip.getChildAt(0) as Icon).color = if (changed) Ui.ACCENT_INK else Ui.TEXT2
             chip.background = Ui.round(if (changed) Ui.ACCENT_DIM else Ui.SURFACE2, 40f)
         }
         renderServings()
@@ -231,7 +231,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         }
         var index = 0
         for (g in shown.ingredients) {
-            if (g.title.isNotBlank()) ing.addView(Ui.text(c, g.title, 17f, Ui.ACCENT, Ui.MEDIUM), Ui.lp(t = 12, b = 2))
+            if (g.title.isNotBlank()) ing.addView(Ui.text(c, g.title, 17f, Ui.ACCENT_INK, Ui.MEDIUM), Ui.lp(t = 12, b = 2))
             for (i in g.items) {
                 val k = index++
                 val original = if (i.originalQty.isNotBlank()) quantity(i.originalQty, i.unit) else null
@@ -242,7 +242,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         // Quantités pesées dans les étapes mais absentes de la liste (souvent l'eau).
         val unlisted = recipe.unlistedWeighings().mapNotNull { (si, name) -> shown.steps.getOrNull(si)?.weigh?.let { Triple(si, name, it) } }
         if (unlisted.isNotEmpty()) {
-            ing.addView(Ui.text(c, tr("Aussi dans les étapes"), 17f, Ui.ACCENT, Ui.MEDIUM), Ui.lp(t = 14, b = 2))
+            ing.addView(Ui.text(c, tr("Aussi dans les étapes"), 17f, Ui.ACCENT_INK, Ui.MEDIUM), Ui.lp(t = 14, b = 2))
             for ((si, name, w) in unlisted) {
                 val original = if (w.originalGrams > 0) "${w.originalGrams} g" else null
                 ing.addView(ingredientRow("${w.grams} g $name", original) { editWeigh(si, name, w) }, Ui.lp(t = 4))
@@ -277,9 +277,9 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
     private fun ingredientRow(label: String, original: String?, onClick: (() -> Unit)?): View {
         val row = Ui.horizontal(c, Gravity.TOP)
         val changed = original != null
-        row.addView(Ui.text(c, "•", 18f, if (changed) Ui.ACCENT else Ui.TEXT3), Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
+        row.addView(Ui.text(c, "•", 18f, if (changed) Ui.ACCENT_INK else Ui.TEXT3), Ui.lp(Ui.WRAP, Ui.WRAP, r = 10))
         val col = Ui.vertical(c)
-        col.addView(Ui.text(c, label, 18f, if (changed) Ui.ACCENT else Ui.TEXT).apply { setLineSpacing(0f, 1.1f) })
+        col.addView(Ui.text(c, label, 18f, if (changed) Ui.ACCENT_INK else Ui.TEXT).apply { setLineSpacing(0f, 1.1f) })
         if (original != null) col.addView(Ui.text(c, tr("Recette : %s", original), 14f, Ui.TEXT3), Ui.lp(t = 2))
         row.addView(col, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         if (onClick != null) {
@@ -317,7 +317,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
             return b
         }
         box.addView(step(Icon.Kind.MINUS, n - 1, tr("Moins de personnes")), LinearLayout.LayoutParams(Ui.u(52), Ui.u(52)))
-        val count = Ui.text(c, people(n), 18f, if (n != recipe.servings) Ui.ACCENT else Ui.TEXT, Ui.MEDIUM)
+        val count = Ui.text(c, people(n), 18f, if (n != recipe.servings) Ui.ACCENT_INK else Ui.TEXT, Ui.MEDIUM)
         count.gravity = Gravity.CENTER
         count.minWidth = Ui.u(76)
         box.addView(count, Ui.lp(Ui.WRAP, Ui.WRAP))
@@ -556,7 +556,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         box.background = Ui.round(Ui.SURFACE2, 16f)
         box.setPadding(Ui.u(16), Ui.u(12), Ui.u(16), Ui.u(12))
         val head = Ui.horizontal(c)
-        head.addView(Ui.text(c, "★".repeat(r.rating) + "☆".repeat(5 - r.rating), 17f, Ui.ACCENT), Ui.lp(Ui.WRAP, Ui.WRAP, r = 12))
+        head.addView(Ui.text(c, "★".repeat(r.rating) + "☆".repeat(5 - r.rating), 17f, Ui.ACCENT_INK), Ui.lp(Ui.WRAP, Ui.WRAP, r = 12))
         val who = listOf(r.author.ifBlank { tr("Anonyme") }, r.date).filter { it.isNotBlank() }.joinToString(" · ")
         head.addView(Ui.ellipsize(Ui.text(c, who, 15f, Ui.TEXT3)), LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         box.addView(head)
@@ -580,7 +580,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
 
     private fun stepRow(i: Int, s: Step): View {
         val row = Ui.horizontal(c, Gravity.TOP)
-        val num = Ui.text(c, "${i + 1}", 17f, Ui.ACCENT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }
+        val num = Ui.text(c, "${i + 1}", 17f, Ui.ACCENT_INK, Ui.MEDIUM).apply { gravity = Gravity.CENTER }
         num.background = Ui.round(Ui.ACCENT_DIM, 18f)
         row.addView(num, LinearLayout.LayoutParams(Ui.u(36), Ui.u(36)).apply { rightMargin = Ui.u(14) })
         val col = Ui.vertical(c)
@@ -589,13 +589,13 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         s.weigh?.let { w ->
             val changed = w.originalGrams > 0
             val chip = Ui.chip(c, if (changed) tr("Peser %d g (recette : %d g)", w.grams, w.originalGrams) else tr("Peser %d g", w.grams),
-                Icon.Kind.SCALE, if (changed) Ui.ACCENT else Ui.TEXT2, if (changed) Ui.ACCENT_DIM else Ui.SURFACE2, 15f)
+                Icon.Kind.SCALE, if (changed) Ui.ACCENT_INK else Ui.TEXT2, if (changed) Ui.ACCENT_DIM else Ui.SURFACE2, 15f)
             chips.addView(chip, Ui.lp(Ui.WRAP, Ui.WRAP, r = 8))
         }
         s.machine?.let { m ->
             val ok = m.valid
             chips.addView(Ui.chip(c, m.summary, if (ok) Icon.Kind.POT else Icon.Kind.WARNING,
-                if (ok) Ui.ACCENT else Ui.WARN, if (ok) Ui.ACCENT_DIM else 0x33FFC14D, 15f))
+                if (ok) Ui.ACCENT_INK else Ui.WARN, if (ok) Ui.ACCENT_DIM else 0x33FFC14D, 15f))
         }
         if (chips.childCount > 0) col.addView(chips, Ui.lp(t = 8))
         row.addView(col, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
@@ -625,7 +625,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
     private fun refreshFavorite() {
         val f = a.app.recipes.isFavorite(recipe.id)
         favIcon.set(if (f) Icon.Kind.STAR_FILLED else Icon.Kind.STAR)
-        favIcon.color = if (f) Ui.ACCENT else Ui.TEXT
+        favIcon.color = if (f) Ui.ACCENT_INK else Ui.TEXT
         favLabel.text = tr("Favori")
     }
 
