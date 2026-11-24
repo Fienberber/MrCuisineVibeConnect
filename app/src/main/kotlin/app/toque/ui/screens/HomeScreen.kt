@@ -7,9 +7,11 @@ import android.widget.TextView
 import app.toque.TimeSync
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
+import app.toque.core.machine.Snapshot
 import app.toque.core.recipes.CommunityRecipes
 import app.toque.core.recipes.UserRecipes
 import app.toque.ui.Icon
+import app.toque.ui.MachineBar
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
 import app.toque.ui.Ui
@@ -29,6 +31,10 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private lateinit var resumeText: TextView
     private lateinit var knobChip: LinearLayout
     private var unsub: (() -> Unit)? = null
+    /** Ce qui s'adapte dans une tuile quand la barre du bas lui prend de la hauteur. */
+    private class TileParts(val top: View, val text: View, val sub: TextView)
+    private val tiles = ArrayList<TileParts>()
+    private var compact = false
     private val tick = object : Runnable {
         override fun run() {
             refreshClock()
@@ -139,8 +145,26 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         t.addView(text, LinearLayout.LayoutParams(Ui.MATCH, 0, 3f))
         t.isClickable = true
         t.setOnClickListener { onClick() }
+        tiles += TileParts(t.getChildAt(0), text, s)
         return t to s
     }
+
+    /**
+     * La barre du bas (programme, Turbo, alerte) prend de la hauteur aux tuiles : la pastille remonte
+     * et le sous-titre tient sur une ligne, pour que le texte ne soit pas rogné. La pastille reste à
+     * la même hauteur dans toutes les tuiles.
+     */
+    private fun setCompact(on: Boolean) {
+        if (on == compact) return
+        compact = on
+        for (p in tiles) {
+            (p.text.layoutParams as LinearLayout.LayoutParams).weight = if (on) 8f else 2f
+            p.sub.maxLines = if (on) 1 else 2
+            p.text.requestLayout()
+        }
+    }
+
+    override fun onSnapshot(s: Snapshot) = setCompact(MachineBar.shownFor(s))
 
     private fun refreshClock() {
         // Heure et date masquées tant qu'elles ne sont pas réglées (voir TimeSync.showClock) ; la

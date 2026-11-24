@@ -173,13 +173,17 @@ class ProgressLine(c: Context) : View(c) {
 /**
  * Barre machine persistante : visible dès qu'un programme tourne, est en pause, vient de
  * finir, ou qu'une alerte est active — sur tous les écrans.
+ *
+ * Une carte arrondie détachée des bords de l'écran, alignée sur les cartes des écrans ([SIDE]) ; ses
+ * boutons sont à la même distance ([INSET]) de son bord en haut, en bas et à droite.
  */
 class MachineBar(private val a: MainActivity) : FrameLayout(a) {
     private val jobRow = Ui.horizontal(a)
     private val faultRow = Ui.horizontal(a)
     private val label = Ui.ellipsize(Ui.text(a, "", 20f, Ui.TEXT, Ui.MEDIUM))
     private val state = Ui.ellipsize(Ui.text(a, "", 16f, Ui.TEXT2))
-    private val time = Ui.text(a, "", 40f, Ui.TEXT, Ui.LIGHT)
+    /** Rapetissé plutôt que coupé quand les pastilles prennent la place (libellés longs, trois pastilles). */
+    private val time = Ui.fitText(a, 40f, 24f, Ui.TEXT, Ui.LIGHT)
     private val progress = ProgressLine(a)
     private val chips = Ui.horizontal(a)
     private val speedChip = Ui.chip(a, "", Icon.Kind.SPEED, Ui.TEXT)
@@ -192,13 +196,15 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
     private var last: Snapshot? = null
 
     init {
-        setBackgroundColor(Ui.SURFACE)
+        // Transparente autour de la carte : le dégradé du fond passe derrière, comme pour la barre du haut.
+        setPadding(Ui.u(SIDE), 0, Ui.u(SIDE), Ui.u(BOTTOM_GAP))
         // Programme
-        jobRow.setPadding(Ui.u(22), Ui.u(12), Ui.u(18), Ui.u(12))
+        jobRow.background = Ui.round(Ui.SURFACE, RADIUS, Ui.STROKE, 1f)
+        jobRow.setPadding(Ui.u(TEXT_INSET), Ui.u(INSET), Ui.u(INSET), Ui.u(INSET))
         val left = Ui.vertical(a)
         left.addView(label)
         left.addView(state, Ui.lp(t = 4))
-        jobRow.addView(left, LinearLayout.LayoutParams(Ui.u(230), Ui.WRAP))
+        jobRow.addView(left, LinearLayout.LayoutParams(Ui.u(210), Ui.WRAP))
         val mid = Ui.vertical(a, Gravity.CENTER_HORIZONTAL)
         mid.addView(time, Ui.lp(Ui.WRAP, Ui.WRAP))
         mid.addView(progress, Ui.lp(Ui.MATCH, Ui.u(6), t = 6))
@@ -207,21 +213,22 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         chips.addView(tempChip, Ui.lp(Ui.WRAP, Ui.WRAP, r = 8))
         chips.addView(dirChip, Ui.lp(Ui.WRAP, Ui.WRAP, r = 8))
         jobRow.addView(chips)
-        pauseBtn = Ui.button(a, "", Ui.Style.SECONDARY, Icon.Kind.PAUSE, height = 64) { onPause() }
-        stopBtn = Ui.button(a, "", Ui.Style.DANGER, Icon.Kind.STOP, height = 64) {
+        pauseBtn = Ui.button(a, "", Ui.Style.SECONDARY, Icon.Kind.PAUSE, height = BUTTON) { onPause() }
+        stopBtn = Ui.button(a, "", Ui.Style.DANGER, Icon.Kind.STOP, height = BUTTON) {
             a.machine.stop()
         }
-        okBtn = Ui.button(a, "OK", Ui.Style.SECONDARY, Icon.Kind.CHECK, height = 64) { a.machine.clearFinished() }
+        okBtn = Ui.button(a, "OK", Ui.Style.SECONDARY, Icon.Kind.CHECK, height = BUTTON) { a.machine.clearFinished() }
         jobRow.addView(pauseBtn, Ui.lp(Ui.u(84), Ui.WRAP, l = 6))
         jobRow.addView(stopBtn, Ui.lp(Ui.u(84), Ui.WRAP, l = 10))
         jobRow.addView(okBtn, Ui.lp(Ui.WRAP, Ui.WRAP, l = 10))
         addView(jobRow, Ui.flp(Ui.MATCH, Ui.WRAP))
-        // Alerte
-        faultRow.setPadding(Ui.u(22), Ui.u(14), Ui.u(18), Ui.u(14))
-        faultRow.setBackgroundColor(0xFF3A1416.toInt())
+        // Alerte : la même carte, en rouge sombre.
+        faultRow.background = Ui.round(0xFF3A1416.toInt(), RADIUS, 0xFF6B2529.toInt(), 1f)
+        faultRow.setPadding(Ui.u(TEXT_INSET), Ui.u(INSET), Ui.u(INSET), Ui.u(INSET))
+        faultRow.minimumHeight = Ui.u(BUTTON + 2 * INSET)
         faultRow.addView(Icon(a, Icon.Kind.WARNING, Ui.DANGER), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
-        faultRow.addView(faultText, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
-        faultRow.addView(Ui.button(a, tr("Acquitter"), Ui.Style.SECONDARY, Icon.Kind.CHECK, height = 60) {
+        faultRow.addView(faultText, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(14) })
+        faultRow.addView(Ui.button(a, tr("Acquitter"), Ui.Style.SECONDARY, Icon.Kind.CHECK, height = BUTTON) {
             a.machine.acknowledge { v -> a.refusal(v) }
         })
         addView(faultRow, Ui.flp(Ui.MATCH, Ui.WRAP))
@@ -247,7 +254,7 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         last = s
         val st = s.state
         val showJob = s.jobActive || s.turboActive
-        visibility = if (showJob || s.hasFault) View.VISIBLE else View.GONE
+        visibility = if (shownFor(s)) View.VISIBLE else View.GONE
         faultRow.visibility = if (s.hasFault) View.VISIBLE else View.GONE
         jobRow.visibility = if (!s.hasFault && showJob) View.VISIBLE else View.GONE
         if (s.hasFault) {
@@ -307,4 +314,21 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         chips.visibility = if (turbo) View.GONE else View.VISIBLE
     }
 
+    companion object {
+        /** Marge de chaque côté : celle des écrans, la carte s'aligne sur les leurs. */
+        const val SIDE = 24
+        /** Espace entre la carte et le bas de l'écran. */
+        const val BOTTOM_GAP = 14
+        /** Hauteur des boutons. */
+        const val BUTTON = 64
+        /** Distance des boutons au bord de la carte, la même en haut, en bas et à droite. */
+        const val INSET = 8
+        /** Retrait du texte à gauche, dans l'arrondi de la carte. */
+        const val TEXT_INSET = 28
+        /** Bouts arrondis du rayon des boutons plus [INSET] : le bouton de droite épouse le bord de la carte. */
+        const val RADIUS = BUTTON / 2f + INSET
+
+        /** La barre est affichée pour [s] : un programme (même terminé, jusqu'à « OK »), Turbo ou une alerte. */
+        fun shownFor(s: Snapshot): Boolean = s.jobActive || s.turboActive || s.hasFault
+    }
 }
