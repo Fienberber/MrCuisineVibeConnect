@@ -105,7 +105,7 @@ class MachineLoop(
             }
             // La boucle n'émet plus rien : le chien de garde envoie des STOP à sa place, puis ferme la liaison, ce
             // qui débloque une écriture coincée (le fil machine repart alors sur une écriture en échec).
-            guarded(stopBusy, "toque-watchdog-stop") { emergencyStop() }
+            guarded(stopBusy, "toque-watchdog-stop") { stopFromWatchdog() }
             guarded(closeBusy, "toque-watchdog-close") { transport?.close() }
             if (silentMs >= fatalStallMs && !fatalReported) {
                 fatalReported = true
@@ -340,6 +340,19 @@ class MachineLoop(
         } catch (_: Throwable) {
         } finally {
             exec.shutdownNow()
+        }
+    }
+
+    /**
+     * STOP écrit par le chien de garde. Sans le verrou de [emergencyStop] (fait pour un processus qui meurt) : une
+     * boucle qui repart doit pouvoir piloter de nouveau. Le programme en cours, lui, ne repart pas : la liaison
+     * fermée fait échouer l'écriture suivante, ce qui lève un défaut à acquitter.
+     */
+    private fun stopFromWatchdog() {
+        val t = transport ?: return
+        try {
+            t.write(controller.stopFrame())
+        } catch (_: Throwable) {
         }
     }
 
