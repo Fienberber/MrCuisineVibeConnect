@@ -712,5 +712,17 @@
   "Aucune recette pour l'instant": "Noch keine Rezepte",
   "Actualiser": "Aktualisieren",
   "Actualisation…": "Wird aktualisiert…",
-  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Verbinde ein Toque-Konto (Einstellungen › Toque-Konto), um hier deine Favoriten von der Website zu finden."
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Verbinde ein Toque-Konto (Einstellungen › Toque-Konto), um hier deine Favoriten von der Website zu finden.",
+  "Bol replacé avec environ %d g de contenu : balance laissée telle quelle": "Schüssel mit etwa %d g Inhalt zurückgestellt: Waage bleibt, wie sie ist",
+  "Bol replacé. S'il est vide, appuyez sur Tare : Toque retiendra son poids et remettra ensuite la balance à zéro à chaque retour du bol vide.": "Schüssel zurückgestellt. Wenn sie leer ist, drücke Tara: Toque merkt sich ihr Gewicht und stellt die Waage danach jedes Mal auf null, wenn die leere Schüssel zurückkommt.",
+  "Bol vide mémorisé : %d g.": "Leere Schüssel gespeichert: %d g.",
+  "Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare.": "Leere Schüssel noch nicht gespeichert: Nimm die Schüssel ab, stelle sie leer zurück (mit Deckel, wenn du damit kochst) und drücke dann Tara.",
+  "Bol vide replacé : balance remise à zéro": "Leere Schüssel zurückgestellt: Waage auf null gesetzt",
+  "En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme.": "Bei einem Schritt „Abwiegen…“ startet die Waage bei null: Nur was du hinzufügst, wird gezählt. Nie während eines Programms.",
+  "Oublier le bol vide mémorisé": "Gespeicherte leere Schüssel vergessen",
+  "Poids du bol vide mémorisé : %d g": "Gewicht der leeren Schüssel gespeichert: %d g",
+  "Remettre la balance à zéro quand le bol vide est replacé": "Waage auf null setzen, wenn die leere Schüssel zurückgestellt wird",
+  "Tare automatique aux étapes de pesée des recettes": "Automatische Tara bei Wiegeschritten von Rezepten",
+  "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque vergleicht das aufgestellte Gewicht mit der gespeicherten leeren Schüssel: Eine Schüssel mit Inhalt wird nie auf null gesetzt.",
+  "Bol retiré": "Schüssel abgenommen"
 }

@@ -712,5 +712,17 @@
   "Aucune recette pour l'instant": "Encara no hi ha receptes",
   "Actualiser": "Actualitza",
   "Actualisation…": "S'està actualitzant…",
-  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Vincula un compte Toque (Configuració › Compte Toque) per trobar aquí els teus preferits del lloc."
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Vincula un compte Toque (Configuració › Compte Toque) per trobar aquí els teus preferits del lloc.",
+  "Bol replacé avec environ %d g de contenu : balance laissée telle quelle": "Bol col·locat amb uns %d g a dins: la bàscula es deixa com està",
+  "Bol replacé. S'il est vide, appuyez sur Tare : Toque retiendra son poids et remettra ensuite la balance à zéro à chaque retour du bol vide.": "Bol col·locat. Si és buit, prem Tara: Toque en recordarà el pes i posarà la bàscula a zero cada vegada que tornis a col·locar el bol buit.",
+  "Bol vide mémorisé : %d g.": "Bol buit memoritzat: %d g.",
+  "Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare.": "Bol buit encara no memoritzat: treu el bol, torna’l a col·locar buit (amb la tapa si cuines amb ella) i prem Tara.",
+  "Bol vide replacé : balance remise à zéro": "Bol buit col·locat: bàscula a zero",
+  "En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme.": "En arribar a un pas «Pesa…», la bàscula torna a zero: només compta el que afegeixes. Mai durant un programa.",
+  "Oublier le bol vide mémorisé": "Oblida el bol buit memoritzat",
+  "Poids du bol vide mémorisé : %d g": "Pes del bol buit memoritzat: %d g",
+  "Remettre la balance à zéro quand le bol vide est replacé": "Posa la bàscula a zero en col·locar el bol buit",
+  "Tare automatique aux étapes de pesée des recettes": "Tara automàtica als passos de pesada de les receptes",
+  "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque compara el pes col·locat amb el bol buit memoritzat: un bol amb contingut mai no es posa a zero.",
+  "Bol retiré": "Bol retirat"
 }

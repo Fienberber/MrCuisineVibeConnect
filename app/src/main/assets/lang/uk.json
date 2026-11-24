@@ -712,5 +712,17 @@
   "Aucune recette pour l'instant": "Рецептів поки що\nнемає",
   "Actualiser": "Оновити",
   "Actualisation…": "Оновлення…",
-  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Під’єднайте обліковий запис Toque (Параметри › Обліковий запис Toque), щоб бачити тут свої улюблені рецепти з сайту."
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Під’єднайте обліковий запис Toque (Параметри › Обліковий запис Toque), щоб бачити тут свої улюблені рецепти з сайту.",
+  "Bol replacé avec environ %d g de contenu : balance laissée telle quelle": "Чашу повернуто, в ній близько %d г: ваги не обнулено",
+  "Bol replacé. S'il est vide, appuyez sur Tare : Toque retiendra son poids et remettra ensuite la balance à zéro à chaque retour du bol vide.": "Чашу повернуто. Якщо вона порожня, натисніть «Тара»: Toque запам’ятає її вагу й надалі обнулятиме ваги щоразу, коли порожню чашу повертають на місце.",
+  "Bol vide mémorisé : %d g.": "Вага порожньої чаші: %d г.",
+  "Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare.": "Вагу порожньої чаші ще не запам’ятовано: зніміть чашу, поставте її порожньою (з кришкою, якщо готуєте з нею) і натисніть «Тара».",
+  "Bol vide replacé : balance remise à zéro": "Порожню чашу повернуто: ваги обнулено",
+  "En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme.": "На кроці «Зважте…» ваги починають з нуля: рахується лише те, що ви додаєте. Ніколи під час програми.",
+  "Oublier le bol vide mémorisé": "Забути вагу порожньої чаші",
+  "Poids du bol vide mémorisé : %d g": "Вагу порожньої чаші запам’ятовано: %d г",
+  "Remettre la balance à zéro quand le bol vide est replacé": "Обнуляти ваги, коли повертають порожню чашу",
+  "Tare automatique aux étapes de pesée des recettes": "Автоматична тара на кроках зважування в рецептах",
+  "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque порівнює вагу на базі з вагою порожньої чаші: чашу з вмістом ніколи не обнуляють.",
+  "Bol retiré": "Чашу знято"
 }

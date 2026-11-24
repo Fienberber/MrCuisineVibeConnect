@@ -712,5 +712,17 @@
   "Aucune recette pour l'instant": "Aún no hay recetas",
   "Actualiser": "Actualizar",
   "Actualisation…": "Actualizando…",
-  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Vincula una cuenta Toque (Ajustes › Cuenta Toque) para encontrar aquí tus favoritos del sitio."
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Vincula una cuenta Toque (Ajustes › Cuenta Toque) para encontrar aquí tus favoritos del sitio.",
+  "Bol replacé avec environ %d g de contenu : balance laissée telle quelle": "Vaso colocado con unos %d g dentro: la báscula se deja como está",
+  "Bol replacé. S'il est vide, appuyez sur Tare : Toque retiendra son poids et remettra ensuite la balance à zéro à chaque retour du bol vide.": "Vaso colocado. Si está vacío, pulsa Tara: Toque recordará su peso y pondrá la báscula a cero cada vez que vuelvas a colocar el vaso vacío.",
+  "Bol vide mémorisé : %d g.": "Vaso vacío memorizado: %d g.",
+  "Bol vide pas encore mémorisé : retirez le bol, replacez-le vide (avec son couvercle si vous cuisinez avec), puis appuyez sur Tare.": "Vaso vacío aún no memorizado: retira el vaso, vuelve a colocarlo vacío (con su tapa si cocinas con ella) y pulsa Tara.",
+  "Bol vide replacé : balance remise à zéro": "Vaso vacío colocado: báscula a cero",
+  "En passant à une étape « Pesez… », la balance repart de zéro : seul ce que vous ajoutez est compté. Jamais pendant un programme.": "Al llegar a un paso «Pesa…», la báscula vuelve a cero: solo cuenta lo que añades. Nunca durante un programa.",
+  "Oublier le bol vide mémorisé": "Olvidar el vaso vacío memorizado",
+  "Poids du bol vide mémorisé : %d g": "Peso del vaso vacío memorizado: %d g",
+  "Remettre la balance à zéro quand le bol vide est replacé": "Poner la báscula a cero al colocar el vaso vacío",
+  "Tare automatique aux étapes de pesée des recettes": "Tara automática en los pasos de pesado de las recetas",
+  "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque compara el peso colocado con el vaso vacío memorizado: un vaso con contenido nunca se pone a cero.",
+  "Bol retiré": "Vaso retirado"
 }
