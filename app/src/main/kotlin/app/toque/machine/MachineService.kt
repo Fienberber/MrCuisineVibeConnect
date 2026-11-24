@@ -17,6 +17,11 @@ import android.os.Process
 import android.os.RemoteException
 import app.toque.Logbook
 import app.toque.Prefs
+import app.toque.core.ha.HaDevice
+import app.toque.core.ha.HomeAssistantBridge
+import app.toque.core.ha.Mqtt
+import app.toque.core.ha.MqttConnector
+import app.toque.core.ha.MqttSettings
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
 import app.toque.core.machine.Accessory
@@ -51,6 +56,11 @@ class MachineService : Service() {
     private var lastNotified = ""
     private lateinit var prefs: Prefs
     private lateinit var log: Logbook
+    /** Home Assistant (MQTT), si activé dans les réglages. */
+    private var ha: MqttConnector? = null
+    private var haBridge: HomeAssistantBridge? = null
+    private var haConnected = false
+    private var haText = ""
 
     /**
      * Ce que ce service a constaté sur la base du robot. Dans un fichier à lui : les réglages
@@ -82,6 +92,7 @@ class MachineService : Service() {
         }
         startForeground(NOTIFICATION_ID, notification(tr("Base moteur"), tr("Démarrage…")))
         createLoop()
+        startHomeAssistant()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -89,6 +100,8 @@ class MachineService : Service() {
     override fun onBind(intent: Intent?): IBinder = messenger.binder
 
     override fun onDestroy() {
+        ha?.stop()
+        ha = null
         loop?.shutdown()
         loop = null
         super.onDestroy()
@@ -160,7 +173,65 @@ class MachineService : Service() {
             learned.edit().putBoolean(BOWL_BIT_SEATED, seated).apply()
     }
 
+    /**
+     * (Re)connexion à Home Assistant d'après les réglages. Lecture seule, plus « Arrêter » : la
+     * commande passe par le contrôleur, comme le bouton Stop de l'écran.
+     */
+    private fun startHomeAssistant() {
+        ha?.stop()
+        ha = null
+        haBridge = null
+        prefs = Prefs(this) // relit le fichier écrit par l'interface
+        val host = prefs.haHost.trim()
+        if (!prefs.haEnabled || host.isEmpty()) {
+            haStatus(false, if (prefs.haEnabled) tr("Indiquez l'adresse du broker MQTT") else tr("Désactivé"))
+            return
+        }
+        val version = try { packageManager.getPackageInfo(packageName, 0).versionName ?: "?" } catch (_: Exception) { "?" }
+        val node = HomeAssistantBridge.cleanNodeId(prefs.haNodeId)
+        var conn: MqttConnector? = null
+        val bridge = HomeAssistantBridge(
+            HaDevice(node, "Monsieur Cuisine", prefs.robot.displayName, version),
+            discoveryPrefix = prefs.haPrefix.trim().trim('/').ifEmpty { "homeassistant" },
+            send = { topic, payload, retain -> conn?.publish(topic, payload, retain) },
+            onStop = { main.post { stopFromHomeAssistant() } },
+        )
+        conn = MqttConnector(
+            MqttSettings(host, prefs.haPort, prefs.haUser.trim(), prefs.haPassword, "toque-$node", will = bridge.will()),
+            listOf(bridge.commandTopic),
+            object : MqttConnector.Listener {
+                override fun onConnected() = bridge.onConnected()
+                override fun onMessage(message: Mqtt.Message) = bridge.onMessage(message.topic, message.text)
+                override fun onStatus(connected: Boolean, text: String) { main.post { haStatus(connected, text) } }
+            },
+        )
+        lastSent?.let { bridge.onSnapshot(it) }
+        haBridge = bridge
+        ha = conn
+        haStatus(false, tr("Connexion à %s…", "$host:${prefs.haPort}"))
+        conn.start()
+    }
+
+    private fun stopFromHomeAssistant() {
+        val l = loop ?: return
+        log.write("ha", "arrêt demandé par Home Assistant")
+        l.post { c ->
+            val v = c.stop()
+            if (!v.ok) log.write("ha", "arrêt refusé : ${v.message}")
+        }
+    }
+
+    private fun haStatus(connected: Boolean, text: String) {
+        if (connected != haConnected || text != haText) log.write("ha", text)
+        haConnected = connected
+        haText = text
+        val m = Message.obtain(null, Ipc.HA_STATUS)
+        m.data = Bundle().apply { putBoolean("connected", connected); putString("text", text) }
+        send(m)
+    }
+
     private fun publish(s: Snapshot) {
+        haBridge?.onSnapshot(s)
         val now = System.currentTimeMillis()
         val prev = lastSent
         val changed = prev == null || prev.copy(sampleAgeMs = 0, txFrames = 0, rxFrames = 0, txHex = "") !=
@@ -195,6 +266,7 @@ class MachineService : Service() {
             putInt("value", e.value)
         }
         send(m)
+        haBridge?.onEvent(e)
         log.write("évènement", "${e.type} ${e.message}")
     }
 
@@ -225,6 +297,13 @@ class MachineService : Service() {
     private fun handle(msg: Message) {
         val to = msg.replyTo
         val id = msg.arg1
+        // Home Assistant ne dépend pas de la boucle machine : réglable même sans robot confirmé.
+        if (msg.what == Ipc.HA_RECONFIGURE) {
+            startHomeAssistant()
+            reply(to, id, Verdict.OK)
+            return
+        }
+        if (msg.what == Ipc.REGISTER && to != null) main.post { haStatus(haConnected, haText) }
         if (loop == null && msg.what == Ipc.RECONFIGURE) {
             // Pas de boucle (robot pas encore confirmé en « Machine réelle ») : rien ne tourne, on la crée.
             createLoop()

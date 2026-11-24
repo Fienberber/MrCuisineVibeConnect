@@ -67,6 +67,54 @@ class Prefs(context: Context) {
             p.edit().putInt("twinPort", v).commit()
         }
 
+    // ---- Home Assistant : publication MQTT (découverte), lue par le service machine.
+
+    var haEnabled: Boolean
+        get() = p.getBoolean("haEnabled", false)
+        set(v) {
+            p.edit().putBoolean("haEnabled", v).commit()
+        }
+
+    var haHost: String
+        get() = p.getString("haHost", "") ?: ""
+        set(v) {
+            p.edit().putString("haHost", v).commit()
+        }
+
+    var haPort: Int
+        get() = p.getInt("haPort", 1883)
+        set(v) {
+            p.edit().putInt("haPort", v).commit()
+        }
+
+    var haUser: String
+        get() = p.getString("haUser", "") ?: ""
+        set(v) {
+            p.edit().putString("haUser", v).commit()
+        }
+
+    var haPassword: String
+        get() = p.getString("haPassword", "") ?: ""
+        set(v) {
+            p.edit().putString("haPassword", v).commit()
+        }
+
+    /** Préfixe de découverte de Home Assistant (réglage « discovery_prefix » de l'intégration MQTT). */
+    var haPrefix: String
+        get() = p.getString("haPrefix", "homeassistant") ?: "homeassistant"
+        set(v) {
+            p.edit().putString("haPrefix", v).commit()
+        }
+
+    /** Identifiant de ce robot dans Home Assistant, tiré une fois : le même après une mise à jour. */
+    val haNodeId: String
+        get() {
+            p.getString("haNodeId", null)?.let { return it }
+            val id = java.util.UUID.randomUUID().toString().replace("-", "").take(8)
+            p.edit().putString("haNodeId", id).commit()
+            return id
+        }
+
     /**
      * Robot confirmé par la personne (identifiant de [RobotProfiles]) ; vide tant qu'elle ne l'a pas
      * confirmé : la liaison avec la base reste alors fermée en « Machine réelle ».

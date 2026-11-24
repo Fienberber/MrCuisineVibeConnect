@@ -44,7 +44,7 @@ import app.toque.update.Updater
  */
 class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Screen(a) {
     /** Les familles de réglages, dans l'ordre du menu : le quotidien d'abord, le technique à la fin. */
-    enum class Family { SCREEN, KNOB_SOUNDS, RECIPES, COOKING, SAFETY, LANGUAGE_TIME, UPDATES, ADVANCED }
+    enum class Family { SCREEN, KNOB_SOUNDS, RECIPES, COOKING, SAFETY, LANGUAGE_TIME, UPDATES, HOME_ASSISTANT, ADVANCED }
 
     /** D'où viennent les recettes : une pastille chacune, en haut de la famille « Recettes ». */
     private enum class Source { LIDL, COMMUNITY, MINE, STOCK }
@@ -95,6 +95,14 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
     private lateinit var accountButtons: LinearLayout
     private lateinit var siteText: TextView
     private lateinit var siteBtn: View
+    private lateinit var haHost: EditText
+    private lateinit var haPort: EditText
+    private lateinit var haUser: EditText
+    private lateinit var haPassword: EditText
+    private lateinit var haPrefix: EditText
+    private lateinit var haText: TextView
+    private var haEnabled = a.prefs.haEnabled
+    private var unsubHa: (() -> Unit)? = null
 
     override fun build(): View {
         val root = Ui.horizontal(c, Gravity.TOP)
@@ -123,6 +131,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
                 Family.SAFETY -> safetyPage(page)
                 Family.LANGUAGE_TIME -> languageAndTimePage(page)
                 Family.UPDATES -> updatesPage(page)
+                Family.HOME_ASSISTANT -> homeAssistantPage(page)
                 Family.ADVANCED -> advancedPage(page)
             }
         }
@@ -148,6 +157,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         Family.SAFETY -> tr("Sécurité")
         Family.LANGUAGE_TIME -> tr("Langue et heure")
         Family.UPDATES -> tr("Mises à jour")
+        Family.HOME_ASSISTANT -> "Home Assistant"
         Family.ADVANCED -> tr("Avancé")
     }
 
@@ -159,6 +169,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         Family.SAFETY -> Icon.Kind.WARNING
         Family.LANGUAGE_TIME -> Icon.Kind.GLOBE   // le globe se reconnaît quelle que soit la langue affichée
         Family.UPDATES -> Icon.Kind.DOWNLOAD
+        Family.HOME_ASSISTANT -> Icon.Kind.LINK
         Family.ADVANCED -> Icon.Kind.SETTINGS
     }
 
@@ -494,6 +505,57 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         p.addView(toggle(tr("Prévenir quand une version sort"), a.prefs.updateAlerts) { a.prefs.updateAlerts = it }, Ui.lp(t = 8, b = 8))
         a.updates.available?.let { release = it; upd = Upd.AVAILABLE }
         renderUpdate()
+    }
+
+    /**
+     * Home Assistant : Toque publie son état sur le broker MQTT de HA (découverte automatique).
+     * Lecture seule, plus « Arrêter » : rien ne démarre depuis HA. Rien ne change avant « Appliquer ».
+     */
+    private fun homeAssistantPage(p: LinearLayout) {
+        p.addView(hint(tr("Toque apparaît tout seul dans Home Assistant (intégration MQTT) : état, programme, temps restant, " +
+            "fin prévue, température, poids, couvercle, alerte, et un bouton Arrêter. Home Assistant ne peut rien démarrer.")), Ui.lp(t = 10))
+        p.addView(toggle(tr("Publier vers Home Assistant"), haEnabled) { haEnabled = it }, Ui.lp(t = 8, b = 4))
+        val server = Ui.horizontal(c)
+        haHost = field(a.prefs.haHost, tr("Adresse du broker MQTT (ex. 192.168.1.10)"))
+        haPort = field(a.prefs.haPort.toString(), "Port").apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        server.addView(haHost, LinearLayout.LayoutParams(0, Ui.u(52), 1f).apply { rightMargin = Ui.u(10) })
+        server.addView(haPort, LinearLayout.LayoutParams(Ui.u(120), Ui.u(52)))
+        p.addView(server, Ui.lp(t = 8))
+        val login = Ui.horizontal(c)
+        haUser = field(a.prefs.haUser, tr("Utilisateur MQTT"))
+        haPassword = field(a.prefs.haPassword, tr("Mot de passe MQTT")).apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+        login.addView(haUser, LinearLayout.LayoutParams(0, Ui.u(52), 1f).apply { rightMargin = Ui.u(10) })
+        login.addView(haPassword, LinearLayout.LayoutParams(0, Ui.u(52), 1f))
+        p.addView(login, Ui.lp(t = 8))
+        haPrefix = field(a.prefs.haPrefix, tr("Préfixe de découverte"))
+        p.addView(setting(Ui.text(c, tr("Préfixe de découverte"), 18f, Ui.TEXT), haPrefix, Ui.u(300), Ui.u(52)), Ui.lp(t = 8))
+        haText = hint("")
+        p.addView(setting(haText, Ui.button(c, tr("Appliquer"), Ui.Style.PRIMARY, Icon.Kind.CHECK, height = 52, textSize = 18f) { applyHa() }),
+            Ui.lp(t = 8, b = 8))
+        line(p)
+        p.addView(hint(tr("Pour être prévenu à la fin d'un programme : une automatisation de Home Assistant déclenchée par l'entité " +
+            "« Fin de programme » (finished, aborted ou fault).")), Ui.lp(t = 10))
+        renderHa()
+    }
+
+    private fun applyHa() {
+        a.prefs.haEnabled = haEnabled
+        a.prefs.haHost = haHost.text.toString().trim()
+        a.prefs.haPort = haPort.text.toString().trim().toIntOrNull()?.takeIf { it in 1..65535 } ?: 1883
+        a.prefs.haUser = haUser.text.toString().trim()
+        a.prefs.haPassword = haPassword.text.toString()
+        a.prefs.haPrefix = haPrefix.text.toString().trim().trim('/').ifEmpty { "homeassistant" }
+        haPort.setText(a.prefs.haPort.toString())
+        haPrefix.setText(a.prefs.haPrefix)
+        a.machine.haReconfigure { v -> if (!v.ok) a.refusal(v) }
+    }
+
+    private fun renderHa() {
+        val m = a.machine
+        haText.text = m.haText.ifEmpty { if (a.prefs.haEnabled) tr("Connexion…") else tr("Désactivé") }
+        haText.setTextColor(if (m.haConnected) Ui.OK else Ui.TEXT2)
     }
 
     /** Ce qu'on règle à l'installation ou pour un dépannage. */
@@ -1058,6 +1120,7 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         unsubRecipes = a.app.recipes.onChange { renderRobot(); refreshSync(); refreshSite() }
         unsubSync = SyncProgress.onChange { refreshSync() }
         unsubSite = a.app.site.onChange { renderAccount(); refreshSite() }
+        unsubHa = a.machine.onHaStatus { renderHa() }
     }
 
     override fun onHide() {
@@ -1068,6 +1131,8 @@ class SettingsScreen(a: MainActivity, private val startOn: Family? = null) : Scr
         unsubSync = null
         unsubSite?.invoke()
         unsubSite = null
+        unsubHa?.invoke()
+        unsubHa = null
     }
 
     override fun onSnapshot(s: Snapshot) {

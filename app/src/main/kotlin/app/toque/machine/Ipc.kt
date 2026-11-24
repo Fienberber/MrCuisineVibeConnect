@@ -35,6 +35,8 @@ object Ipc {
     const val SIM = 23
     const val CONFIRM_COLD = 24
     const val FORGET_BOWL = 25
+    /** Réglages Home Assistant changés : le service relit Prefs et refait la connexion MQTT. */
+    const val HA_RECONFIGURE = 26
 
     /** Clé de la langue de l'interface, jointe à chaque commande. */
     const val LANG = "lang"
@@ -42,6 +44,8 @@ object Ipc {
     const val SNAPSHOT = 100
     const val EVENT = 101
     const val REPLY = 102
+    /** État de la connexion à Home Assistant : « connected » (booléen) et « text ». */
+    const val HA_STATUS = 103
 
     fun snapshotToBundle(s: Snapshot): Bundle {
         val b = Bundle()

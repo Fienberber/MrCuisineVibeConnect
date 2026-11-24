@@ -35,6 +35,13 @@ class MachineClient(private val context: Context) {
 
     private val snapshotListeners = ArrayList<(Snapshot) -> Unit>()
     private val eventListeners = ArrayList<(MachineEvent) -> Unit>()
+    private val haListeners = ArrayList<() -> Unit>()
+
+    /** Home Assistant : connecté au broker MQTT, et l'état en clair (« Connecté à … », « Erreur : … »). */
+    var haConnected = false
+        private set
+    var haText = ""
+        private set
     private val pending = HashMap<Int, (Verdict) -> Unit>()
     private var nextId = 1
     private var service: Messenger? = null
@@ -56,6 +63,11 @@ class MachineClient(private val context: Context) {
                 }
             }
             Ipc.REPLY -> pending.remove(msg.arg1)?.invoke(Ipc.bundleToVerdict(msg.data))
+            Ipc.HA_STATUS -> {
+                haConnected = msg.data.getBoolean("connected")
+                haText = msg.data.getString("text") ?: ""
+                for (l in ArrayList(haListeners)) l()
+            }
         }
         true
     })
@@ -134,6 +146,14 @@ class MachineClient(private val context: Context) {
     /** Smart : la personne confirme que le contenu est froid (température pas encore mesurée), avant le Turbo. */
     fun confirmCold(cb: (Verdict) -> Unit) = sendRaw(Ipc.CONFIRM_COLD, null, cb)
     fun reconfigure(cb: (Verdict) -> Unit) = sendRaw(Ipc.RECONFIGURE, null, cb)
+    /** Réglages Home Assistant enregistrés : le service refait la connexion MQTT. */
+    fun haReconfigure(cb: (Verdict) -> Unit = {}) = sendRaw(Ipc.HA_RECONFIGURE, null, cb)
+
+    fun onHaStatus(l: () -> Unit): () -> Unit {
+        haListeners += l
+        l()
+        return { haListeners -= l }
+    }
     fun suspendPort(cb: (Verdict) -> Unit) = sendRaw(Ipc.SUSPEND_PORT, null, cb)
     fun resumePort(cb: (Verdict) -> Unit = {}) = sendRaw(Ipc.RESUME_PORT, null, cb)
 
