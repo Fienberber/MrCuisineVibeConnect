@@ -478,6 +478,10 @@ class MainActivity : Activity() {
         if (prefs.sound) Sounds.recipeDone()
     }
 
+    fun weighRecordedSound() {
+        if (prefs.sound) Sounds.weighRecorded()
+    }
+
     fun chime(times: Int = 1) {
         if (!prefs.sound) return
         val t = tone ?: return
