@@ -110,7 +110,8 @@ class Standby(private val a: MainActivity, private val root: FrameLayout) {
         val b = Ui.vertical(a, Gravity.CENTER_HORIZONTAL)
         val t = Ui.text(a, "", 150f, 0xFF7C828B.toInt(), Ui.THIN)
         b.addView(t, Ui.lp(Ui.WRAP, Ui.WRAP))
-        val h = Ui.text(a, "", 22f, Ui.WARN, Ui.MEDIUM)
+        // La veille est noire dans les deux thèmes : l'avertissement garde sa teinte claire.
+        val h = Ui.text(a, "", 22f, Ui.WARN_ON_DARK, Ui.MEDIUM)
         b.addView(h, Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
         b.addView(Ui.text(a, tr("Touchez l'écran pour reprendre"), 17f, 0xFF3E434A.toInt()), Ui.lp(Ui.WRAP, Ui.WRAP, t = 18))
         v.addView(b, Ui.flp(Ui.WRAP, Ui.WRAP, Gravity.CENTER))

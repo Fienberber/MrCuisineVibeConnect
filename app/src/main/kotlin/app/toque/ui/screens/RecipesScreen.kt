@@ -298,7 +298,7 @@ class RecipesScreen(
         val meta = Ui.ellipsize(Ui.text(c, "", 15f, Ui.TEXT2))
         val star = Icon(c, Icon.Kind.STAR_FILLED, Ui.ACCENT)
         /** « Perso », ou la langue (« DE ») d'une recette venue d'une autre langue. */
-        val badge = Ui.text(c, "", 13f, Ui.TEXT, Ui.MEDIUM).apply {
+        val badge = Ui.text(c, "", 13f, Ui.ON_PHOTO, Ui.MEDIUM).apply {
             setPadding(Ui.u(10), Ui.u(3), Ui.u(10), Ui.u(3))
             background = Ui.round(0xB3000000.toInt(), 20f)
         }

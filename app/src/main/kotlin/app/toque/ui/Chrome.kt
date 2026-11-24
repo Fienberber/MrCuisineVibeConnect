@@ -216,9 +216,9 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         jobRow.addView(stopBtn, Ui.lp(Ui.u(84), Ui.WRAP, l = 10))
         jobRow.addView(okBtn, Ui.lp(Ui.WRAP, Ui.WRAP, l = 10))
         addView(jobRow, Ui.flp(Ui.MATCH, Ui.WRAP))
-        // Alerte
+        // Alerte : en rouge sombre ; en rouge pâle sur le thème clair, où le texte est foncé.
         faultRow.setPadding(Ui.u(22), Ui.u(14), Ui.u(18), Ui.u(14))
-        faultRow.setBackgroundColor(0xFF3A1416.toInt())
+        faultRow.setBackgroundColor(if (Ui.light) 0xFFFDE7E7.toInt() else 0xFF3A1416.toInt())
         faultRow.addView(Icon(a, Icon.Kind.WARNING, Ui.DANGER), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
         faultRow.addView(faultText, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         faultRow.addView(Ui.button(a, tr("Acquitter"), Ui.Style.SECONDARY, Icon.Kind.CHECK, height = 60) {
