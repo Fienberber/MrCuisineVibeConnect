@@ -60,8 +60,9 @@ follow [Camybrith Cooking's](https://github.com/Tidusneo24150/camybrith-cooking/
    `Toque-smart`**: the other APK is the Connect's and does not work on the Smart's tablet), then, from the
    repository folder:
    `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-smart-x.y.z.apk`
-   (or `adb install -r`, then `tools/robot/setup-root.sh` as root). After that, Settings › Updates
-   takes the Smart APK by itself.
+   (macOS: `bash tools/install-robot.sh --apk Toque-smart-x.y.z.apk`, or `adb install -r` then
+   `tools/robot/setup-root.sh` as root). After that, Settings › Updates takes the Smart APK by
+   itself.
 
    Had a `0.8.0-smart.N` test version? Install 0.8.0 over it with the same command, once: the updater
    of those test versions does not offer it.
@@ -97,5 +98,6 @@ version and the base firmware (Diagnostics screen), what works and what doesn't,
 
 ## Back to the stock app
 
-`tools\restore-robot.ps1` gives the motor back to the stock app (its serial-port service included);
-`tools\restore-robot.ps1 -Uninstall` also uninstalls Toque.
+`tools\restore-robot.ps1` (macOS: `bash tools/restore-robot.sh`) gives the motor back to the stock
+app (its serial-port service included); add `-Uninstall` (macOS: `--uninstall`) to also uninstall
+Toque.

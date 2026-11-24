@@ -5,8 +5,9 @@ repository with a request such as *"Install Toque on my Monsieur Cuisine"*. It i
 procedure, written so that the agent does everything it can by itself and asks the person only for
 what needs hands, eyes or a Windows security prompt.
 
-Humans: the same procedure by hand is in [docs/INSTALLATION.md](docs/INSTALLATION.md) (Connect) and
-[docs/SMART.en.md](docs/SMART.en.md) (Smart).
+Humans: the same procedure by hand is in [docs/INSTALLATION.md](docs/INSTALLATION.md) (Connect,
+Windows), [docs/MACOS.en.md](docs/MACOS.en.md) (Connect, macOS) and [docs/SMART.en.md](docs/SMART.en.md)
+(Smart). On **macOS**, also read *Installing from macOS (Connect)* below before starting.
 
 ## First: which robot?
 
@@ -25,8 +26,9 @@ procedures. **Before anything else, ask the person to read the model on the labe
   `adb shell getprop ro.build.version.release` gives `6.0` on a Connect and `8.1.0` on a Smart, and
   `adb shell pm list packages` lists the stock app, `de.silpion.mc2` (Connect) or
   `com.tecpal.device.mc30` (Smart). If the label and the tablet disagree, stop and ask.
-- **Never run `tools\setup\toque-setup.ps1` on a Smart.** Its TWRP, scatter file and partition
-  addresses are the Connect's: written to a Smart, they can leave its tablet unusable.
+- **Never run `tools\setup\toque-setup.ps1` or `tools/setup/toque-setup.sh` on a Smart.** Their
+  TWRP, scatter file and partition addresses are the Connect's: written to a Smart, they can leave
+  its tablet unusable.
 - **Each robot has its own APK; never swap them.** The Smart's APK runs in the virtual machine's
   safe mode, which its Android 8.1 needs (its JIT compiler miscompiles some code) and which would make
   a Connect much slower. Once installed, *Settings › Updates* takes the right one by itself.
@@ -232,6 +234,47 @@ operation in the window — with a computer-use tool, or by guiding the person:
    steps read the partitions back from the robot and compare them with the images, so they work
    the same after a GUI flash, and say so if another file was written.
 
+## Installing from macOS (Connect)
+
+Same rules, safety checks and robot steps as Windows above, with these differences:
+
+- **Tool**: `bash tools/setup/toque-setup.sh <step>` (work folder `~/Toque`, state
+  `~/Toque/state.txt`, log `~/Toque/setup-log.txt`, mtkclient output `~/Toque/mtk-<step>-out.txt`).
+  No driver, no SP Flash Tool, no manual downloads, no `driver`/`cleanup` steps.
+- **Prerequisites**: [Homebrew](https://brew.sh) (`brew install python libusb`, Python 3.10+; ask
+  before installing) and git (`xcode-select --install`). On a USB-C-only Mac, put a **USB-C to
+  USB-A adapter** (female USB-A) or hub between the Mac and the USB A↔A cable. On Apple silicon,
+  click **Allow** on *"Allow accessory to connect?"* (in download mode, then switch off and on).
+- **Download mode & TWRP writes**: `prepare` clones pinned [mtkclient](https://github.com/bkerler/mtkclient)
+  v2.1.4.1 (commit `5a863eece86fcaa97cb8325cf747e0aae3c307e4`), applies
+  [tools/setup/mtkclient-macos-serial.patch](tools/setup/mtkclient-macos-serial.patch), and installs
+  SHA-256-pinned CLI packages ([tools/setup/mtkclient-requirements.txt](tools/setup/mtkclient-requirements.txt),
+  no PySide6/fusepy). Never run other mtkclient commands than the script's.
+  - `backup` and `flash-twrp` use mtkclient (robot **off**, cable **in**, switch on **once** when
+    *Waiting for PreLoader VCOM* shows; *Handshake failed, retrying...* every 10 s while waiting is
+    normal; robot stays in download mode afterwards until switched off). Done end to end on one real
+    SKMC 1200 C3 in November 2026: tell the person before starting.
+  - `own-twrp` (SKMC 1100 A1 only) works the same way after `backup`.
+  - `flash-root` and `unroot` run **from TWRP** via [`tools/robot/twrp-flash.sh`](tools/robot/twrp-flash.sh)
+    (checks both partitions first, reads each back; never switch off during writes; `unroot --download-mode`
+    uses mtkclient if nothing boots).
+- **Which TWRP**: unlike `toque-setup.ps1`, the macOS script does **not** recognise the robot from
+  its backup. Read the label first: on an **SKMC 1100 A1**, run `own-twrp` after `backup` and before
+  `flash-twrp` (the guide's TWRP has no touch on that robot); on an SKMC 1200, go straight to
+  `flash-twrp`. If the label is unreadable, stop and ask.
+- **Install**: `install` picks the highest `Toque-X.Y.Z.apk` version in `~/Toque/downloads` (never
+  `Toque-smart-*`), and [`tools/install-robot.sh`](tools/install-robot.sh) stops when `adb install`
+  does not answer `Success`, pushes `setup-root.sh` **and** `toque-su.sh` (the boot script that keeps
+  Toque allowed in Magisk and opens it first), and stops if the boot script was not installed. Run
+  `install` again after fixing whatever it reports.
+- **After changing a macOS script**: at least `bash -n` on it; there is no fake-robot bench like
+  `tools/setup/test-setup.ps1` for the shell scripts yet.
+- **When mtkclient does not reach the robot**: (1) verify A↔A cable, right-hand port, USB-C→USB-A
+  adapter (`system_profiler SPUSBDataType` should list **MT65xx Preloader**, `0x0e8d`); (2) on *Sync
+  error* / *Failed to upload da*, check `status` shows *v2.1.4.1 + macOS serial fixes*, switch robot
+  off, retry (`--libusb` tries libusb instead); (3) fallback: do only `backup` and `flash-twrp` on
+  Windows, copy backups into `~/Toque/backup/`, run `backup` on the Mac, and continue from `root`.
+
 ## Monsieur Cuisine Smart (SKMS 1200): in test
 
 Toque drives the Smart since 0.8.0, but the project has no Smart: **Smart owners test it and report
@@ -250,7 +293,8 @@ starting. The full guide, with the tests to run, is [docs/SMART.en.md](docs/SMAR
    [latest release](https://github.com/Wuki60/MrCuisineVibeConnect/releases/latest): the asset whose
    name **starts with `Toque-smart-`** (about 1.1 MB). Ask before downloading.
 4. **Install**, from the repository folder:
-   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk <folder>\Toque-smart-X.Y.Z.apk`.
+   `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk <folder>\Toque-smart-X.Y.Z.apk`
+   (macOS: `bash tools/install-robot.sh --apk <folder>/Toque-smart-X.Y.Z.apk`).
    It installs the APK, sets up root for Toque (`tools/robot/setup-root.sh`) and starts it. If the
    install fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, another port with the same package name
    (`app.toque`, for example Camybrith Cooking's Ratatouille Edition) is installed with another
@@ -263,7 +307,8 @@ starting. The full guide, with the tests to run, is [docs/SMART.en.md](docs/SMAR
 
 The *Known problems* table below is for the Connect. On a Smart, describe the problem in #59.
 Undo: Toque › Settings › Advanced › *Back to the stock app* (it re-enables the stock app's
-`SerialPortMC30Service`), or `tools\restore-robot.ps1 -Uninstall`.
+`SerialPortMC30Service`), or `tools\restore-robot.ps1 -Uninstall` (macOS:
+`bash tools/restore-robot.sh --uninstall`).
 
 ## Known problems and fixes (Connect)
 
@@ -297,9 +342,11 @@ Undo: Toque › Settings › Advanced › *Back to the stock app* (it re-enables
 ## Undo (Connect)
 
 - Back to the stock app, keeping root: Toque › Settings › Advanced › *Back to the stock app*, or
-  `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`.
+  `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall` (macOS:
+  `bash tools/restore-robot.sh --uninstall`).
 - Remove root and TWRP: SP Flash Tool *Download Only* with **boot** =
-  `C:\Toque\backup\boot-original.img` and **recovery** = `C:\Toque\backup\recovery-original.img`.
+  `C:\Toque\backup\boot-original.img` and **recovery** = `C:\Toque\backup\recovery-original.img`
+  (macOS: `bash tools/setup/toque-setup.sh unroot`, after restoring the stock app).
 
 ## After the install
 

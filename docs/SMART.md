@@ -63,8 +63,9 @@ Smart : suivez celui de [Camybrith Cooking](https://github.com/Tidusneo24150/cam
    par `Toque-smart`** : l'autre APK est celui du Connect et ne marche pas sur la tablette du Smart), puis,
    depuis le dossier du dépôt :
    `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1 -Apk Toque-smart-x.y.z.apk`
-   (ou `adb install -r` puis `tools/robot/setup-root.sh` en root). Ensuite, Réglages › Mises à jour
-   prend tout seul l'APK du Smart.
+   (macOS : `bash tools/install-robot.sh --apk Toque-smart-x.y.z.apk`, ou `adb install -r` puis
+   `tools/robot/setup-root.sh` en root). Ensuite, Réglages › Mises à jour prend tout seul l'APK du
+   Smart.
 
    Vous aviez une version de test `0.8.0-smart.N` ? Installez la 0.8.0 par-dessus avec la même
    commande, une seule fois : l'outil de mise à jour de ces versions de test ne la propose pas.
@@ -101,5 +102,6 @@ ce qui ne marche pas, et le journal (Réglages › Avancé › Journal).
 
 ## Revenir à l'appli d'origine
 
-`tools\restore-robot.ps1` réactive l'appli d'origine (son service du port série compris) ;
-`tools\restore-robot.ps1 -Uninstall` désinstalle aussi Toque.
+`tools\restore-robot.ps1` (macOS : `bash tools/restore-robot.sh`) réactive l'appli d'origine (son
+service du port série compris) ; ajouter `-Uninstall` (macOS : `--uninstall`) désinstalle aussi
+Toque.

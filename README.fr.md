@@ -55,25 +55,46 @@ Si Toque vous rend service, vous pouvez [soutenir le projet](https://toqueapp.or
 
 ## Installer avec un agent IA (Connect)
 
-Le plus simple : confiez l'installation à un agent IA qui peut piloter votre PC Windows (Claude,
-ChatGPT, Copilot…). Donnez-lui ce message :
+Le plus simple : confiez l'installation à un agent IA qui peut piloter votre PC Windows ou votre Mac
+(Claude, ChatGPT, Copilot…). Donnez-lui ce message :
 
 > Installe Toque sur mon Monsieur Cuisine Connect en suivant le fichier AGENTS.md de
 > https://github.com/Wuki60/MrCuisineVibeConnect
 
 Le fichier [AGENTS.md](AGENTS.md) lui décrit toute la procédure, et le script
-[`tools/setup/toque-setup.ps1`](tools/setup/toque-setup.ps1) fait le travail étape par étape
-(téléchargements vérifiés, pilote, sauvegarde, root, installation, ADB par Wi-Fi). L'agent ne vous
-demande que ce qu'il ne peut pas faire lui-même :
+[`tools/setup/toque-setup.ps1`](tools/setup/toque-setup.ps1) (Windows) ou
+[`tools/setup/toque-setup.sh`](tools/setup/toque-setup.sh) (macOS) fait le travail étape par étape
+(téléchargements vérifiés, pilote sous Windows, sauvegarde, root, installation, ADB par Wi-Fi).
+L'agent ne vous demande que ce qu'il ne peut pas faire lui-même :
 
-- avoir un câble **USB-A mâle ↔ USB-A mâle** et un petit tournevis Torx ;
+- avoir un câble **USB-A mâle ↔ USB-A mâle** (plus un adaptateur USB-C → USB-A si votre Mac n'a que
+  des ports USB-C) et un petit tournevis Torx ;
 - dévisser la trappe sous le robot, brancher le câble sur le port **« Android USB »**, éteindre et
   rallumer le robot quand il le dit ;
-- répondre aux fenêtres de sécurité de Windows (et, si besoin, désactiver l'intégrité de la mémoire
-  le temps de l'installation) ;
+- répondre aux fenêtres de sécurité de Windows (ou aux demandes Homebrew / accessoire sur Mac) ;
 - appuyer une fois sur **Autoriser** sur l'écran du robot.
 
-Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.fr.md).
+Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.fr.md) (Windows) ou
+[docs/MACOS.md](docs/MACOS.md) (macOS).
+
+## Installer depuis un Mac (Connect)
+
+Toque s'installe aussi depuis un Mac (Apple silicon ou Intel), avec les mêmes étapes et les mêmes
+vérifications que sous Windows. Pas de pilote ni de SP Flash Tool : [mtkclient](https://github.com/bkerler/mtkclient)
+fait les deux étapes qui demandent le mode téléchargement MediaTek, et TWRP écrit le reste.
+
+1. Installez [Homebrew](https://brew.sh), puis `brew install python libusb` et `xcode-select --install`.
+2. Prenez un câble **USB-A ↔ USB-A** ; sur un Mac qui n'a que des ports USB-C, ajoutez un
+   **adaptateur USB-C → USB-A**.
+3. Depuis le dossier du dépôt, lancez les étapes dans l'ordre, chacune quand la précédente le dit :
+   `bash tools/setup/toque-setup.sh prepare`, puis `backup`, `flash-twrp` (sur un SKMC 1100 A1,
+   `own-twrp` d'abord), `root`, `flash-root`, `android`, `install`, et si vous voulez `wifi`.
+   `bash tools/setup/toque-setup.sh status` dit où vous en êtes.
+4. **Gardez une copie de `~/Toque/backup/`** (clé USB ou cloud) : c'est votre retour en arrière.
+
+Le guide complet, avec quoi faire si mtkclient n'atteint pas le robot : [docs/MACOS.md](docs/MACOS.md).
+Un agent IA peut aussi le faire pour vous (voir plus haut). Testé de bout en bout sur un vrai
+SKMC 1200 C3 en novembre 2026 ; merci à @flexbox.
 
 ## Ce que fait Toque
 
@@ -195,9 +216,11 @@ app/    Appli Android (minSdk 23), sans AndroidX
         machine/   service de pilotage (processus « :machine ») et IPC
         recipes/   catalogue local, synchro Lidl
         ui/        écrans
-tools/  setup/toque-setup.ps1 (installation complète, pilotable par un agent IA), scripts de root (TWRP),
-        d'installation, de restauration et de publication, twin.py (jumeau numérique pour tester sur PC)
-docs/   INSTALLATION.md (EN), INSTALLATION.fr.md (FR) : Connect ; SMART.md (FR), SMART.en.md (EN) : Smart
+tools/  setup/toque-setup.ps1 (Windows) et setup/toque-setup.sh (macOS, installation complète
+        pilotable par un agent IA), robot/ (root TWRP, écriture TWRP, restauration), scripts
+        d'installation, de restauration (.ps1/.sh) et de publication, twin.py (jumeau numérique)
+docs/   INSTALLATION.md, INSTALLATION.fr.md (Connect, Windows) ; MACOS.md, MACOS.en.md (Connect,
+        macOS) ; SMART.md, SMART.en.md (Smart)
 AGENTS.md  procédure d'installation pour un agent IA
 ```
 
@@ -266,6 +289,7 @@ déjà enregistrés pour git).
 
 - Protocole : [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk) (MIT).
 - Accès au robot : [Monsieur-Cuisine-Connect-Hack](https://github.com/EliasKotlyar/Monsieur-Cuisine-Connect-Hack).
+- Mode téléchargement MediaTek sous macOS : [mtkclient](https://github.com/bkerler/mtkclient) (GPLv3, téléchargé par `prepare`, non inclus ; `prepare` applique `tools/setup/mtkclient-macos-serial.patch`).
 - Contributions : @pierok13 (veille, notes et quantités, paliers, sons, récentes, certificats Android 6,
   capteur du bol), @lucasbraud, @OUTSIDE2k8 (traduction espagnole), @Locodice67 (traduction allemande,
   script d'installation), @baptiste-gislot, @florentdestremau (bouton rotatif), @maximehuran (lumière
@@ -274,7 +298,8 @@ déjà enregistrés pour git).
   protocole, programmes, captures), @Tidusneo24150 (Camybrith Cooking : plages de température et
   modes des recettes du Smart, relecture sur un vrai Smart), @pierrearnou (couleurs d'accent,
   interrupteurs), @oscarsanchezdm (langue des recettes, thème clair), @phanex (ukrainien, recherche
-  dans tous les alphabets, stabilité de la balance), @McSoda (essais sur robot et corrections), et
+  dans tous les alphabets, stabilité de la balance), @McSoda (essais sur robot et corrections),
+  @flexbox (scripts d'installation macOS, correctifs série mtkclient et flash depuis TWRP), et
   tous ceux qui ont testé leur robot et signalé des bugs.
 
 Licence MIT. Ce dépôt ne contient aucune recette, image ni code de Lidl : chaque robot télécharge
