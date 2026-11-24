@@ -43,7 +43,7 @@ abstract class Screen(val a: MainActivity) {
     open val cookWaiting: Boolean get() = false
 }
 
-/** Barre supérieure : retour, titre, état de la base, heure. */
+/** Barre supérieure : retour, titre, minuteurs, état de la base, heure. */
 class TopBar(private val a: MainActivity) : LinearLayout(a) {
     private val back = Icon(a, Icon.Kind.BACK, Ui.TEXT)
     private val titleView = Ui.ellipsize(Ui.text(a, "", 24f, Ui.TEXT, Ui.MEDIUM))
@@ -61,6 +61,15 @@ class TopBar(private val a: MainActivity) : LinearLayout(a) {
     private val link = barChip("", Icon.Kind.LINK, Ui.TEXT2)
     private val clock = barChip("", Icon.Kind.CLOCK, Ui.TEXT)
     private val home = Icon(a, Icon.Kind.HOME, Ui.TEXT)
+    /** Minuteur de cuisine : bouton rond au repos, pastille orange (temps restant, nombre) quand il en tourne. */
+    private val timerButton = Icon(a, Icon.Kind.TIMER, Ui.TEXT)
+    private val timerChip = Ui.chip(a, "", Icon.Kind.TIMER, Ui.ACCENT, Ui.ACCENT_DIM)
+    private val timerText = Ui.chipText(timerChip)
+    private val timerCount = Ui.text(a, "", 14f, Ui.ON_ACCENT, Ui.BOLD).apply {
+        gravity = Gravity.CENTER
+        background = Ui.round(Ui.ACCENT, 12f)
+        minWidth = Ui.u(24)
+    }
     private val handler = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
         override fun run() {
@@ -81,6 +90,15 @@ class TopBar(private val a: MainActivity) : LinearLayout(a) {
         roundButton(back) { a.back() }
         addView(back, LayoutParams(Ui.u(TOUCH), Ui.u(TOUCH)))
         addView(titleView, LayoutParams(0, Ui.WRAP, 1f).apply { leftMargin = Ui.u(6) })
+        roundButton(timerButton) { TimerPanel.open(a) }
+        timerButton.contentDescription = tr("Minuteur")
+        addView(timerButton, LayoutParams(Ui.u(TOUCH), Ui.u(TOUCH)).apply { rightMargin = Ui.u(4) })
+        timerChip.addView(timerCount, LayoutParams(Ui.WRAP, Ui.u(24)).apply { leftMargin = Ui.u(8) })
+        timerChip.background = Ui.pressable(Ui.round(Ui.ACCENT_DIM, 40f, Ui.ACCENT, 1.5f), 40f)
+        timerChip.isClickable = true
+        timerChip.setOnClickListener { TimerPanel.open(a) }
+        timerChip.visibility = View.GONE
+        addView(timerChip, chipParams(10))
         addView(lid, chipParams(10))
         addView(bowl, chipParams(10))
         addView(temp, chipParams(10))
@@ -152,6 +170,19 @@ class TopBar(private val a: MainActivity) : LinearLayout(a) {
     }
 
     fun stopClock() = handler.removeCallbacks(tick)
+
+    /** Pastille du minuteur qui finit le premier (et nombre de minuteurs en cours), ou le bouton rond. */
+    fun showTimers(t: Timers) {
+        val running = t.running
+        val first = running.firstOrNull()
+        timerButton.visibility = if (first == null) View.VISIBLE else View.GONE
+        timerChip.visibility = if (first == null) View.GONE else View.VISIBLE
+        if (first == null) return
+        val text = Ui.clock(first.remaining(t.now()))
+        if (timerText.text.toString() != text) timerText.text = text
+        timerCount.text = running.size.toString()
+        timerCount.visibility = if (running.size > 1) View.VISIBLE else View.GONE
+    }
 
     fun setTitle(t: String, canGoBack: Boolean) {
         titleView.text = t
