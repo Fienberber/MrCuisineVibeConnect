@@ -10,7 +10,7 @@
 Time: 1 to 2 hours the first time. Steps 1 and 2 (root) are the tricky ones: a mistake can leave
 the robot's tablet unusable. Read everything before you start.
 
-Menu names below are those of the English interface (*Settings › Langue · Language › English*).
+Menu names below are those of the English interface (*Settings › Language and time › Langue · Language › English*).
 
 ## What you need
 
@@ -127,11 +127,12 @@ disconnect the USB cable and perform all subsequent steps and updates over Wi-Fi
 ## 4. First run — EMPTY bowl
 
 1. At first start, Toque asks *Which robot is this?*: choose **Monsieur Cuisine Connect** (until then
-   it sends nothing to the motor base). Then **Settings › Machine › Real machine › Apply**. Toque turns off the stock app's motor service (reversible) and opens the
+   it sends nothing to the motor base). Then **Settings › Advanced › Machine › Real machine › Apply** (in demo mode, a dot marks
+   *Advanced* in the menu on the left of Settings). Toque turns off the stock app's motor service (reversible) and opens the
    serial port.
 2. Success: the badge at the top right must read Ready with **no Demo or Twin marker** **and** the
    journal must show the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; `Démo (base simulée)`
-   means the mode was not applied. If not: Settings › Tools › Motor base diagnostics (are frames
+   means the mode was not applied. If not: Settings › Advanced › Motor base diagnostics (are frames
    received?) and Log.
 3. Empty bowl, lid closed, **hand near the main switch**:
    - Manual cooking: 10 s, speed 2 → the motor runs, then stops on its own.
@@ -153,7 +154,7 @@ To open Toque from the PC: `adb shell am start -n app.toque/.ui.MainActivity`.
 
 ## 6. Lidl recipes
 
-**Settings › Lidl recipes › Sync** (the robot needs Wi-Fi). Toque downloads the official
+**Settings › Recipes › Lidl › Sync** (the robot needs Wi-Fi). Toque downloads the official
 Monsieur Cuisine connect recipes from monsieur-cuisine.com, then their photos: about 15 minutes the
 first time, then only new or changed recipes. After that, the sync runs every night at 3:30 am.
 Recipes are in the interface language (French by default).
@@ -165,7 +166,7 @@ Lidl's servers; come back with the **Back to Toque** button. If that import fail
 
 ## Going back to the stock app
 
-- From Toque: Settings › Tools › Back to the stock app.
+- From Toque: Settings › Advanced › Back to the stock app.
 - From the PC: `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`
 
 Toque itself only disables the stock app's motor service, which both methods undo; Toque then no

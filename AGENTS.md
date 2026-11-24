@@ -116,11 +116,11 @@ A log is kept in `C:\Toque\setup-log.txt`, state in `C:\Toque\state.json`.
 | 6 | `flash-root` | agent + person | Writes `boot-magisk.img` into `boot` and TWRP into `recovery`. Power cycle as above → stock app. |
 | 7 | `android` | agent + person | Checks Magisk, installs its app; the person taps **Grant** on the robot once. Reads `boot` and `recovery` back and stops if they are not what `flash-root` wrote. |
 | 8 | `install` | agent | Installs Toque and checks that the file on the robot is the one sent, allows it in Magisk, installs the boot script, starts it. |
-| 9 | first run | person | *Which robot is this?*: **Monsieur Cuisine Connect**. Empty bowl: Settings › Machine › Real machine › Apply. Success: badge **not** in demo mode **and** journal line showing the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; then manual cooking 10 s speed 2. |
+| 9 | first run | person | *Which robot is this?*: **Monsieur Cuisine Connect**. Empty bowl: Settings › Advanced › Machine › Real machine › Apply (in demo mode a dot marks *Advanced* in the menu on the left of Settings). Success: badge **not** in demo mode **and** journal line showing the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; then manual cooking 10 s speed 2. |
 | 10 | `wifi` | agent | ADB over Wi-Fi (port 5555), so the cable can go and the cover go back on. |
 | 11 | `cleanup` | agent + person | Removes the MediaTek driver; the person can turn memory integrity back on. |
 
-Then: Toque › Settings › Lidl recipes › **Sync** (about 15 minutes the first time). The recipe count
+Then: Toque › Settings › Recipes › Lidl › **Sync** (about 15 minutes the first time). The recipe count
 stays at 0 and "never synced" stays shown until every recipe has been fetched: that is normal, do not
 restart the sync.
 
@@ -257,12 +257,12 @@ starting. The full guide, with the tests to run, is [docs/SMART.en.md](docs/SMAR
    signature: `adb uninstall app.toque` removes it, **with its settings and own recipes**. Ask the
    person first, and suggest exporting those recipes in that app.
 5. **On the robot**: *Which robot is this?* → **Monsieur Cuisine Smart (SKMS 1200)**.
-6. **First run, empty bowl, hand on the main switch**: Settings › Machine › Real machine › Apply.
+6. **First run, empty bowl, hand on the main switch**: Settings › Advanced › Machine › Real machine › Apply.
    Then the tests of [docs/SMART.en.md](docs/SMART.en.md), in their order. Help the person write
    what they saw for #59; they post it.
 
 The *Known problems* table below is for the Connect. On a Smart, describe the problem in #59.
-Undo: Toque › Settings › Tools › *Back to the stock app* (it re-enables the stock app's
+Undo: Toque › Settings › Advanced › *Back to the stock app* (it re-enables the stock app's
 `SerialPortMC30Service`), or `tools\restore-robot.ps1 -Uninstall`.
 
 ## Known problems and fixes (Connect)
@@ -290,13 +290,13 @@ Undo: Toque › Settings › Tools › *Back to the stock app* (it re-enables th
 | TWRP's first screen: *Keep Read Only* / *Swipe to Allow Modifications* | TWRP protects `/system` by default | Swipe to allow modifications. Otherwise `root` stops with "/system is read-only" |
 | `prepare`: SP Flash Tool checksum mismatch, file sizes right | The RAR was extracted without its password: some tools write garbage of the right size | Extract again with the password `spflashtool.com` and check that no error is reported |
 | Magisk app: *Requires additional setup*, then *reinstall Magisk… recovery mode cannot get device info* | Magisk app's own check, harmless here | Accept a reboot if offered; **never** use *Direct install* (it rewrites `boot`). Back out of the install screen |
-| Toque says "bowl not detected" with the bowl in place, and "detected" without it | The bowl sensor is reversed on many robots (B2, C3, SKMC 1100) | Settings › Safety › **Invert the bowl sensor**; check *Settings › Tools › Diagnostics*, then enable *Require bowl detection* |
+| Toque says "bowl not detected" with the bowl in place, and "detected" without it | The bowl sensor is reversed on many robots (B2, C3, SKMC 1100) | Settings › Safety › **Invert the bowl sensor**; check *Settings › Advanced › Motor base diagnostics*, then enable *Require bowl detection* |
 | The rotary knob does nothing | Knob keys not set up | Tap the *Rotary knob not set up* pill on Home and follow the 3 steps |
 | Scale shows "overload · 0 g" right after the install | The robot was resting on the cable or the open cover | Put the robot flat on its feet with nothing under it, screw the cover back, restart it |
 
 ## Undo (Connect)
 
-- Back to the stock app, keeping root: Toque › Settings › Tools › *Back to the stock app*, or
+- Back to the stock app, keeping root: Toque › Settings › Advanced › *Back to the stock app*, or
   `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`.
 - Remove root and TWRP: SP Flash Tool *Download Only* with **boot** =
   `C:\Toque\backup\boot-original.img` and **recovery** = `C:\Toque\backup\recovery-original.img`.
@@ -305,8 +305,8 @@ Undo: Toque › Settings › Tools › *Back to the stock app* (it re-enables th
 
 - Updates: Toque › Settings › Updates installs new releases from this repository, each robot its
   own APK.
-- Recipes: Settings › Lidl recipes › Sync (monsieur-cuisine.com, no account). Nightly re-sync.
-- Clock: set automatically (time zone from the Internet connection); Settings › Date and time.
+- Recipes: Settings › Recipes › Lidl › Sync (monsieur-cuisine.com, no account). Nightly re-sync.
+- Clock: set automatically (time zone from the Internet connection); Settings › Language and time.
 - To work on the robot later over Wi-Fi: `adb connect <robot IP>:5555`.
 
 ## Working on the code

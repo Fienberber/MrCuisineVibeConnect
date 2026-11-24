@@ -129,12 +129,13 @@ mises à jour par Wi-Fi (`tools\install-robot.ps1 -Ip <IP du robot>`).
 ## 4. Premier essai — bol VIDE
 
 1. Au premier démarrage, Toque demande « Quel est votre robot ? » : choisissez **Monsieur Cuisine
-   Connect** (jusque-là, il n'envoie rien à la base moteur). Puis **Réglages › Machine › Machine réelle › Appliquer**. Toque coupe l'appli
+   Connect** (jusque-là, il n'envoie rien à la base moteur). Puis **Réglages › Avancé › Machine › Machine réelle › Appliquer**
+   (en mode Démo, un point marque « Avancé » dans le menu à gauche des Réglages). Toque coupe l'appli
    d'origine du moteur (réversible) et ouvre le port série.
 2. Réussite : la pastille en haut à droite doit afficher « Base prête » **sans marqueur Démo ni Jumeau**
    **et** le journal doit afficher la liaison réelle, par ex. `liaison ouverte : Base moteur (/dev/ttyMT…)` ;
-   `Démo (base simulée)` signifie que le mode n'a pas été appliqué. Sinon : Réglages › Outils ›
-   Diagnostic (trames reçues ?) et Journal.
+   `Démo (base simulée)` signifie que le mode n'a pas été appliqué. Sinon : Réglages › Avancé ›
+   Diagnostic de la base moteur (trames reçues ?) et Journal.
 3. Bol vide, couvercle fermé, **main près de l'interrupteur principal** :
    - Cuisson manuelle : 10 s, vitesse 2 → le moteur tourne puis s'arrête seul.
    - Ouvrir le couvercle pendant un essai → arrêt immédiat, « Pause : couvercle ouvert ».
@@ -156,7 +157,7 @@ Pour ouvrir Toque depuis le PC : `adb shell am start -n app.toque/.ui.MainActivi
 
 ## 6. Recettes Lidl
 
-**Réglages › Recettes Lidl › Synchroniser** (le robot doit être en Wi-Fi). Toque télécharge les
+**Réglages › Recettes › Lidl › Synchroniser** (le robot doit être en Wi-Fi). Toque télécharge les
 recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com, puis leurs photos :
 environ 15 minutes la première fois, ensuite seulement les recettes nouvelles ou modifiées. La
 synchro se refait chaque nuit à 3 h 30. Les recettes sont dans la langue de l'interface (le
@@ -170,7 +171,7 @@ décrit la base d'origine.
 
 ## Revenir à l'appli d'origine
 
-- Depuis Toque : Réglages › Outils › « Revenir à l'appli d'origine ».
+- Depuis Toque : Réglages › Avancé › « Revenir à l'appli d'origine ».
 - Depuis le PC : `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`
 
 Toque lui-même ne fait que désactiver le service moteur de l'appli d'origine, ce que ces deux

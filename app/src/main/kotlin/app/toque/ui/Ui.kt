@@ -199,6 +199,9 @@ object Ui {
             includeFontPadding = false
         }
 
+    /** Espaces insécables à l'intérieur des guillemets : un retour à la ligne ne sépare plus « du mot qui suit, ni » de celui qui précède. */
+    fun guillemets(s: String): String = s.replace("« ", "« ").replace(" »", " »")
+
     /** Texte d'une seule ligne, rapetissé de [size] jusqu'à [min] pour tenir dans sa largeur (jamais de retour à la ligne). */
     fun fitText(c: Context, size: Float, min: Float, color: Int = TEXT, face: Typeface = REGULAR): TextView =
         object : TextView(c) {

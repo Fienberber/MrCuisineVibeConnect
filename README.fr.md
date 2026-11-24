@@ -31,7 +31,7 @@ robot sans rien envoyer à sa base moteur et demande de le confirmer.
 > À utiliser à vos risques, en suivant la procédure de premier essai.
 >
 > L'interface existe en **français**, **anglais**, **allemand**, **espagnol**, **catalan** et
-> **ukrainien** (*Réglages › Langue · Language*).
+> **ukrainien** (*Réglages › Langue et heure*).
 
 ## Le site communautaire : [toqueapp.org](https://toqueapp.org)
 
@@ -43,8 +43,8 @@ catalan et ukrainien.
 - **Publiez vos recettes** sur le site ou directement depuis le robot. Les réglages de chaque étape
   (durée, température, vitesse) sont vérifiés avec les mêmes règles de sécurité que sur le robot.
 - **Envoyez-les sur votre robot** : les recettes de la communauté arrivent sur le robot sans aucun
-  compte (*Réglages › Recettes de la communauté*). Avec un compte Toque gratuit et facultatif
-  (*Réglages › Compte Toque*), vos favoris et vos recettes vous suivent sur le robot.
+  compte (*Réglages › Recettes › Communauté*). Avec un compte Toque gratuit et facultatif
+  (à relier sur la même page), vos favoris et vos recettes vous suivent sur le robot.
 - **Traduisez** les recettes des autres dans votre langue, **abonnez-vous** aux cuisiniers que vous
   aimez, et signalez ce qui n'a rien à y faire.
 - Votre compte reste privé : le profil public ne montre que votre pseudo et vos recettes publiées, et
@@ -80,7 +80,7 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 - **Interface sombre, bleu nuit**, pensée pour l'écran 7" et le bouton rotatif du robot, fluide sur sa
   tablette d'origine (1 Go de RAM, Android 6) : pas de bibliothèque lourde, images
   sous-échantillonnées, vues recyclées. Dix couleurs d'accent et un thème clair dans
-  *Réglages › Apparence*.
+  *Réglages › Écran*.
 - **Une appli, plusieurs robots** : chaque robot a sa fiche (port, protocole, programmes,
   températures) et ne montre que les programmes et les recettes qu'il sait faire. Sur le **Smart** :
   cuisson manuelle avec ses 21 températures (40 °C compris), Pétrir, Vapeur, Rissoler, Turbo,
@@ -93,9 +93,9 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
   nouvelles ou modifiées sont retéléchargées. On peut toujours importer à la place celles de
   l'appli d'origine.
 - **Recettes de la communauté sur [toqueapp.org](https://toqueapp.org)** : les recettes partagées
-  par les utilisateurs de Toque arrivent sur le robot (*Réglages › Recettes de la communauté*), sans
+  par les utilisateurs de Toque arrivent sur le robot (*Réglages › Recettes › Communauté*), sans
   compte. Avec un compte Toque gratuit (facultatif, proposé une seule fois et plus jamais si on
-  refuse ; *Réglages › Compte Toque*), les favoris du site arrivent sur le robot et vos recettes
+  refuse ; à relier sur la même page), les favoris du site arrivent sur le robot et vos recettes
   peuvent être publiées depuis le robot. Le site est en français, anglais, allemand, espagnol,
   catalan et ukrainien ; le robot ne garde qu'une clé révocable, jamais le mot de passe.
 - **Auteur, notes et avis** : chaque recette affiche qui l'a publiée et sa note sur le site, et la
@@ -126,9 +126,9 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 - **Mes recettes** : écrivez les vôtres (titre, personnes, durée, une ligne par ingrédient, étapes
   avec leur réglage du robot et leur pesée, choisis avec les mêmes limites de sécurité que la cuisson
   manuelle), ou faites **votre version** d'une recette Lidl avec le crayon. Les synchronisations n'y
-  touchent jamais. Réglages › Mes recettes les exporte vers `Download/toque-mes-recettes.json`, ou
+  touchent jamais. Réglages › Recettes › Mes recettes les exporte vers `Download/toque-mes-recettes.json`, ou
   les importe (pour les sauvegarder ou les passer à un autre robot).
-- **Recettes des autres langues** (option dans Réglages › Recettes Lidl) : les recettes absentes
+- **Recettes des autres langues** (option dans Réglages › Recettes › Lidl) : les recettes absentes
   dans votre langue sont ajoutées en anglais, français, allemand, espagnol…, une seule fois
   chacune, avec leur langue sur la vignette, et leurs catégories prennent les noms de votre langue.
   La langue du catalogue Lidl peut aussi être choisie (par exemple les recettes espagnoles avec
@@ -144,12 +144,12 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 - **Heure toujours juste** : le fuseau horaire est trouvé d'après la connexion Internet et l'heure
   vient du réseau (le robot n'a pas de pile d'horloge). Juste après l'allumage, l'horloge est réglée
   d'après le premier serveur qui répond : l'heure est juste en quelques secondes au lieu de rester
-  sur 01:00. Réglable à la main dans Réglages › Date et heure. L'heure ne s'affiche qu'une fois juste.
+  sur 01:00. Réglable à la main dans Réglages › Langue et heure. L'heure ne s'affiche qu'une fois juste.
 - **Mise en veille**, comme l'appli d'origine : après quelques minutes sans toucher l'écran ni le
   bouton rotatif (de 2 à 30 min, ou jamais, dans Réglages › Écran), un écran noir assombri affiche
   l'heure, et la température du bol quand il est chaud. Jamais pendant un programme ni sur la
   balance. Le geste qui réveille ne fait rien d'autre. Pendant la veille, l'anneau de la molette
-  reste normal, passe en veilleuse blanche très faible ou s'éteint (Réglages › Écran).
+  reste normal, passe en veilleuse blanche très faible ou s'éteint (Réglages › Molette et sons).
 - **Capteur du bol inversé** : sur certains robots (vu sur un SKMC 1200 C3), la base signale le bol
   présent quand il est retiré ; Réglages › Sécurité › Inverser le capteur du bol corrige cela.
 - **Pensé pour un robot sans boutons Android** : Toque s'ouvre au démarrage, et un bouton
@@ -212,12 +212,12 @@ En ligne de commande : `gradlew assembleDebug` (et `gradlew :core:test` pour les
 ## Tester sans le robot
 
 1. **Mode Démo** (par défaut) : installer l'APK sur n'importe quel Android (ou l'émulateur
-   d'Android Studio, en paysage). La base moteur est simulée ; Réglages › Outils › Diagnostic
+   d'Android Studio, en paysage). La base moteur est simulée ; Réglages › Avancé › Diagnostic
    permet d'ouvrir le couvercle ou de provoquer une erreur pour voir les sécurités.
-   Réglages › Recettes Lidl › Synchroniser télécharge les recettes sur n'importe quel appareil.
+   Réglages › Recettes › Lidl › Synchroniser télécharge les recettes sur n'importe quel appareil.
 2. **Jumeau numérique** : le jumeau du [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk)
    reproduit le protocole réel indépendamment de Toque.
-   `python tools/twin.py --sdk <dossier du SDK>` puis, dans Toque, Réglages › Machine ›
+   `python tools/twin.py --sdk <dossier du SDK>` puis, dans Toque, Réglages › Avancé › Machine ›
    Jumeau (émulateur : hôte `10.0.2.2` ; appareil réel : `adb reverse tcp:8765 tcp:8765` et
    hôte `127.0.0.1`). `python tools/twin.py --send "lid 1"` ouvre le couvercle, etc.
 
@@ -232,7 +232,7 @@ L'appli est écrite en français ; chaque autre langue est un fichier dans
 2. Recompiler l'appli, ou, sans recompiler, copier le fichier dans `Android/data/app.toque/files/lang/`
    sur l'appareil puis relancer Toque.
 
-La langue apparaît alors dans Réglages › Langue · Language. `gradlew :core:test` vérifie chaque
+La langue apparaît alors dans Réglages › Langue et heure. `gradlew :core:test` vérifie chaque
 fichier de langue.
 
 ## Publier une nouvelle version

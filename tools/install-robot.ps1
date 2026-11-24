@@ -51,7 +51,7 @@ if ($out -notmatch "Boot script installed") { Stop-Install "The root setup did n
 [void](Invoke-RobotAdb $adbExe @("-s", $robot, "shell", "am start -n app.toque/.ui.MainActivity"))
 Write-Host ""
 Write-Host "Toque is running. On the robot:"
-Write-Host "  1. Settings > Machine > Real machine > Apply (first test: EMPTY bowl)."
+Write-Host "  1. Settings > Advanced > Machine > Real machine > Apply (first test: EMPTY bowl)."
 Write-Host "  2. Toque now opens by itself when the robot starts (the robot has no Home button)."
 Write-Host "  3. Settings > Lidl recipes > Sync."
 Write-Host "To undo everything: tools\restore-robot.ps1"

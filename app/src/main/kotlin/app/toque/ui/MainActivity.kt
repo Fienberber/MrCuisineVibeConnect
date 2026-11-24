@@ -115,7 +115,7 @@ class MainActivity : Activity() {
         push(HomeScreen(this))
         if (reopenSettings) {
             reopenSettings = false
-            push(SettingsScreen(this))
+            push(SettingsScreen.reopened(this))
         } else if (!prefs.knobReady && !prefs.knobSetupShown) {
             // Premier lancement : le bouton du robot n'envoie pas les mêmes touches partout.
             prefs.knobSetupShown = true
@@ -140,7 +140,7 @@ class MainActivity : Activity() {
 
     /**
      * Une seule fois : relier un compte toqueapp.org (facultatif). « Non merci » : plus jamais
-     * demandé (Réglages › Compte Toque reste là). Sans compte, la communauté arrive quand même.
+     * demandé (Réglages › Recettes › Communauté reste là). Sans compte, la communauté arrive quand même.
      */
     fun offerSite() {
         if (prefs.siteOffered || prefs.siteLinked || overlayShown) return
@@ -151,7 +151,7 @@ class MainActivity : Activity() {
         head.addView(Ui.text(this, tr("Compte Toque"), 26f, Ui.TEXT, Ui.MEDIUM))
         card.addView(head)
         card.addView(Ui.text(this, tr("Vous avez un compte sur toqueapp.org ? Reliez-le pour retrouver ici vos favoris du site et publier vos recettes depuis le robot.") +
-            "\n\n" + tr("Sans compte, les recettes de la communauté arrivent quand même. Vous pourrez relier un compte plus tard dans Réglages › Compte Toque."),
+            "\n\n" + tr("Sans compte, les recettes de la communauté arrivent quand même. Vous pourrez relier un compte plus tard dans Réglages › Recettes › Communauté."),
             19f, Ui.TEXT2).apply { setLineSpacing(0f, 1.2f) }, Ui.lp(t = 16, b = 26))
         val row = Ui.horizontal(this, Gravity.END or Gravity.CENTER_VERTICAL)
         row.addView(Ui.button(this, tr("Non merci"), Ui.Style.GHOST, height = 60) {
@@ -222,7 +222,7 @@ class MainActivity : Activity() {
         app.recipes.load()
         refreshTitle()
         // Les Réglages ouverts montrent des choses propres au robot (recettes Lidl, import) : on les refait.
-        if (current is SettingsScreen && before !== p) replace(SettingsScreen(this))
+        if (current is SettingsScreen && before !== p) replace(SettingsScreen.reopened(this))
         val msg = if (!p.tested) tr("%s : en test. Vos retours sont attendus sur GitHub.", p.displayName) else tr("Robot : %s", p.displayName)
         toast(msg, if (p.tested) Ui.OK else Ui.WARN)
         if (before != null && before.lidlDevice != p.lidlDevice && app.recipes.count > 0)
