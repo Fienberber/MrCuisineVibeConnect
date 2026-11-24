@@ -4,7 +4,6 @@
   "%d fois": "%d vegades",
   "%d pers.": "%d pers.",
   "%d recettes": "%d receptes",
-  "%d recettes Lidl": "%d receptes Lidl",
   "%d recettes Lidl à jour": "%d receptes Lidl al dia",
   "%d recettes ajoutées, %d mises à jour": "%d receptes afegides, %d actualitzades",
   "%d recettes dans Toque": "%d receptes a Toque",
@@ -25,7 +24,6 @@
   "1 favori": "1 preferit",
   "1 fois": "1 vegada",
   "1 recette": "1 recepta",
-  "1 recette Lidl": "1 recepta Lidl",
   "1 recette perso": "1 recepta meva",
   "30 min max": "30 min màx.",
   "Abandonner": "Descarta",
@@ -73,7 +71,6 @@
   "Aucun ingrédient pour l'instant.": "Encara no hi ha cap ingredient.",
   "Aucun programme": "Cap programa",
   "Aucune phase active": "Cap fase activa",
-  "Aucune recette Lidl pour l'instant": "Encara no hi ha receptes Lidl",
   "Aucune recette cuisinée pour l'instant.\nLes recettes apparaissent ici dès leur première cuisson.": "Encara no has cuinat cap recepta.\nLes receptes apareixen aquí des del primer cop que les cuines.",
   "Aucune recette lisible dans les fichiers de Download": "No hi ha cap recepta llegible als fitxers de Download",
   "Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.": "No hi ha cap recepta llegible. Envia el fitxer diagnostic-recettes.txt.",
@@ -711,5 +708,9 @@
   "Publiée sur toqueapp.org · toucher pour changer": "Publicada a toqueapp.org · toca per canviar",
   "Sur votre compte toqueapp.org (privée) · toucher pour changer": "Al teu compte de toqueapp.org (privada) · toca per canviar",
   "1 de la communauté": "1 de la comunitat",
-  "%d de la communauté": "%d de la comunitat"
+  "%d de la communauté": "%d de la comunitat",
+  "Aucune recette pour l'instant": "Encara no hi ha receptes",
+  "Actualiser": "Actualitza",
+  "Actualisation…": "S'està actualitzant…",
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Vincula un compte Toque (Configuració › Compte Toque) per trobar aquí els teus preferits del lloc."
 }

@@ -166,9 +166,9 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         val lidl = n - perso - community
         recipesSub.text = when {
             !repo.loaded -> tr("Chargement…")
-            n == 0 -> tr("Aucune recette Lidl pour l'instant")
+            n == 0 -> tr("Aucune recette pour l'instant")
             else -> listOfNotNull(
-                when (lidl) { 0 -> null; 1 -> tr("1 recette Lidl"); else -> tr("%d recettes Lidl", lidl) },
+                when (lidl) { 0 -> null; 1 -> tr("1 recette"); else -> tr("%d recettes", lidl) },
                 when (perso) { 0 -> null; 1 -> tr("1 recette perso"); else -> tr("%d recettes perso", perso) },
                 when (community) { 0 -> null; 1 -> tr("1 de la communauté"); else -> tr("%d de la communauté", community) },
             ).joinToString("\n")

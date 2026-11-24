@@ -4,7 +4,6 @@
   "%d fois": "%d разів",
   "%d pers.": "%d порцій",
   "%d recettes": "%d рецептів",
-  "%d recettes Lidl": "%d рецептів\nв колекції",
   "%d recettes Lidl à jour": "%d рецептів оновлено",
   "%d recettes ajoutées, %d mises à jour": "Додано %d рецептів, оновлено %d",
   "%d recettes dans Toque": "%d рецептів у Toque",
@@ -25,7 +24,6 @@
   "1 favori": "1 рецепт\nв обраному",
   "1 fois": "1 раз",
   "1 recette": "1 рецепт",
-  "1 recette Lidl": "1 рецепт Lidl",
   "1 recette perso": "1 власний рецепт",
   "30 min max": "До 30 хв",
   "Abandonner": "Скасувати",
@@ -73,7 +71,6 @@
   "Aucun ingrédient pour l'instant.": "Інгредієнтів поки немає.",
   "Aucun programme": "Немає програми",
   "Aucune phase active": "Немає активної фази",
-  "Aucune recette Lidl pour l'instant": "Рецептів поки що\nнемає",
   "Aucune recette cuisinée pour l'instant.\nLes recettes apparaissent ici dès leur première cuisson.": "Ще нічого не готували.\nРецепти з'являться тут після першого приготування.",
   "Aucune recette lisible dans les fichiers de Download": "У файлах папки Download не знайдено придатних рецептів",
   "Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.": "Немає доступних для читання рецептів. Надішліть файл diagnostic-recettes.txt.",
@@ -711,5 +708,9 @@
   "Publiée sur toqueapp.org · toucher pour changer": "Опубліковано на toqueapp.org · торкніться, щоб змінити",
   "Sur votre compte toqueapp.org (privée) · toucher pour changer": "У вашому обліковому записі toqueapp.org (приватно) · торкніться, щоб змінити",
   "1 de la communauté": "1 від спільноти",
-  "%d de la communauté": "Від спільноти: %d"
+  "%d de la communauté": "Від спільноти: %d",
+  "Aucune recette pour l'instant": "Рецептів поки що\nнемає",
+  "Actualiser": "Оновити",
+  "Actualisation…": "Оновлення…",
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Під’єднайте обліковий запис Toque (Параметри › Обліковий запис Toque), щоб бачити тут свої улюблені рецепти з сайту."
 }

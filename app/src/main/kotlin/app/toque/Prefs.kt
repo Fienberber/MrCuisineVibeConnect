@@ -370,6 +370,16 @@ class Prefs(context: Context) {
             p.edit().putString("siteLang", v).commit()
         }
 
+    /**
+     * Version de ce que l'appli garde des recettes du site : plus petite que SiteAccount.FORMAT, la
+     * prochaine synchro redemande toutes les recettes une fois (ex. pour recevoir leurs photos).
+     */
+    var siteFormat: Int
+        get() = p.getInt("siteFormat", 0)
+        set(v) {
+            p.edit().putInt("siteFormat", v).commit()
+        }
+
     /** Dernière liste complète (recettes retirées du site enlevées), en ms. */
     var siteFullMs: Long
         get() = p.getLong("siteFullMs", 0)

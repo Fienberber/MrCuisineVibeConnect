@@ -4,7 +4,6 @@
   "%d fois": "%d-mal",
   "%d pers.": "Für %d Pers.",
   "%d recettes": "%d Rezepte",
-  "%d recettes Lidl": "%d Lidl-Rezepte",
   "%d recettes Lidl à jour": "%d Lidl-Rezepte auf dem neuesten Stand",
   "%d recettes ajoutées, %d mises à jour": "%d Rezepte hinzugefügt, %d aktualisiert",
   "%d recettes dans Toque": "%d Rezepte in Toque",
@@ -25,7 +24,6 @@
   "1 favori": "1 Favorit",
   "1 fois": "1-mal",
   "1 recette": "1 Rezept",
-  "1 recette Lidl": "1 Lidl-Rezept",
   "1 recette perso": "1 eigenes Rezept",
   "30 min max": "max. 30 Min.",
   "Abandonner": "Abbrechen",
@@ -73,7 +71,6 @@
   "Aucun ingrédient pour l'instant.": "Noch keine Zutaten.",
   "Aucun programme": "Kein Programm",
   "Aucune phase active": "Keine aktive Phase",
-  "Aucune recette Lidl pour l'instant": "Noch keine Lidl-Rezepte",
   "Aucune recette cuisinée pour l'instant.\nLes recettes apparaissent ici dès leur première cuisson.": "Noch kein Rezept gekocht.\nRezepte erscheinen hier, sobald sie einmal gekocht wurden.",
   "Aucune recette lisible dans les fichiers de Download": "Kein lesbares Rezept in den Dateien in Download",
   "Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.": "Kein lesbares Rezept. Die Datei diagnostic-recettes.txt senden.",
@@ -711,5 +708,9 @@
   "Publiée sur toqueapp.org · toucher pour changer": "Auf toqueapp.org veröffentlicht · tippen zum Ändern",
   "Sur votre compte toqueapp.org (privée) · toucher pour changer": "In Ihrem toqueapp.org-Konto (privat) · tippen zum Ändern",
   "1 de la communauté": "1 aus der Community",
-  "%d de la communauté": "%d aus der Community"
+  "%d de la communauté": "%d aus der Community",
+  "Aucune recette pour l'instant": "Noch keine Rezepte",
+  "Actualiser": "Aktualisieren",
+  "Actualisation…": "Wird aktualisiert…",
+  "Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site.": "Verbinde ein Toque-Konto (Einstellungen › Toque-Konto), um hier deine Favoriten von der Website zu finden."
 }
