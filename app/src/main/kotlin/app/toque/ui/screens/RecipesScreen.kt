@@ -207,12 +207,12 @@ class RecipesScreen(
         empty.visibility = if (results.isEmpty() && repo.loaded) View.VISIBLE else View.GONE
         emptyText.text = when {
             none && a.prefs.mode == Prefs.Mode.HARDWARE ->
-                tr("Les recettes Lidl apparaîtront après la première synchronisation.\nRéglages › Recettes Lidl › Synchroniser.")
+                tr("Les recettes Lidl apparaîtront après la première synchronisation.\nRéglages › Recettes › Lidl › Synchroniser.")
             none -> tr("Les recettes Lidl apparaîtront après la première synchronisation, une fois Toque installé sur le robot.")
             usage != Usage.NONE && query.isBlank() -> tr("Aucune recette cuisinée pour l'instant.\nLes recettes apparaissent ici dès leur première cuisson.")
             filter.favoritesOnly && query.isBlank() -> tr("Aucun favori pour l'instant.\nTouchez l'étoile d'une recette pour l'ajouter.")
             filter.source == RecipeSource.COMMUNITY && query.isBlank() ->
-                tr("Aucune recette de la communauté pour l'instant.\nRéglages › Recettes de la communauté › Synchroniser.")
+                tr("Aucune recette de la communauté pour l'instant.\nRéglages › Recettes › Communauté › Synchroniser.")
             filter.source == RecipeSource.USER && query.isBlank() ->
                 tr("Aucune recette perso pour l'instant.\nTouchez « Nouvelle recette », ou le crayon d'une recette Lidl pour en faire votre version.")
             else -> tr("Aucune recette ne correspond.\nAstuce : séparez plusieurs ingrédients par des virgules.")
@@ -223,7 +223,7 @@ class RecipesScreen(
     private fun refreshFavorites() {
         val site = a.app.site
         if (!a.prefs.siteLinked && !a.prefs.siteCommunity) {
-            a.toast(tr("Reliez un compte Toque (Réglages › Compte Toque) pour retrouver ici vos favoris du site."), Ui.WARN)
+            a.toast(tr("Reliez un compte Toque (Réglages › Recettes › Communauté) pour retrouver ici vos favoris du site."), Ui.WARN)
             return
         }
         if (site.busy) {

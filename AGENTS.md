@@ -114,11 +114,11 @@ A log is kept in `C:\Toque\setup-log.txt`, state in `C:\Toque\state.json`.
 | 6 | `flash-root` | agent + person | Writes `boot-magisk.img` into `boot` and TWRP into `recovery`. Power cycle as above → stock app. |
 | 7 | `android` | agent + person | Checks Magisk, installs its app; the person taps **Grant** on the robot once. Checks the boot partition. |
 | 8 | `install` | agent | Installs Toque, allows it in Magisk, starts it. |
-| 9 | first run | person | *Which robot is this?*: **Monsieur Cuisine Connect**. Empty bowl: Settings › Advanced › Machine › Real machine › Apply (in demo mode a card at the top of Settings leads there). Success: badge **not** in demo mode **and** journal line showing the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; then manual cooking 10 s speed 2. |
+| 9 | first run | person | *Which robot is this?*: **Monsieur Cuisine Connect**. Empty bowl: Settings › Advanced › Machine › Real machine › Apply (in demo mode a dot marks *Advanced* in the menu on the left of Settings). Success: badge **not** in demo mode **and** journal line showing the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; then manual cooking 10 s speed 2. |
 | 10 | `wifi` | agent | ADB over Wi-Fi (port 5555), so the cable can go and the cover go back on. |
 | 11 | `cleanup` | agent + person | Removes the MediaTek driver; the person can turn memory integrity back on. |
 
-Then: Toque › Settings › Lidl recipes › **Sync** (about 15 minutes the first time). The recipe count
+Then: Toque › Settings › Recipes › Lidl › **Sync** (about 15 minutes the first time). The recipe count
 stays at 0 and "never synced" stays shown until every recipe has been fetched: that is normal, do not
 restart the sync.
 
@@ -289,8 +289,8 @@ Undo: Toque › Settings › Advanced › *Back to the stock app* (it re-enables
 
 - Updates: Toque › Settings › Updates installs new releases from this repository, each robot its
   own APK.
-- Recipes: Settings › Lidl recipes › Sync (monsieur-cuisine.com, no account). Nightly re-sync.
-- Clock: set automatically (time zone from the Internet connection); Settings › Date and time.
+- Recipes: Settings › Recipes › Lidl › Sync (monsieur-cuisine.com, no account). Nightly re-sync.
+- Clock: set automatically (time zone from the Internet connection); Settings › Language and time.
 - To work on the robot later over Wi-Fi: `adb connect <robot IP>:5555`.
 
 ## Working on the code

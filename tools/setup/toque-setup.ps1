@@ -632,7 +632,7 @@ function Step-Install {
     if ($ver -notmatch "versionName") { Fail "Toque is not installed." }
     $mode = Get-MachineMode
     if ($mode -ne "" -and $mode -ne "hardware") {
-        NeedHuman ("Toque is in '" + $mode + "' mode, so the motor is not driven. On the robot, EMPTY bowl, lid closed, hand near the main switch: Toque > Settings > Advanced > Machine > Real machine > Apply (in demo mode, the card at the top of Settings, 'Go to the setting', leads there), then run the install step again so the mode can be verified. Success: the badge reads Ready/« Prête » with no Demo or Twin marker AND the journal must show the real link, e.g. 'liaison ouverte : Base moteur (/dev/ttyMT...)'; the simulated-base line means the mode was not applied.")
+        NeedHuman ("Toque is in '" + $mode + "' mode, so the motor is not driven. On the robot, EMPTY bowl, lid closed, hand near the main switch: Toque > Settings > Advanced > Machine > Real machine > Apply (in demo mode, a dot marks 'Advanced' in the menu on the left of Settings), then run the install step again so the mode can be verified. Success: the badge reads Ready/« Prête » with no Demo or Twin marker AND the journal must show the real link, e.g. 'liaison ouverte : Base moteur (/dev/ttyMT...)'; the simulated-base line means the mode was not applied.")
     }
     if ($mode -eq "hardware") { Ok "Toque machine mode: hardware (real machine)." }
     elseif ($mode -eq "") { Say "WARNING: Toque machine mode could not be verified (su or prefs unreadable). On the robot, Settings > Advanced > Machine > Real machine must be applied before the motor can run." }

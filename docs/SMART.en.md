@@ -26,7 +26,7 @@
   (Settings › Advanced › Robot to change it). In "Real machine", the link to the base stays closed until the
   robot is confirmed.
 - **Each robot only sees the recipes it can make**: the ones the site makes for it, whose every
-  setting exists on that robot. The others are counted in Settings › Lidl recipes ("N recipes
+  setting exists on that robot. The others are counted in Settings › Recipes › Lidl ("N recipes
   hidden"). Screens (programs, manual cooking, editor) only offer what the robot can do.
 - On the Connect nothing changes: same protocol, same limits, and sorting the recipes stays light.
 
@@ -42,7 +42,7 @@
 - **Smart programs**: blend, smoothie, boil eggs, sous-vide (40 to 85 °C), slow cooking (60 to
   100 °C), ferment (30 to 50 °C), cook rice, heat water, pre-rinse, long cleaning. Sous-vide, slow
   cooking and ferment can run as long as in the stock app (12 h at most).
-- **The Smart's Lidl recipes**: Settings › Lidl recipes › Sync (the first time, every recipe is read
+- **The Smart's Lidl recipes**: Settings › Recipes › Lidl › Sync (the first time, every recipe is read
   again).
 - **Not yet**: heating without stirring (speed 0) in manual cooking; importing the stock app's
   database; the list of the base's error codes.

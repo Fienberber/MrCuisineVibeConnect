@@ -27,7 +27,7 @@
   robot (Réglages › Avancé › Robot pour changer). En « Machine réelle », la liaison avec la base reste fermée
   tant que le robot n'est pas confirmé.
 - **Chaque robot ne voit que les recettes qu'il peut faire** : celles que le site lui destine, dont
-  chaque réglage existe sur ce robot. Les autres sont comptées dans Réglages › Recettes Lidl
+  chaque réglage existe sur ce robot. Les autres sont comptées dans Réglages › Recettes › Lidl
   (« N recettes masquées »). Les écrans (programmes, cuisson manuelle, éditeur) ne proposent que ce
   que le robot sait faire.
 - Sur le Connect, rien ne change : même protocole, mêmes limites, et le tri des recettes reste léger.
@@ -45,7 +45,7 @@
 - **Programmes du Smart** : mixer, smoothie, cuire des œufs, sous-vide (40 à 85 °C), mijoter (60 à
   100 °C), fermenter (30 à 50 °C), cuire du riz, chauffer l'eau, prélaver, nettoyage long. Sous-vide,
   mijoter et fermenter vont jusqu'à la durée de l'appli d'origine (12 h au plus).
-- **Recettes Lidl du Smart** : Réglages › Recettes Lidl › Synchroniser (la première fois, toutes les
+- **Recettes Lidl du Smart** : Réglages › Recettes › Lidl › Synchroniser (la première fois, toutes les
   fiches sont relues).
 - **Pas encore** : chauffe sans mélange (vitesse 0) en cuisson manuelle ; import de la base de
   l'appli d'origine ; liste des codes d'erreur de la base.

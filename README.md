@@ -30,7 +30,7 @@ robot without sending anything to its motor base and asks you to confirm it.
 > risk and follow the first-run procedure.
 >
 > The interface is available in **English**, **French**, **German**, **Spanish**, **Catalan** and
-> **Ukrainian** (*Settings › Langue · Language*), and other languages can be added with a single file
+> **Ukrainian** (*Settings › Language and time*), and other languages can be added with a single file
 > (see below).
 
 ## Community site: [toqueapp.org](https://toqueapp.org)
@@ -42,7 +42,7 @@ Toque's own recipe site, free and ad-free, in English, French, German, Spanish, 
 - **Publish your recipes** on the site or straight from the robot. Each step's settings (time,
   temperature, speed) are checked with the same safety rules as on the robot.
 - **Send them to your robot**: community recipes reach the robot without any account
-  (*Settings › Community recipes*). With a free, optional Toque account (*Settings › Toque account*),
+  (*Settings › Recipes › Community*). With a free, optional Toque account (linked on the same page),
   your favourites and your own recipes follow you to the robot.
 - **Translate** other people's recipes into your language, **follow** the cooks you like, and report
   what doesn't belong there.
@@ -77,7 +77,7 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 
 - **Dark night-blue interface** designed for the robot's 7" screen and rotary knob, and smooth on its
   original tablet (1 GB RAM, Android 6): no heavy libraries, downsampled images, recycled views.
-  Ten accent colours and a light theme in *Settings › Appearance*.
+  Ten accent colours and a light theme in *Settings › Screen*.
 - **One app, several robots**: each robot has its profile (port, protocol, programs, temperatures)
   and only shows the programs and recipes it can make. On the **Smart**: manual cooking with its 21
   temperatures (40 °C included), Knead, Steam, Sauté, Turbo, cleaning, and the Smart programs (blend,
@@ -89,8 +89,8 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   Requests are spaced out and only new or changed recipes are downloaded again. The recipes already
   in the stock app can still be imported instead.
 - **Community recipes from [toqueapp.org](https://toqueapp.org)**: recipes shared by Toque users
-  arrive on the robot (*Settings › Community recipes*), no account needed. With a free Toque account
-  (optional, offered once and never again if declined; *Settings › Toque account*), the site's
+  arrive on the robot (*Settings › Recipes › Community*), no account needed. With a free Toque account
+  (optional, offered once and never again if declined; linked on the same page), the site's
   favourites come to the robot and your own recipes can be published from the robot. The site is in
   French, English, German, Spanish, Catalan and Ukrainian; only a revocable key of the robot is kept,
   never the password.
@@ -117,10 +117,10 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
   an eye on the cooking, and a warning when the bowl may be too full (2.5 L of liquid at most).
 - **My recipes**: write your own (title, people, time, one line per ingredient, steps with their
   robot setting and weighing, chosen with the same safety limits as manual cooking), or make **your
-  version** of a Lidl recipe with the pencil. Syncs never touch them. *Settings › My recipes* exports
+  version** of a Lidl recipe with the pencil. Syncs never touch them. *Settings › Recipes › My recipes* exports
   them to, or imports them from, `Download/toque-mes-recettes.json` (to back them up or pass them to
   another robot).
-- **Recipes from other languages** (option in *Settings › Lidl recipes*): the recipes that don't
+- **Recipes from other languages** (option in *Settings › Recipes › Lidl*): the recipes that don't
   exist in your language are added from English, French, German, Spanish…, each one only once, with
   its language on the thumbnail, and their categories take the names of your language. The language
   of the Lidl catalogue can also be chosen (for example Spanish recipes with a Catalan interface).
@@ -135,12 +135,12 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 - **Always the right time**: the time zone comes from the Internet connection and the time from
   the network (the robot has no clock battery). Right after power-on, the clock is set from the
   first server that answers, so the time is right within seconds instead of staying on 01:00. Can
-  be set by hand in *Settings › Date and time*. The clock only shows once it is right.
+  be set by hand in *Settings › Language and time*. The clock only shows once it is right.
 - **Standby**, like the stock app: after a few minutes without a touch or a turn of the knob
   (2 to 30 min, or never, in *Settings › Screen*), a dimmed black screen shows the time, and the
   bowl temperature when it is hot. Never during a program or on the scale. The gesture that wakes
   the screen does nothing else. During standby, the knob ring stays normal, dims to a faint white
-  night-light, or turns off (*Settings › Screen*).
+  night-light, or turns off (*Settings › Knob and sounds*).
 - **Bowl sensor that reads the wrong way round**: on some robots (seen on an SKMC 1200 C3) the
   base reports the bowl as present when it is removed; *Settings › Safety › Invert the bowl
   sensor* fixes it.
@@ -205,7 +205,7 @@ From the command line: `gradlew assembleDebug` (and `gradlew :core:test` for the
 1. **Demo mode** (default): install the APK on any Android device (or the Android Studio
    emulator, in landscape). The motor board is simulated; *Settings › Advanced › Motor base
    diagnostics* lets you open the lid or trigger an error to see the safety
-   features. *Settings › Lidl recipes › Sync* downloads the recipes on any device too.
+   features. *Settings › Recipes › Lidl › Sync* downloads the recipes on any device too.
 2. **Digital twin**: the twin from the [Monsieur Cuisine Developer SDK](https://github.com/antrea/monsieur-cuisine-developer-sdk)
    reproduces the real protocol independently of Toque.
    Run `python tools/twin.py --sdk <SDK folder>`, then in Toque choose *Settings › Advanced › Machine ›
@@ -223,7 +223,7 @@ The app is written in French; each other language is one file in
 2. Rebuild the app, or, without rebuilding, copy the file to `Android/data/app.toque/files/lang/`
    on the device and restart Toque.
 
-The language then appears in *Settings › Langue · Language*. `gradlew :core:test` checks
+The language then appears in *Settings › Language and time*. `gradlew :core:test` checks
 every language file.
 
 ## Publish a new version

@@ -122,8 +122,8 @@ mises à jour par Wi-Fi (`tools\install-robot.ps1 -Ip <IP du robot>`).
 
 ## 4. Premier essai — bol VIDE
 
-1. Dans Toque : **Réglages › Avancé › Machine › Machine réelle › Appliquer** (en mode Démo, la carte
-   en haut des Réglages, « Aller au réglage », y mène). Toque coupe l'appli
+1. Dans Toque : **Réglages › Avancé › Machine › Machine réelle › Appliquer** (en mode Démo, un point
+   marque « Avancé » dans le menu à gauche des Réglages). Toque coupe l'appli
    d'origine du moteur (réversible) et ouvre le port série.
 2. Réussite : la pastille en haut à droite doit afficher « Prête » **sans marqueur Démo ni Jumeau**
    **et** le journal doit afficher la liaison réelle, par ex. `liaison ouverte : Base moteur (/dev/ttyMT…)` ;
@@ -150,7 +150,7 @@ Pour ouvrir Toque depuis le PC : `adb shell am start -n app.toque/.ui.MainActivi
 
 ## 6. Recettes Lidl
 
-**Réglages › Recettes Lidl › Synchroniser** (le robot doit être en Wi-Fi). Toque télécharge les
+**Réglages › Recettes › Lidl › Synchroniser** (le robot doit être en Wi-Fi). Toque télécharge les
 recettes officielles du Monsieur Cuisine connect sur monsieur-cuisine.com, puis leurs photos :
 environ 15 minutes la première fois, ensuite seulement les recettes nouvelles ou modifiées. La
 synchro se refait chaque nuit à 3 h 30. Les recettes sont dans la langue de l'interface (le
