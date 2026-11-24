@@ -74,6 +74,9 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         app = ToqueApp.of(this)
+        // Le service machine d'abord : son processus démarre et ouvre la liaison avec la base pendant
+        // que l'écran se construit (les barres et le son prennent près d'une demi-seconde sur le robot).
+        app.machine.connect()
         val dm = resources.displayMetrics
         Ui.init(dm.widthPixels, dm.heightPixels)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -102,7 +105,6 @@ class MainActivity : Activity() {
         } catch (_: RuntimeException) {
         }
 
-        app.machine.connect()
         app.recipes.load()
         SyncService.schedule(this)
         push(HomeScreen(this))
