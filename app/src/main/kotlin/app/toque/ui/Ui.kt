@@ -65,10 +65,32 @@ object Ui {
         0xFF1C2B3E.toInt(), 0xFF35301A.toInt(), 0xFF1E3320.toInt(), 0xFF3A2A1C.toInt(),
     )
 
-    const val COOL = 0xFF5CC8FF.toInt()
-    const val OK = 0xFF3DDC97.toInt()
-    const val WARN = 0xFFFFC14D.toInt()
-    const val DANGER = 0xFFFF5A5F.toInt()
+    /**
+     * Couleurs d'état : information, réussi, avertissement, danger. Claires sur le thème sombre ;
+     * sur le thème clair, des teintes foncées, lisibles en texte et en icône sur un fond clair
+     * (les mêmes servent aux jauges et aux boutons, avec [ON_COOL] et [ON_WARN] pour le texte posé dessus).
+     */
+    var COOL = COOL_ON_DARK
+        private set
+    var OK = OK_ON_DARK
+        private set
+    var WARN = WARN_ON_DARK
+        private set
+    var DANGER = DANGER_ON_DARK
+        private set
+    /** Texte posé sur un fond [COOL] (bouton) ou [WARN] (Turbo maintenu). */
+    var ON_COOL = 0xFF04131C.toInt()
+        private set
+    var ON_WARN = 0xFF1A1405.toInt()
+        private set
+
+    /** Les couleurs d'état du thème sombre, pour ce qui reste sombre quel que soit le thème (veille). */
+    const val COOL_ON_DARK = 0xFF5CC8FF.toInt()
+    const val OK_ON_DARK = 0xFF3DDC97.toInt()
+    const val WARN_ON_DARK = 0xFFFFC14D.toInt()
+    const val DANGER_ON_DARK = 0xFFFF5A5F.toInt()
+    /** Texte posé sur le voile sombre d'une photo (pastille « Perso », langue de la recette) : clair dans les deux thèmes. */
+    const val ON_PHOTO = 0xFFF3F5F9.toInt()
 
     var ACCENT = ACCENTS[0]
         private set
@@ -101,6 +123,12 @@ object Ui {
             SCRIM = 0x99000000.toInt()
             bgGradient = intArrayOf(0xFFF7F8FB.toInt(), 0xFFEEF1F6.toInt(), 0xFFE4E9F1.toInt())
             rippleColor = 0x22000000
+            COOL = 0xFF0B6FA8.toInt()
+            OK = 0xFF10794D.toInt()
+            WARN = 0xFF9A5B00.toInt()
+            DANGER = 0xFFC62828.toInt()
+            ON_COOL = Color.WHITE
+            ON_WARN = Color.WHITE
             placeholders = intArrayOf(
                 0xFFE8D5C4.toInt(), 0xFFC5DDD4.toInt(), 0xFFD4CDE4.toInt(), 0xFFE4CCD2.toInt(),
                 0xFFC8D5E4.toInt(), 0xFFE0DBC4.toInt(), 0xFFC9DEC9.toInt(), 0xFFE4D4C4.toInt(),
@@ -121,6 +149,12 @@ object Ui {
                 0xFF3A2416.toInt(), 0xFF16302A.toInt(), 0xFF2B2140.toInt(), 0xFF3B1E26.toInt(),
                 0xFF1C2B3E.toInt(), 0xFF35301A.toInt(), 0xFF1E3320.toInt(), 0xFF3A2A1C.toInt(),
             )
+            COOL = COOL_ON_DARK
+            OK = OK_ON_DARK
+            WARN = WARN_ON_DARK
+            DANGER = DANGER_ON_DARK
+            ON_COOL = 0xFF04131C.toInt()
+            ON_WARN = 0xFF1A1405.toInt()
         }
     }
 
@@ -255,7 +289,7 @@ object Ui {
             Style.SECONDARY -> SURFACE3 to TEXT
             Style.DANGER -> DANGER to Color.WHITE
             Style.GHOST -> Color.TRANSPARENT to TEXT2
-            Style.COOL -> COOL to 0xFF04131C.toInt()
+            Style.COOL -> COOL to ON_COOL
         }
         val row = horizontal(c, Gravity.CENTER)
         row.minimumHeight = u(height)

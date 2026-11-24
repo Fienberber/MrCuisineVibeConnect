@@ -225,8 +225,9 @@ class MachineBar(private val a: MainActivity) : FrameLayout(a) {
         jobRow.addView(stopBtn, Ui.lp(Ui.u(84), Ui.WRAP, l = 10))
         jobRow.addView(okBtn, Ui.lp(Ui.WRAP, Ui.WRAP, l = 10))
         addView(jobRow, Ui.flp(Ui.MATCH, Ui.WRAP))
-        // Alerte : la même carte, en rouge sombre.
-        faultRow.background = Ui.round(0xFF3A1416.toInt(), RADIUS, 0xFF6B2529.toInt(), 1f)
+        // Alerte : la même carte, en rouge sombre ; en rouge pâle sur le thème clair, où le texte est foncé.
+        faultRow.background = if (Ui.light) Ui.round(0xFFFDE7E7.toInt(), RADIUS, 0xFFF2C4C4.toInt(), 1f)
+            else Ui.round(0xFF3A1416.toInt(), RADIUS, 0xFF6B2529.toInt(), 1f)
         faultRow.setPadding(Ui.u(TEXT_INSET), Ui.u(INSET), Ui.u(INSET), Ui.u(INSET))
         faultRow.minimumHeight = Ui.u(BUTTON + 2 * INSET)
         faultRow.addView(Icon(a, Icon.Kind.WARNING, Ui.DANGER), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
