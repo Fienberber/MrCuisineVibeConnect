@@ -60,6 +60,8 @@ class MainActivity : Activity() {
     private var toastView: TextView? = null
     private var lastKnobMs = 0L
     private lateinit var standby: Standby
+    lateinit var splash: Splash
+        private set
     lateinit var updates: UpdateAlert
         private set
     private var swallowTouch = false
@@ -97,6 +99,7 @@ class MainActivity : Activity() {
         root.addView(overlay, Ui.flp())
         setContentView(root)
         standby = Standby(this, root)
+        splash = Splash(this, root)
         updates = UpdateAlert(this)
         standby.onWake = { updates.onWake() }
 
@@ -117,9 +120,16 @@ class MainActivity : Activity() {
             push(KnobSetupScreen(this))
         }
         // Robot pas encore confirmé : on le reconnaît sans rien lui envoyer, la personne confirme.
-        // Ensuite (une seule fois) : proposer de relier un compte Toque.
-        if (!prefs.robotConfirmed) root.post { askRobot() }
-        else if (!prefs.siteOffered) root.post { offerSite() }
+        // Pas d'écran de démarrage alors : la base reste fermée jusqu'à la réponse, il cacherait la question.
+        if (!prefs.robotConfirmed) {
+            Splash.done = true
+            root.post { askRobot() }
+        } else {
+            // Par-dessus l'accueil, le temps que la base soit prête.
+            splash.start()
+            // Ensuite (une seule fois) : proposer de relier un compte Toque.
+            if (!prefs.siteOffered) root.post { offerSite() }
+        }
         // Recettes de la communauté (sans compte) : une première fois sans attendre la nuit, puis une
         // fois par jour au plus. Un peu après le démarrage, pour ne pas le ralentir.
         if (prefs.siteCommunity && System.currentTimeMillis() - prefs.siteLastMs > 24 * 3600_000L)
@@ -270,6 +280,7 @@ class MainActivity : Activity() {
             machineBar.update(s)
             stack.lastOrNull()?.onSnapshot(s)
             standby.onSnapshot(s)
+            splash.onSnapshot(s, app.machine.heard)
         }
         unsubscribeEvents = app.machine.onEvent { e -> onMachineEvent(e) }
         topBar.startClock()
@@ -387,6 +398,8 @@ class MainActivity : Activity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && standby.onKnob()) return true
+        // Écran de démarrage : ni la molette ni Retour n'agissent sur les écrans qu'il couvre.
+        if (splash.shown) return true
         // Retour reste Retour (tablettes et émulateur) : jamais un cran du bouton, même appris par erreur.
         val isBack = event.keyCode == KeyEvent.KEYCODE_BACK
         if (!isBack) knobListener?.let { l ->
@@ -419,6 +432,7 @@ class MainActivity : Activity() {
 
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && standby.onKnob()) return true
+        if (splash.shown) return true
         if (event.action == MotionEvent.ACTION_SCROLL) {
             // Encodeur rotatif (AXIS_SCROLL) ou molette (AXIS_VSCROLL)
             val v = event.getAxisValue(AXIS_SCROLL).let { if (it == 0f) -event.getAxisValue(MotionEvent.AXIS_VSCROLL) else it }
