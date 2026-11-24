@@ -65,6 +65,12 @@ class MainActivity : Activity() {
     private var swallowTouch = false
     var knobListener: ((KeyEvent) -> Unit)? = null
 
+    /** Molette d'une fenêtre ouverte : tourner ([turn]) et appuyer ([press]). */
+    class OverlayKnob(val turn: (Int) -> Unit, val press: () -> Unit)
+
+    /** Ce que fait la molette dans la fenêtre ouverte ; effacé quand elle se ferme. Sans lui, rien ne change. */
+    var overlayKnob: OverlayKnob? = null
+
     val prefs: Prefs get() = app.prefs
     val machine get() = app.machine
     val snapshot: Snapshot get() = app.machine.snapshot
@@ -391,6 +397,15 @@ class MainActivity : Activity() {
             if (event.action == KeyEvent.ACTION_DOWN) l(event)
             return true
         }
+        // Fenêtre qui a sa molette (choix du tri des recettes) : la molette agit sur elle, pas sur l'écran dessous.
+        val ok = overlayKnob
+        if (!isBack && ok != null && overlay.visibility == View.VISIBLE && currentFocus !is android.widget.EditText) {
+            val k = knobKind(event.keyCode)
+            if (k != 0) {
+                if (event.action == KeyEvent.ACTION_DOWN) { if (k == PRESS) ok.press() else ok.turn(k) }
+                return true
+            }
+        }
         if (!isBack && event.action == KeyEvent.ACTION_DOWN && overlay.visibility != View.VISIBLE) {
             val k = event.keyCode
             // Par défaut : les flèches, et les touches du bouton du robot (clavier mtk-kpd :
@@ -415,12 +430,33 @@ class MainActivity : Activity() {
         return super.dispatchKeyEvent(event)
     }
 
+    /** -1 / 1 : un cran de la molette, [PRESS] : son appui, 0 : une autre touche. */
+    private fun knobKind(k: Int): Int {
+        val left = prefs.knobLeft.let { if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_F7 }
+        val right = prefs.knobRight.let { if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_RIGHT || k == KeyEvent.KEYCODE_F6 }
+        val press = prefs.knobPress.let {
+            if (it >= 0) it == k else k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_F5
+        }
+        return when {
+            press -> PRESS
+            left -> -1
+            right -> 1
+            else -> 0
+        }
+    }
+
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && standby.onKnob()) return true
         if (event.action == MotionEvent.ACTION_SCROLL) {
             // Encodeur rotatif (AXIS_SCROLL) ou molette (AXIS_VSCROLL)
             val v = event.getAxisValue(AXIS_SCROLL).let { if (it == 0f) -event.getAxisValue(MotionEvent.AXIS_VSCROLL) else it }
             val now = System.currentTimeMillis()
+            val ok = overlayKnob
+            if (v != 0f && ok != null && overlay.visibility == View.VISIBLE) {
+                if (now - lastKnobMs > 40) ok.turn(if (v > 0) 1 else -1)
+                lastKnobMs = now
+                return true
+            }
             if (v != 0f && now - lastKnobMs > 40) {
                 lastKnobMs = now
                 if (!prefs.knobSetupDone) prefs.knobSetupDone = true
@@ -502,6 +538,7 @@ class MainActivity : Activity() {
     /** Affiche une carte modale au centre de l'écran. */
     fun showOverlay(card: View, width: Int = 640, dismissOnScrim: Boolean = true) {
         hideKeyboard()
+        overlayKnob = null
         overlay.removeAllViews()
         overlay.setBackgroundColor(Ui.SCRIM)
         overlay.isClickable = true
@@ -516,6 +553,7 @@ class MainActivity : Activity() {
     fun closeOverlay() {
         overlay.visibility = View.GONE
         overlay.removeAllViews()
+        overlayKnob = null
     }
 
     /** Dialogue de confirmation. */
@@ -674,6 +712,8 @@ class MainActivity : Activity() {
     companion object {
         private var reopenSettings = false
         private const val STORAGE_REQUEST = 7
+        /** Appui de la molette, pour knobKind (les crans sont -1 et 1). */
+        private const val PRESS = 2
 
         /** MotionEvent.AXIS_SCROLL (API 26), valeur fixe pour Android 6. */
         private const val AXIS_SCROLL = 26

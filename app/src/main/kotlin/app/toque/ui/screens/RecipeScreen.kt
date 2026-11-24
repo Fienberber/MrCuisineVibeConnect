@@ -35,7 +35,8 @@ import app.toque.ui.Screen
 import app.toque.ui.Ui
 
 /**
- * Fiche recette : ingrédients à gauche, étapes à droite, « Cuisiner » pour le pas-à-pas.
+ * Fiche recette : photo, nombre de personnes, note et « Cuisiner » à gauche (sans défilement) ;
+ * à droite, les onglets Ingrédients, Étapes et Avis.
  * Une quantité se corrige en la touchant dans la liste d'ingrédients et les étapes qui
  * l'utilisent suivent ; la note et les corrections sont à l'utilisateur et restent en place quand le catalogue est synchronisé.
  */
@@ -57,7 +58,7 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         val root = Ui.horizontal(c, Gravity.TOP)
         root.setPadding(Ui.u(24), Ui.u(6), Ui.u(24), Ui.u(18))
 
-        // ---- colonne gauche
+        // ---- colonne gauche : rien n'y défile, la photo prend la hauteur qui reste.
         val left = Ui.vertical(c)
         val header = FrameLayout(c)
         header.background = Ui.gradient(Ui.placeholderColors(recipe.title), 24f)
@@ -70,11 +71,11 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
                 outline.setRoundRect(0, 0, view.width, view.height, Ui.uf(24f))
         }
         ImageLoader.load(img, a.app.recipes.imageFile(recipe.image), Ui.u(420))
-        left.addView(header, LinearLayout.LayoutParams(Ui.MATCH, Ui.u(170)))
+        left.addView(header, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
 
         val meta = Ui.horizontal(c)
         if (recipe.totalMinutes > 0) meta.addView(Ui.chip(c, "${recipe.totalMinutes} min", Icon.Kind.CLOCK), Ui.lp(Ui.WRAP, Ui.WRAP, r = 8))
-        // Le nombre de personnes se règle au-dessus des ingrédients.
+        // Le nombre de personnes se règle sur la ligne « Pour », plus bas.
         if (recipe.servings > 0) servingsChip = Ui.chip(c, "", Icon.Kind.PEOPLE).also { meta.addView(it, Ui.lp(Ui.WRAP, Ui.WRAP, r = 8)) }
         meta.addView(Ui.chip(c, when (recipe.difficulty) { 1 -> tr("Facile"); 2 -> tr("Moyen"); else -> tr("Difficile") }, Icon.Kind.STAR))
         left.addView(meta, Ui.lp(t = 12))
@@ -118,34 +119,99 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         actions.addView(fav)
         left.addView(actions, Ui.lp(t = 14))
 
-        renderIngredients()
-        left.addView(Ui.scroll(c, ingredientsBox), LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { topMargin = Ui.u(10) })
+        // « Pour » et le nombre de personnes, puis la note : remplis par renderIngredients().
+        if (recipe.servings > 0) left.addView(servingsRow, Ui.lp(t = 12))
+        left.addView(noteBox)
         root.addView(left, LinearLayout.LayoutParams(0, Ui.MATCH, 0.42f).apply { rightMargin = Ui.u(24) })
 
-        // ---- colonne droite
-        val steps = Ui.vertical(c)
-        steps.addView(section(tr("Étapes")))
-        steps.addView(stepsList)
+        // ---- colonne droite : onglets Ingrédients, Étapes, Avis ; seul le contenu de l'onglet défile.
+        val card = Ui.vertical(c)
+        card.background = Ui.round(Ui.SURFACE, 24f)
+        card.setPadding(Ui.u(22), Ui.u(10), Ui.u(22), Ui.u(18))
+        val tabsRow = Ui.horizontal(c)
+        tabsRow.setPadding(0, Ui.u(8), 0, Ui.u(12))
+        val paneBox = FrameLayout(c)
+        fun addTab(t: Tab, label: String, count: Int, content: View) {
+            val pane = Ui.scroll(c, content)
+            paneBox.addView(pane, Ui.flp())
+            val v = tabView(label, count) { selectTab(t) }
+            tabsRow.addView(v.row, Ui.lp(Ui.WRAP, Ui.WRAP, l = if (tabsRow.childCount > 0) 10 else 0))
+            tabs[t] = v
+            panes[t] = pane
+        }
+        renderIngredients()
         renderSteps()
-        McOnline.apiIdOf(recipe.id)?.let { apiId ->
-            steps.addView(reviewsBox, Ui.lp(t = 22))
+        addTab(Tab.INGREDIENTS, tr("Ingrédients"), recipe.allIngredients.size, ingredientsBox)
+        addTab(Tab.STEPS, tr("Étapes"), recipe.steps.size, stepsList)
+        reviewsApiId = McOnline.apiIdOf(recipe.id)
+        if (reviewsApiId != null) {
             reviewsBox.addView(section(if (recipe.ratingCount > 0)
                 tr("Avis · %s/5 (%d notes)", rating(recipe.rating), recipe.ratingCount) else tr("Avis")))
             reviewsBox.addView(reviewsState, Ui.lp(t = 10))
-            loadReviews(apiId, 1)
+            addTab(Tab.REVIEWS, tr("Avis"), recipe.ratingCount, reviewsBox)
         }
-        val stepsBox = Ui.vertical(c)
-        stepsBox.background = Ui.round(Ui.SURFACE, 24f)
-        stepsBox.setPadding(Ui.u(22), Ui.u(10), Ui.u(22), Ui.u(18))
-        stepsBox.addView(Ui.scroll(c, steps), Ui.lp(Ui.MATCH, Ui.MATCH))
-        root.addView(stepsBox, LinearLayout.LayoutParams(0, Ui.MATCH, 0.58f))
+        card.addView(tabsRow)
+        card.addView(paneBox, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
+        root.addView(card, LinearLayout.LayoutParams(0, Ui.MATCH, 0.58f))
+        // Sans liste d'ingrédients (ni pesée hors liste), la fiche s'ouvre sur les étapes.
+        selectTab(if (recipe.ingredients.isEmpty() && recipe.unlistedWeighings().isEmpty()) Tab.STEPS else tab)
         refreshFavorite()
         return root
+    }
+
+    // ------------------------------------------------------------------ onglets
+
+    private enum class Tab { INGREDIENTS, STEPS, REVIEWS }
+    private class TabView(val row: LinearLayout, val label: TextView, val count: TextView?)
+
+    /** Onglet ouvert ; il reste le même tant que l'écran vit (chaque onglet garde aussi sa position). */
+    private var tab = Tab.INGREDIENTS
+    private val tabs = LinkedHashMap<Tab, TabView>()
+    private val panes = LinkedHashMap<Tab, android.widget.ScrollView>()
+    private var reviewsApiId: Long? = null
+    private var reviewsStarted = false
+
+    /** Onglet à la façon des puces de choix, en 48 de haut ; [count] en plus clair (0 : rien). */
+    private fun tabView(label: String, count: Int, onClick: () -> Unit): TabView {
+        val row = Ui.horizontal(c, Gravity.CENTER)
+        row.minimumHeight = Ui.u(48)
+        row.setPadding(Ui.u(22), 0, Ui.u(22), 0)
+        val l = Ui.text(c, label, 17f, Ui.TEXT, Ui.MEDIUM).apply { setSingleLine() }
+        row.addView(l)
+        val n = if (count > 0) Ui.text(c, count.toString(), 15f, Ui.TEXT2).apply { setSingleLine() } else null
+        if (n != null) row.addView(n, Ui.lp(Ui.WRAP, Ui.WRAP, l = 8))
+        row.isClickable = true
+        row.setOnClickListener { onClick() }
+        return TabView(row, l, n)
+    }
+
+    private fun selectTab(t: Tab) {
+        if (t !in tabs) return
+        tab = t
+        // Onglet choisi : texte sur fond accent, comme les boutons et puces choisis (Ui.button, Ui.toggleChip).
+        val onAccent = Ui.ON_ACCENT
+        for ((k, v) in tabs) {
+            val on = k == t
+            v.row.background = Ui.pressable(if (on) Ui.round(Ui.ACCENT, 24f) else Ui.round(Ui.SURFACE2, 24f, Ui.STROKE, 1f), 24f)
+            v.label.setTextColor(if (on) onAccent else Ui.TEXT)
+            v.count?.setTextColor(if (on) (onAccent and 0x00FFFFFF) or (0xB3 shl 24) else Ui.TEXT2)
+            v.row.isSelected = on
+        }
+        for ((k, p) in panes) p.visibility = if (k == t) View.VISIBLE else View.GONE
+        // Avis : lus à la première ouverture de l'onglet.
+        if (t == Tab.REVIEWS && !reviewsStarted) {
+            reviewsStarted = true
+            reviewsApiId?.let { loadReviews(it, 1) }
+        }
     }
 
     // ------------------------------------------------------------------ note et quantités adaptées
 
     private var servingsChip: LinearLayout? = null
+    /** « Pour » et le réglage du nombre de personnes, à gauche. */
+    private val servingsRow by lazy { Ui.horizontal(c) }
+    /** « Ma note » : le bouton d'ajout ou la note coupée à deux lignes, à gauche. */
+    private val noteBox by lazy { Ui.vertical(c) }
 
     private fun renderIngredients() {
         val ing = ingredientsBox
@@ -157,26 +223,9 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
             (chip.getChildAt(0) as Icon).color = if (changed) Ui.ACCENT else Ui.TEXT2
             chip.background = Ui.round(if (changed) Ui.ACCENT_DIM else Ui.SURFACE2, 40f)
         }
-        ing.addView(section(tr("Ma note")))
-        if (adjustments.note.isBlank()) {
-            ing.addView(Ui.button(c, tr("Ajouter une note"), Ui.Style.GHOST, Icon.Kind.PLUS, height = 46, textSize = 16f) { editNote() },
-                Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
-        } else {
-            val note = Ui.text(c, adjustments.note, 17f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }
-            note.background = Ui.pressable(Ui.round(Ui.ACCENT_DIM, 16f), 16f)
-            note.setPadding(Ui.u(14), Ui.u(10), Ui.u(14), Ui.u(10))
-            note.setOnClickListener { editNote() }
-            ing.addView(note, Ui.lp(t = 8))
-        }
-        if (recipe.servings > 0) {
-            val head = Ui.horizontal(c)
-            head.addView(section(tr("Ingrédients")), LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
-            head.addView(servingsStepper(), Ui.lp(Ui.WRAP, Ui.WRAP, t = 6))
-            ing.addView(head, Ui.lp(t = 8))
-            if (shown.servings != recipe.servings) ing.addView(servingsNotice(), Ui.lp(t = 8, b = 4))
-        } else {
-            ing.addView(section(tr("Ingrédients")), Ui.lp(t = 8))
-        }
+        renderServings()
+        renderNote()
+        if (recipe.servings > 0 && shown.servings != recipe.servings) ing.addView(servingsNotice(), Ui.lp(b = 8))
         if (shown.allIngredients.any { it.qty.isNotBlank() } || shown.steps.any { it.weigh != null }) {
             ing.addView(Ui.text(c, tr("Touchez une quantité pour l'adapter : les étapes suivent."), 14f, Ui.TEXT3), Ui.lp(t = 4))
         }
@@ -198,6 +247,29 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
                 val original = if (w.originalGrams > 0) "${w.originalGrams} g" else null
                 ing.addView(ingredientRow("${w.grams} g $name", original) { editWeigh(si, name, w) }, Ui.lp(t = 4))
             }
+        }
+    }
+
+    private fun renderServings() {
+        if (recipe.servings <= 0) return
+        servingsRow.removeAllViews()
+        servingsRow.addView(section(tr("Pour")).apply { setPadding(0, 0, 0, 0) }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        servingsRow.addView(servingsStepper())
+    }
+
+    private fun renderNote() {
+        noteBox.removeAllViews()
+        noteBox.addView(section(tr("Ma note")))
+        if (adjustments.note.isBlank()) {
+            noteBox.addView(Ui.button(c, tr("Ajouter une note"), Ui.Style.GHOST, Icon.Kind.PLUS, height = 46, textSize = 16f) { editNote() },
+                Ui.lp(Ui.WRAP, Ui.WRAP, t = 8))
+        } else {
+            // Deux lignes au plus : un appui ouvre la note entière dans l'éditeur.
+            val note = Ui.ellipsize(Ui.text(c, adjustments.note, 16f, Ui.TEXT).apply { setLineSpacing(0f, 1.15f) }, 2)
+            note.background = Ui.pressable(Ui.round(Ui.ACCENT_DIM, 16f), 16f)
+            note.setPadding(Ui.u(14), Ui.u(9), Ui.u(14), Ui.u(9))
+            note.setOnClickListener { editNote() }
+            noteBox.addView(note, Ui.lp(t = 8))
         }
     }
 
@@ -555,6 +627,12 @@ class RecipeScreen(a: MainActivity, val recipe: Recipe) : Screen(a) {
         favIcon.set(if (f) Icon.Kind.STAR_FILLED else Icon.Kind.STAR)
         favIcon.color = if (f) Ui.ACCENT else Ui.TEXT
         favLabel.text = tr("Favori")
+    }
+
+    /** Molette : fait défiler l'onglet ouvert ; l'appui lance « Cuisiner ». */
+    override fun onKnob(delta: Int): Boolean {
+        panes[tab]?.smoothScrollBy(0, delta * Ui.u(160))
+        return true
     }
 
     override fun onKnobPress(): Boolean {

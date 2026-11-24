@@ -39,6 +39,7 @@ import app.toque.update.Updater
 class SettingsScreen(a: MainActivity) : Screen(a) {
     override val title = tr("Réglages")
     private lateinit var modeRow: LinearLayout
+    private lateinit var scroller: ScrollView
     private lateinit var twinBox: LinearLayout
     private lateinit var host: EditText
     private lateinit var port: EditText
@@ -314,7 +315,8 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
                 .apply { setLineSpacing(0f, 1.1f) }, Ui.lp(t = 4))
         } }
 
-        return Ui.scroll(c, col)
+        scroller = Ui.scroll(c, col)
+        return scroller
     }
 
     private fun section(parent: LinearLayout, title: String, icon: Icon.Kind): LinearLayout {
@@ -770,8 +772,19 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
         unsubSite = null
     }
 
+    /** La molette fait défiler la page (un cran : un peu plus d'une ligne de réglage). */
+    override fun onKnob(delta: Int): Boolean {
+        scroller.smoothScrollTo(0, scroller.scrollY + delta * Ui.u(KNOB_STEP))
+        return true
+    }
+
     override fun onSnapshot(s: Snapshot) {
         bowlText.text = if (s.hasSample) tr("Capteur du bol en ce moment : %s. Vérifiez qu'il change quand vous retirez le bol avant d'activer cette option.",
             if (s.bowlDetected) tr("bol détecté") else tr("bol NON détecté")) else tr("Base non connectée")
+    }
+
+    private companion object {
+        /** Défilement d'un cran de molette, en pixels de référence. */
+        const val KNOB_STEP = 120
     }
 }
