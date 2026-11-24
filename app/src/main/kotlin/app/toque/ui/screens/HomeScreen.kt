@@ -11,8 +11,10 @@ import app.toque.core.recipes.CommunityRecipes
 import app.toque.core.recipes.UserRecipes
 import app.toque.ui.Icon
 import app.toque.ui.MachineBar
+import app.toque.ui.KnobFocus
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
+import app.toque.ui.TouchWatch
 import app.toque.ui.Ui
 import app.toque.ui.WallClock
 import java.text.SimpleDateFormat
@@ -33,6 +35,10 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     private lateinit var searchHint: TextView
     /** Titre de la recette guidée cherché dans la base (catalogue pas encore chargé) : une fois par recette. */
     private var titleLookup = ""
+    /** Éléments que la molette parcourt, dans l'ordre de lecture, avec le rayon de leurs coins. */
+    private val knobTargets = ArrayList<Pair<View, Float>>()
+    private lateinit var recipesTile: View
+    private val knob by lazy { KnobFocus(view, HomeKnob()) }
     private var unsub: (() -> Unit)? = null
     /** Ce qui s'adapte dans une tuile quand la barre du bas lui prend de la hauteur. */
     private class TileParts(val top: View, val text: View, val sub: TextView)
@@ -76,12 +82,14 @@ class HomeScreen(a: MainActivity) : Screen(a) {
 
         // Raccourcis sous la recherche : dernières recettes cuisinées, et les plus cuisinées.
         val shortcuts = Ui.horizontal(c)
-        shortcuts.addView(Ui.button(c, tr("Récentes"), Ui.Style.SECONDARY, Icon.Kind.CLOCK, height = 56, textSize = 18f) {
+        val recent = Ui.button(c, tr("Récentes"), Ui.Style.SECONDARY, Icon.Kind.CLOCK, height = 56, textSize = 18f) {
             a.push(RecipesScreen(a, initialUsage = RecipesScreen.Usage.RECENT))
-        }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(12) })
-        shortcuts.addView(Ui.button(c, tr("Fréquentes"), Ui.Style.SECONDARY, Icon.Kind.FLAME, height = 56, textSize = 18f) {
+        }
+        shortcuts.addView(recent, LinearLayout.LayoutParams(0, Ui.WRAP, 1f).apply { rightMargin = Ui.u(12) })
+        val most = Ui.button(c, tr("Fréquentes"), Ui.Style.SECONDARY, Icon.Kind.FLAME, height = 56, textSize = 18f) {
             a.push(RecipesScreen(a, initialUsage = RecipesScreen.Usage.MOST))
-        }, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        }
+        shortcuts.addView(most, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         left.addView(shortcuts, Ui.lp(Ui.MATCH, Ui.WRAP, t = 14))
 
         resumeCard = Ui.horizontal(c)
@@ -103,6 +111,10 @@ class HomeScreen(a: MainActivity) : Screen(a) {
             val r = a.app.recipes.getAdjusted(a.prefs.guidedRecipe)
             if (r != null) a.push(CookScreen(a, r, a.prefs.guidedStep)) else { a.prefs.guidedRecipe = ""; refresh() }
         }
+        knobTargets += search to 36f
+        knobTargets += recent to 28f
+        knobTargets += most to 28f
+        knobTargets += resumeCard to 24f
         left.addView(resumeCard, Ui.lp(Ui.MATCH, Ui.WRAP, t = 16))
         root.addView(left, LinearLayout.LayoutParams(0, Ui.MATCH, 0.42f).apply { rightMargin = Ui.u(28) })
 
@@ -111,6 +123,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         val row2 = Ui.horizontal(c)
         val (t1, s1) = tile(Icon.Kind.BOOK, tr("Recettes")) { a.push(RecipesScreen(a)) }
         recipesSub = s1
+        recipesTile = t1
         row1.addView(t1, tileLp(true))
         row1.addView(tile(Icon.Kind.POT, tr("Cuisson\nmanuelle"), hasSub = false) { a.push(ManualScreen(a)) }.first, tileLp(true))
         row1.addView(tile(Icon.Kind.KNEAD, tr("Programmes"), tr("Pétrir, vapeur, rissoler, nettoyage")) { a.push(ProgramsScreen(a)) }.first, tileLp(false))
@@ -126,7 +139,44 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         grid.addView(row1, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { bottomMargin = Ui.u(16) })
         grid.addView(row2, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
         root.addView(grid, LinearLayout.LayoutParams(0, Ui.MATCH, 0.58f))
-        return root
+        // Un toucher de l'écran efface le cadre de la molette.
+        val watch = TouchWatch(c) { knob.hide() }
+        watch.addView(root, Ui.flp())
+        return watch
+    }
+
+    /** La molette sur l'accueil : recherche, raccourcis, carte « Reprendre », puis les six tuiles. */
+    private inner class HomeKnob : KnobFocus.Slots {
+        override val size: Int get() = knobTargets.size
+        /** Au premier cran : la recette en cours s'il y en a une, sinon « Recettes ». */
+        override fun start(): Int {
+            val resume = knobTargets.indexOfFirst { it.first === resumeCard }
+            if (usable(resume)) return resume
+            return knobTargets.indexOfFirst { it.first === recipesTile }
+        }
+        override fun usable(i: Int): Boolean {
+            if (i !in knobTargets.indices) return false
+            var v: View? = knobTargets[i].first
+            while (v != null && v !== view) {
+                if (v.visibility != View.VISIBLE) return false
+                v = v.parent as? View
+            }
+            return knobTargets[i].first.isEnabled
+        }
+        override fun mark(i: Int, on: Boolean) = KnobFocus.frame(knobTargets[i].first, on, knobTargets[i].second)
+        override fun activate(i: Int) {
+            knobTargets[i].first.performClick()
+        }
+    }
+
+    override fun onKnob(delta: Int): Boolean {
+        knob.turn(delta)
+        return true
+    }
+
+    override fun onKnobPress(): Boolean {
+        knob.press()
+        return true
     }
 
     private fun tileLp(gap: Boolean) = LinearLayout.LayoutParams(0, Ui.MATCH, 1f).apply { if (gap) rightMargin = Ui.u(16) }
@@ -152,6 +202,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         t.isClickable = true
         t.setOnClickListener { onClick() }
         tiles += TileParts(t.getChildAt(0), text, s)
+        knobTargets += t to 26f
         return t to s
     }
 
@@ -262,6 +313,8 @@ class HomeScreen(a: MainActivity) : Screen(a) {
     }
 
     override fun onHide() {
+        // De retour sur l'accueil, le premier cran repart de la recette en cours (ou de « Recettes »).
+        knob.reset()
         unsub?.invoke()
         a.updates.onChange = null
         view.removeCallbacks(tick)
