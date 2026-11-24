@@ -802,5 +802,5 @@
   "Yaourt": "Joghurt",
   "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentation: Messer steht, höchstens %d °C",
   "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lauwarme Milch mit Starterkultur, Deckel zu. Hält %d °C ohne Rühren: das Messer steht still.",
-  "Pétrir, vapeur, rissoler, yaourt, nettoyage": "Kneten, Dampfgaren, Anbraten, Joghurt, Reinigung"
+  "Pétrir, vapeur, yaourt, nettoyage": "Kneten, Dampfgaren, Joghurt, Reinigung"
 }
