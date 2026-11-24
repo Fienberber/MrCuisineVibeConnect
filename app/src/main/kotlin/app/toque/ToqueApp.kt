@@ -21,7 +21,7 @@ class ToqueApp : Application() {
     lateinit var log: Logbook
         private set
     val machine: MachineClient by lazy { MachineClient(this) }
-    val recipes: RecipeRepo by lazy { RecipeRepo(this) }
+    val recipes: RecipeRepo by lazy { RecipeRepo(this, log) }
     /** toqueapp.org : compte relié, recettes de la communauté. */
     val site: app.toque.site.SiteAccount by lazy { app.toque.site.SiteAccount(this) }
 

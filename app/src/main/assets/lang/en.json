@@ -75,6 +75,7 @@
   "Aucune recette lisible dans les fichiers de Download": "No readable recipe in the Download files",
   "Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.": "No readable recipe. Send the file diagnostic-recettes.txt.",
   "Aucune recette ne correspond.\nAstuce : séparez plusieurs ingrédients par des virgules.": "No matching recipe.\nTip: separate several ingredients with commas.",
+  "Recherche dans les ingrédients…": "Searching the ingredients…",
   "Aucune recette avec ces filtres.\nTouchez « Toutes » pour les retirer.": "No recipe with these filters.\nTap “All” to clear them.",
   "Trier :": "Sort:",
   "Trier les recettes": "Sort recipes",

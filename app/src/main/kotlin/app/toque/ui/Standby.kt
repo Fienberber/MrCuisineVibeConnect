@@ -33,6 +33,9 @@ class Standby(private val a: MainActivity, private val root: FrameLayout) {
 
     val asleep: Boolean get() = view != null
 
+    /** Temps sans geste ni signe de vie du robot (programme, couvercle, balance), en ms. */
+    val idleMs: Long get() = SystemClock.uptimeMillis() - lastInputMs
+
     /** Sortie de veille (pas à l'arrêt de l'écran) : l'alerte de mise à jour regarde à ce moment-là. */
     var onWake: (() -> Unit)? = null
 

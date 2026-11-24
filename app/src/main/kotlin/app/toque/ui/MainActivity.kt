@@ -36,6 +36,7 @@ import app.toque.core.robot.RobotProfile
 import app.toque.core.robot.RobotProfiles
 import app.toque.recipes.LidlSync
 import app.toque.recipes.SyncService
+import app.toque.ui.screens.CookScreen
 import app.toque.ui.screens.HomeScreen
 import app.toque.ui.screens.KnobSetupScreen
 import app.toque.ui.screens.SettingsScreen
@@ -230,7 +231,8 @@ class MainActivity : Activity() {
         prefs.robotId = p.id
         RobotProfiles.active = p
         machine.reconfigure { v -> if (!v.ok) refusal(v) }
-        app.recipes.load()
+        // Catalogue déjà chargé : relu avec le filtre du nouveau robot (fiches courtes, sans relire chaque recette).
+        app.recipes.refreshLater()
         refreshTitle()
         // Les Réglages ouverts montrent des choses propres au robot (recettes Lidl, import) : on les refait.
         if (current is SettingsScreen && before !== p) replace(SettingsScreen.reopened(this))
@@ -302,6 +304,16 @@ class MainActivity : Activity() {
         standby.start()
         updates.onStart()
         startTimers()
+        root.postDelayed(syncCheck, 60_000)
+    }
+
+    /** Chaque minute : la synchro automatique des recettes regarde si le robot est inutilisé (voir AutoSync). */
+    private val syncCheck = object : Runnable {
+        override fun run() {
+            SyncService.reportUi(standby.idleMs, snapshot.busy || current is CookScreen || current?.keepAwake == true)
+            SyncService.consider(this@MainActivity)
+            root.postDelayed(this, 60_000)
+        }
     }
 
     // ------------------------------------------------------------------ minuteurs de cuisine
@@ -357,6 +369,8 @@ class MainActivity : Activity() {
         unsubscribe?.invoke()
         unsubscribeEvents?.invoke()
         topBar.stopClock()
+        root.removeCallbacks(syncCheck)
+        SyncService.reportUi(-1, false)
         standby.stop()
         // Toque n'est plus à l'écran (appli d'origine, paramètres Android…) : blanc du robot.
         KnobLight.release()

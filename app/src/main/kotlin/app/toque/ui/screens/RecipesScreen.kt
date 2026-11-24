@@ -340,6 +340,8 @@ class RecipesScreen(
         val none = repo.loaded && repo.count == 0
         count.text = if (results.isEmpty()) "" else if (results.size == 1) tr("1 recette") else tr("%d recettes", results.size)
         empty.visibility = if (results.isEmpty() && repo.loaded) View.VISIBLE else View.GONE
+        // Ingrédients et étapes pas encore dans l'index (les secondes après le démarrage) : on attend sa réponse.
+        val waitingFull = query.isNotBlank() && !repo.index.full
         emptyText.text = when {
             none && a.prefs.mode == Prefs.Mode.HARDWARE ->
                 tr("Les recettes Lidl apparaîtront après la première synchronisation.\nRéglages › Recettes › Lidl › Synchroniser.")
@@ -350,6 +352,7 @@ class RecipesScreen(
                 tr("Aucune recette de la communauté pour l'instant.\nRéglages › Recettes › Communauté › Synchroniser.")
             selection == ChipSelection.of(RecipeChip.USER) && query.isBlank() ->
                 tr("Aucune recette perso pour l'instant.\nTouchez « Nouvelle recette », ou le crayon d'une recette Lidl pour en faire votre version.")
+            waitingFull -> tr("Recherche dans les ingrédients…")
             selection.hasFilters -> tr("Aucune recette avec ces filtres.\nTouchez « Toutes » pour les retirer.")
             else -> tr("Aucune recette ne correspond.\nAstuce : séparez plusieurs ingrédients par des virgules.")
         }
