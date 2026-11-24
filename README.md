@@ -79,7 +79,7 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 
 ## Install from a Mac (Connect)
 
-Toque installs from a Mac too (Apple silicon or Intel), with the same steps and checks as on
+Toque installs from a Mac too, with the same steps and checks as on
 Windows. No driver and no SP Flash Tool: [mtkclient](https://github.com/bkerler/mtkclient) does the
 two steps that need MediaTek download mode, and TWRP writes the rest.
 
@@ -93,7 +93,8 @@ two steps that need MediaTek download mode, and TWRP writes the rest.
 
 The full guide, with what to do when mtkclient does not reach the robot:
 [docs/MACOS.en.md](docs/MACOS.en.md). An AI agent can also run it for you (see above).
-Done end to end on a real SKMC 1200 C3 in November 2026; thanks to @flexbox.
+Done end to end on a real SKMC 1200 C3 from an Apple silicon Mac in November 2026 (Intel Macs and the
+SKMC 1100 A1 not tested yet: please report). Thanks to @julienperrault and @flexbox.
 
 ## Features
 
@@ -283,14 +284,17 @@ already stored for git).
 - Robot access: [Monsieur-Cuisine-Connect-Hack](https://github.com/EliasKotlyar/Monsieur-Cuisine-Connect-Hack).
 - MediaTek download mode on macOS: [mtkclient](https://github.com/bkerler/mtkclient) (GPLv3, downloaded by `prepare`, not included; `prepare` applies `tools/setup/mtkclient-macos-serial.patch`).
 - Contributions: @pierok13 (standby, notes and quantities, speed stages, sounds, recent recipes,
-  Android 6 roots, bowl sensor), @lucasbraud, @OUTSIDE2k8 (Spanish), @Locodice67 (German, install
+  Android 6 roots, bowl sensor), @lucasbraud, @OUTSIDE2k8 (Spanish), @Locodice67 (German, clock at start, install
   script), @baptiste-gislot, @florentdestremau (rotary knob), @maximehuran (knob light in standby),
-  @badrbelhaj1 (Magisk at restart, SKMC 1100 A1 TWRP, heat without stirring, interface fixes),
+  @badrbelhaj1 (Magisk at restart, SKMC 1100 A1 TWRP, heat without stirring, settings menu, recipe
+  filters and sort, kitchen timers, colour wheel, knob ring colours, startup screen, fast serial
+  port check, install checks, interface fixes),
   @meuca1 (Catalan), @Flav974 (Smart port: protocol, programs, captures), @Tidusneo24150 (Camybrith
   Cooking: Smart temperature ranges and recipe modes, review on a real Smart), @pierrearnou (accent
   colours, switches), @oscarsanchezdm (recipe language, light theme), @phanex (Ukrainian, search in
-  any alphabet, scale stability), @McSoda (robot tests and fixes), @flexbox (macOS install scripts,
-  mtkclient serial fixes and TWRP flasher), and everyone who tested their robot and reported bugs.
+  any alphabet, scale stability, weighing history), @McSoda (robot tests and fixes, motor loop
+  watchdog), @julienperrault and @flexbox (macOS install scripts, mtkclient serial fixes and TWRP
+  flasher), and everyone who tested their robot and reported bugs.
 
 MIT License. This repository contains no Lidl recipes, images or code: each robot downloads the
 recipes itself from monsieur-cuisine.com, for its owner's personal use.

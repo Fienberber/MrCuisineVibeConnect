@@ -79,7 +79,7 @@ Comptez 1 à 2 heures. Sans agent : [docs/INSTALLATION.fr.md](docs/INSTALLATION.
 
 ## Installer depuis un Mac (Connect)
 
-Toque s'installe aussi depuis un Mac (Apple silicon ou Intel), avec les mêmes étapes et les mêmes
+Toque s'installe aussi depuis un Mac, avec les mêmes étapes et les mêmes
 vérifications que sous Windows. Pas de pilote ni de SP Flash Tool : [mtkclient](https://github.com/bkerler/mtkclient)
 fait les deux étapes qui demandent le mode téléchargement MediaTek, et TWRP écrit le reste.
 
@@ -94,7 +94,8 @@ fait les deux étapes qui demandent le mode téléchargement MediaTek, et TWRP �
 
 Le guide complet, avec quoi faire si mtkclient n'atteint pas le robot : [docs/MACOS.md](docs/MACOS.md).
 Un agent IA peut aussi le faire pour vous (voir plus haut). Testé de bout en bout sur un vrai
-SKMC 1200 C3 en novembre 2026 ; merci à @flexbox.
+SKMC 1200 C3 depuis un Mac Apple silicon en novembre 2026 (Mac Intel et SKMC 1100 A1 pas encore
+essayés : dites-nous). Merci à @julienperrault et @flexbox.
 
 ## Ce que fait Toque
 
@@ -291,15 +292,18 @@ déjà enregistrés pour git).
 - Accès au robot : [Monsieur-Cuisine-Connect-Hack](https://github.com/EliasKotlyar/Monsieur-Cuisine-Connect-Hack).
 - Mode téléchargement MediaTek sous macOS : [mtkclient](https://github.com/bkerler/mtkclient) (GPLv3, téléchargé par `prepare`, non inclus ; `prepare` applique `tools/setup/mtkclient-macos-serial.patch`).
 - Contributions : @pierok13 (veille, notes et quantités, paliers, sons, récentes, certificats Android 6,
-  capteur du bol), @lucasbraud, @OUTSIDE2k8 (traduction espagnole), @Locodice67 (traduction allemande,
+  capteur du bol), @lucasbraud, @OUTSIDE2k8 (traduction espagnole), @Locodice67 (traduction allemande, heure au démarrage,
   script d'installation), @baptiste-gislot, @florentdestremau (bouton rotatif), @maximehuran (lumière
   du bouton en veille), @badrbelhaj1 (Magisk au redémarrage, TWRP du SKMC 1100 A1, chauffe sans
-  mélange, corrections d'interface), @meuca1 (traduction catalane), @Flav974 (portage du Smart :
+  mélange, menu des réglages, filtres et tri des recettes, minuteurs, roue des couleurs, couleurs de
+  la molette, écran de démarrage, vérification rapide du port série, contrôles d'installation,
+  corrections d'interface), @meuca1 (traduction catalane), @Flav974 (portage du Smart :
   protocole, programmes, captures), @Tidusneo24150 (Camybrith Cooking : plages de température et
   modes des recettes du Smart, relecture sur un vrai Smart), @pierrearnou (couleurs d'accent,
   interrupteurs), @oscarsanchezdm (langue des recettes, thème clair), @phanex (ukrainien, recherche
-  dans tous les alphabets, stabilité de la balance), @McSoda (essais sur robot et corrections),
-  @flexbox (scripts d'installation macOS, correctifs série mtkclient et flash depuis TWRP), et
+  dans tous les alphabets, stabilité de la balance, historique des pesées), @McSoda (essais sur robot
+  et corrections, chien de garde de la boucle moteur), @julienperrault et @flexbox (scripts
+  d'installation macOS, correctifs série mtkclient et flash depuis TWRP), et
   tous ceux qui ont testé leur robot et signalé des bugs.
 
 Licence MIT. Ce dépôt ne contient aucune recette, image ni code de Lidl : chaque robot télécharge
