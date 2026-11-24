@@ -124,7 +124,7 @@ mises à jour par Wi-Fi (`tools\install-robot.ps1 -Ip <IP du robot>`).
 
 1. Dans Toque : **Réglages › Machine › Machine réelle › Appliquer**. Toque coupe l'appli
    d'origine du moteur (réversible) et ouvre le port série.
-2. Réussite : la pastille en haut à droite doit afficher « Prête » **sans marqueur Démo ni Jumeau**
+2. Réussite : la pastille en haut à droite doit afficher « Base prête » **sans marqueur Démo ni Jumeau**
    **et** le journal doit afficher la liaison réelle, par ex. `liaison ouverte : Base moteur (/dev/ttyMT…)` ;
    `Démo (base simulée)` signifie que le mode n'a pas été appliqué. Sinon : Réglages › Outils ›
    Diagnostic (trames reçues ?) et Journal.

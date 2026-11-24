@@ -168,6 +168,13 @@ class Prefs(context: Context) {
             p.edit().putString("standbyKnob", v).commit()
         }
 
+    /** Code couleur sur l'anneau de la molette (problème, pause, à vous, en cours). */
+    var knobColours: Boolean
+        get() = p.getBoolean("knobColours", true)
+        set(v) {
+            p.edit().putBoolean("knobColours", v).commit()
+        }
+
     /** Fuseau horaire : « auto » (d'après la connexion Internet) ou un identifiant IANA choisi à la main. */
     var timeZone: String
         get() = p.getString("timeZone", "auto") ?: "auto"
@@ -287,6 +294,13 @@ class Prefs(context: Context) {
         get() = p.getInt("guidedStep", 0)
         set(v) {
             p.edit().putInt("guidedStep", v).commit()
+        }
+
+    /** Titre connu de la recette guidée, « id⇥titre » : l'accueil le montre avant le chargement du catalogue. */
+    var guidedTitle: String
+        get() = p.getString("guidedTitle", "") ?: ""
+        set(v) {
+            p.edit().putString("guidedTitle", v).apply()
         }
 
     /** Réglages importés déjà vérifiés (« J'ai vérifié ce réglage »), clé = recette, étape et réglage. */
