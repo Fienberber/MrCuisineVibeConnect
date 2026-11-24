@@ -212,7 +212,7 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
         }
         var k = 0
         for (group in draft.ingredients) {
-            if (group.title.isNotBlank()) ingredientsBox.addView(Ui.text(c, group.title, 16f, Ui.ACCENT, Ui.MEDIUM), Ui.lp(t = 10, b = 2))
+            if (group.title.isNotBlank()) ingredientsBox.addView(Ui.text(c, group.title, 16f, Ui.ACCENT_INK, Ui.MEDIUM), Ui.lp(t = 10, b = 2))
             for (i in group.items) {
                 val index = k++
                 val row = Ui.horizontal(c)
@@ -312,7 +312,7 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
         val last = draft.steps.size - 1
         for ((i, s) in draft.steps.withIndex()) {
             val row = Ui.horizontal(c, Gravity.TOP)
-            val num = Ui.text(c, "${i + 1}", 17f, Ui.ACCENT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }
+            val num = Ui.text(c, "${i + 1}", 17f, Ui.ACCENT_INK, Ui.MEDIUM).apply { gravity = Gravity.CENTER }
             num.background = Ui.round(Ui.ACCENT_DIM, 18f)
             row.addView(num, LinearLayout.LayoutParams(Ui.u(36), Ui.u(36)).apply { rightMargin = Ui.u(14); topMargin = Ui.u(4) })
             val col = Ui.vertical(c)
@@ -323,7 +323,7 @@ class RecipeEditScreen(a: MainActivity, start: Recipe, private val isNew: Boolea
             s.machine?.let { m ->
                 val ok = m.valid
                 chips.addView(Ui.chip(c, m.summary, if (ok) Icon.Kind.POT else Icon.Kind.WARNING,
-                    if (ok) Ui.ACCENT else Ui.WARN, if (ok) Ui.ACCENT_DIM else 0x33FFC14D, 15f))
+                    if (ok) Ui.ACCENT_INK else Ui.WARN, if (ok) Ui.ACCENT_DIM else 0x33FFC14D, 15f))
             }
             if (chips.childCount > 0) col.addView(chips, Ui.lp(t = 6))
             col.background = Ui.pressable(Ui.round(0, 12f), 12f)
@@ -516,7 +516,7 @@ class StepEditScreen(
                 Ui.lp(t = 10))
         } else when (m.program) {
             StepProgram.MANUAL -> {
-                box.addView(Ui.text(c, m.summary, 22f, Ui.ACCENT, Ui.MEDIUM), Ui.lp(t = 10))
+                box.addView(Ui.text(c, m.summary, 22f, Ui.ACCENT_INK, Ui.MEDIUM), Ui.lp(t = 10))
                 box.addView(Ui.button(c, tr("Régler durée, température et vitesse"), Ui.Style.SECONDARY, Icon.Kind.POT, height = 56, textSize = 17f) {
                     openManual()
                 }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))

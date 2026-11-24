@@ -28,6 +28,7 @@ import app.toque.recipes.SyncProgress
 import app.toque.recipes.RecipeFiles
 import app.toque.core.recipes.CommunityRecipes
 import app.toque.core.recipes.UserRecipes
+import app.toque.ui.AccentWheel
 import app.toque.ui.Icon
 import app.toque.ui.MainActivity
 import app.toque.ui.Screen
@@ -175,6 +176,19 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             }
             look.addView(row, Ui.lp(t = if (rowIndex == 0) 12 else 6))
         }
+        // Toute autre couleur : la roue. Une couleur prise sur la roue est montrée cochée, devant le bouton.
+        val wheelRow = Ui.horizontal(c)
+        if (Ui.ACCENT !in Ui.ACCENTS) {
+            wheelRow.addView(swatch(Ui.ACCENT) { openWheel() }, LinearLayout.LayoutParams(0, Ui.u(60), 1f))
+            wheelRow.addView(Ui.button(c, tr("Roue des couleurs"), Ui.Style.SECONDARY, height = 56, textSize = 18f) { openWheel() },
+                LinearLayout.LayoutParams(0, Ui.WRAP, 4f))
+        } else {
+            wheelRow.addView(Ui.button(c, tr("Roue des couleurs"), Ui.Style.SECONDARY, height = 56, textSize = 18f) { openWheel() },
+                Ui.lp(Ui.WRAP, Ui.WRAP))
+        }
+        look.addView(wheelRow, Ui.lp(t = 8))
+        // L'image de l'anneau se prépare déjà (une fois par processus) : la roue s'ouvre complète.
+        AccentWheel.Ring.get(Ui.u(AccentWheelScreen.RING)) {}
 
         // ---- Écran
         val screen = section(right, tr("Écran"), Icon.Kind.CLOCK)
@@ -320,22 +334,24 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
     private fun section(parent: LinearLayout, title: String, icon: Icon.Kind): LinearLayout {
         val card = Ui.card(c, 24f)
         val head = Ui.horizontal(c)
-        head.addView(Icon(c, icon, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(24), Ui.u(24)).apply { rightMargin = Ui.u(10) })
+        head.addView(Icon(c, icon, Ui.ACCENT_INK), LinearLayout.LayoutParams(Ui.u(24), Ui.u(24)).apply { rightMargin = Ui.u(10) })
         head.addView(Ui.text(c, title, 21f, Ui.TEXT, Ui.MEDIUM))
         card.addView(head, Ui.lp(b = 10))
         parent.addView(card, Ui.lp(b = 16))
         return card
     }
 
+    private fun openWheel() = a.push(AccentWheelScreen(a))
+
     /** Pastille de couleur : un disque, entouré et coché quand c'est la couleur en cours. */
-    private fun swatch(color: Int): View {
+    private fun swatch(color: Int, onPick: (() -> Unit)? = null): View {
         val box = android.widget.FrameLayout(c)
         val selected = color == Ui.ACCENT
         val dot = android.widget.FrameLayout(c).apply {
             background = Ui.pressable(Ui.round(color, 26f, if (selected) Ui.TEXT else 0, if (selected) 3f else 0f), 26f)
             if (selected) addView(Icon(c, Icon.Kind.CHECK, Ui.ON_ACCENT), Ui.flp(Ui.u(24), Ui.u(24), Gravity.CENTER))
             isClickable = true
-            setOnClickListener { if (!selected) a.applyAccent(color) }
+            setOnClickListener { if (onPick != null) onPick() else if (!selected) a.applyAccent(color) }
         }
         box.addView(dot, Ui.flp(Ui.u(52), Ui.u(52), Gravity.CENTER))
         return box
@@ -429,7 +445,7 @@ class SettingsScreen(a: MainActivity) : Screen(a) {
             val height = if (options.size > 7) Ui.u(400) else ViewGroup.LayoutParams.WRAP_CONTENT
             val popup = PopupWindow(scroll, box.width, height, false)
             for ((code, name) in options) {
-                val row = Ui.text(c, name, 19f, if (code == current) Ui.ACCENT else Ui.TEXT)
+                val row = Ui.text(c, name, 19f, if (code == current) Ui.ACCENT_INK else Ui.TEXT)
                 row.setPadding(Ui.u(16), Ui.u(14), Ui.u(16), Ui.u(14))
                 row.background = Ui.pressable(Ui.round(0, 0f), 0f)
                 row.isClickable = true

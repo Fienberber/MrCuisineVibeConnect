@@ -133,7 +133,7 @@ class MainActivity : Activity() {
         val card = Ui.card(this, 28f, Ui.SURFACE2)
         card.setPadding(Ui.u(32), Ui.u(28), Ui.u(32), Ui.u(26))
         val head = Ui.horizontal(this)
-        head.addView(Icon(this, Icon.Kind.PEOPLE, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
+        head.addView(Icon(this, Icon.Kind.PEOPLE, Ui.ACCENT_INK), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
         head.addView(Ui.text(this, tr("Compte Toque"), 26f, Ui.TEXT, Ui.MEDIUM))
         card.addView(head)
         card.addView(Ui.text(this, tr("Vous avez un compte sur toqueapp.org ? Reliez-le pour retrouver ici vos favoris du site et publier vos recettes depuis le robot.") +
@@ -524,7 +524,7 @@ class MainActivity : Activity() {
         val card = Ui.card(this, 28f, Ui.SURFACE2)
         card.setPadding(Ui.u(32), Ui.u(28), Ui.u(32), Ui.u(26))
         val head = Ui.horizontal(this)
-        head.addView(Icon(this, icon, if (danger) Ui.DANGER else Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
+        head.addView(Icon(this, icon, if (danger) Ui.DANGER else Ui.ACCENT_INK), LinearLayout.LayoutParams(Ui.u(34), Ui.u(34)).apply { rightMargin = Ui.u(14) })
         head.addView(Ui.text(this, title, 26f, Ui.TEXT, Ui.MEDIUM))
         card.addView(head)
         card.addView(Ui.text(this, message, 19f, Ui.TEXT2).apply { setLineSpacing(0f, 1.2f) }, Ui.lp(t = 16, b = 26))

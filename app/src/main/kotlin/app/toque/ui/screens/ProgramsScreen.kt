@@ -96,7 +96,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
             p.card = card
             val badge = FrameLayout(c)
             badge.background = Ui.round(Ui.ACCENT_DIM, 28f)
-            badge.addView(Icon(c, p.icon, Ui.ACCENT), Ui.flp(Ui.u(32), Ui.u(32), Gravity.CENTER))
+            badge.addView(Icon(c, p.icon, Ui.ACCENT_INK), Ui.flp(Ui.u(32), Ui.u(32), Gravity.CENTER))
             card.addView(badge, LinearLayout.LayoutParams(Ui.u(56), Ui.u(56)))
             card.addView(Ui.ellipsize(Ui.text(c, p.name, 26f, Ui.TEXT, Ui.MEDIUM)), Ui.lp(t = 14))
             card.addView(Ui.text(c, p.text, 16f, Ui.TEXT2).apply { setLineSpacing(0f, 1.15f) }, Ui.lp(t = 6))
@@ -184,7 +184,7 @@ class ProgramsScreen(a: MainActivity) : Screen(a) {
             }
             p.unit.text = if (s < 60) "s" else if (s >= 3600) "h" else "min"
             p.temp?.text = "${p.celsius} °C"
-            p.card.background = Ui.round(Ui.SURFACE, 26f, if (i == selected) Ui.ACCENT else Ui.STROKE, if (i == selected) 2.5f else 1f)
+            p.card.background = Ui.round(Ui.SURFACE, 26f, if (i == selected) Ui.ACCENT_INK else Ui.STROKE, if (i == selected) 2.5f else 1f)
         }
     }
 

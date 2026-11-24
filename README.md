@@ -77,7 +77,7 @@ Allow 1 to 2 hours. Without an agent: [docs/INSTALLATION.md](docs/INSTALLATION.m
 
 - **Dark night-blue interface** designed for the robot's 7" screen and rotary knob, and smooth on its
   original tablet (1 GB RAM, Android 6): no heavy libraries, downsampled images, recycled views.
-  Ten accent colours and a light theme in *Settings › Appearance*.
+  Ten accent colours, a colour wheel for any other readable one, and a light theme in *Settings › Appearance*.
 - **One app, several robots**: each robot has its profile (port, protocol, programs, temperatures)
   and only shows the programs and recipes it can make. On the **Smart**: manual cooking with its 21
   temperatures (40 °C included), Knead, Steam, Sauté, Turbo, cleaning, and the Smart programs (blend,

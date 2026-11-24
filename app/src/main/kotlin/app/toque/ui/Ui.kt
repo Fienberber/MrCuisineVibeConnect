@@ -17,6 +17,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import app.toque.core.look.ColourWheel
 
 /**
  * Thème et utilitaires de mise en page, à l'échelle d'un écran de référence 1024×600.
@@ -70,6 +71,7 @@ object Ui {
     const val WARN = 0xFFFFC14D.toInt()
     const val DANGER = 0xFFFF5A5F.toInt()
 
+    /** L'accent en fond : boutons primaires, puces choisies, pastilles pleines, jauges. */
     var ACCENT = ACCENTS[0]
         private set
     var ACCENT_DIM = 0x33FF8A3D
@@ -77,13 +79,41 @@ object Ui {
     /** Texte posé sur l'accent (boutons primaires, puces sélectionnées). */
     var ON_ACCENT = 0xFF1A0E05.toInt()
         private set
+    /**
+     * L'accent en texte, en icône fine ou en trait (cadre d'une carte choisie) sur les surfaces du
+     * thème : l'accent lui-même sur le sombre ; sur le clair, la même teinte assombrie jusqu'à 4,5:1
+     * sur le fond et les surfaces (une couleur vive y est trop pâle pour du texte ou un trait).
+     * Les fonds gardent [ACCENT].
+     */
+    var ACCENT_INK = ACCENTS[0]
+        private set
 
+    /** [color] peut être l'accent : une des dix, ou une couleur qui passe la garde de la roue (ColourWheel). */
+    fun accepts(color: Int): Boolean = color in ACCENTS || ColourWheel.accepts(color)
+
+    /** Choisit l'accent ; une couleur refusée ([accepts]) laisse l'orange d'origine. */
     fun setAccent(color: Int) {
-        val c = if (color in ACCENTS) color else ACCENTS[0]
+        val opaque = color or (0xFF shl 24)
+        val c = if (color in ACCENTS) color else if (accepts(opaque)) opaque else ACCENTS[0]
         ACCENT = c
         ACCENT_DIM = (c and 0x00FFFFFF) or 0x33000000
         fun dark(ch: Int) = (((c shr ch) and 0xFF) * 0.12f).toInt() shl ch
         ON_ACCENT = (0xFF shl 24) or dark(16) or dark(8) or dark(0)
+        ACCENT_INK = inkOf(c)
+    }
+
+    /**
+     * L'encre de [color] sur le thème en cours (voir [ACCENT_INK]) : lisible sur le fond, les surfaces, et
+     * sur le fond discret de l'accent ([ACCENT_DIM] posé sur SURFACE2 : puces, numéros d'étape).
+     */
+    fun inkOf(color: Int): Int {
+        if (!light) return color
+        fun dim(ch: Int): Int {
+            val b = (SURFACE2 shr ch) and 0xFF
+            return Math.round(b + (((color shr ch) and 0xFF) - b) * (0x33 / 255f)) shl ch
+        }
+        val dimBack = (0xFF shl 24) or dim(16) or dim(8) or dim(0)
+        return ColourWheel.ink(color, intArrayOf(BG, SURFACE, SURFACE2, SURFACE3, dimBack))
     }
 
     /** Applique le thème clair ou sombre (fond, surfaces, texte). L'accent est inchangé. */
@@ -122,6 +152,7 @@ object Ui {
                 0xFF1C2B3E.toInt(), 0xFF35301A.toInt(), 0xFF1E3320.toInt(), 0xFF3A2A1C.toInt(),
             )
         }
+        ACCENT_INK = inkOf(ACCENT)
     }
 
     val LIGHT: Typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
@@ -321,7 +352,7 @@ object Ui {
     /** Couleur liée à une température : froid -> bleu, tiède -> orange, chaud -> rouge. */
     fun tempColor(c: Int): Int = when {
         c >= 90 -> DANGER
-        c >= 60 -> ACCENT
+        c >= 60 -> ACCENT_INK
         c >= 40 -> WARN
         else -> COOL
     }

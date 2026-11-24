@@ -76,7 +76,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         resumeCard = Ui.horizontal(c)
         resumeCard.setPadding(Ui.u(22), Ui.u(16), Ui.u(18), Ui.u(16))
         resumeCard.background = Ui.pressable(Ui.round(Ui.ACCENT_DIM, 24f), 24f)
-        resumeCard.addView(Icon(c, Icon.Kind.PLAY, Ui.ACCENT), LinearLayout.LayoutParams(Ui.u(26), Ui.u(26)).apply { rightMargin = Ui.u(14) })
+        resumeCard.addView(Icon(c, Icon.Kind.PLAY, Ui.ACCENT_INK), LinearLayout.LayoutParams(Ui.u(26), Ui.u(26)).apply { rightMargin = Ui.u(14) })
         resumeText = Ui.ellipsize(Ui.text(c, "", 19f, Ui.TEXT, Ui.MEDIUM), 2)
         resumeCard.addView(resumeText, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
         // Zone de toucher plus grande que l'icône (au doigt, sur la carte).
@@ -110,7 +110,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         // Sous-titre seulement quand une nouvelle version de Toque attend d'être installée.
         val (t6, s6) = tile(Icon.Kind.SETTINGS, tr("Réglages")) { a.push(SettingsScreen(a)) }
         settingsSub = s6
-        settingsSub.setTextColor(Ui.ACCENT)
+        settingsSub.setTextColor(Ui.ACCENT_INK)
         row2.addView(t6, tileLp(false))
         grid.addView(row1, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { bottomMargin = Ui.u(16) })
         grid.addView(row2, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f))
@@ -129,8 +129,10 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         t.background = Ui.pressable(Ui.round(Ui.SURFACE, 26f, Ui.STROKE, 1f), 26f)
         t.addView(View(c), LinearLayout.LayoutParams(1, 0, 2f))
         val badge = android.widget.FrameLayout(c)
-        badge.background = Ui.round(Ui.ACCENT_DIM, 44f)
-        badge.addView(Icon(c, icon, Ui.ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
+        // Le rond prend la couleur choisie (Réglages › Apparence) et l'icône se dessine dessus en foncé :
+        // elle reste nette avec toutes les couleurs, sur le thème sombre comme sur le clair.
+        badge.background = Ui.round(Ui.ACCENT, 44f)
+        badge.addView(Icon(c, icon, Ui.ON_ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
         t.addView(badge, LinearLayout.LayoutParams(Ui.u(84), Ui.u(84)))
         val text = Ui.vertical(c, Gravity.CENTER_HORIZONTAL or Gravity.TOP)
         text.addView(Ui.text(c, title, 22f, Ui.TEXT, Ui.MEDIUM).apply { gravity = Gravity.CENTER }, Ui.lp(Ui.WRAP, Ui.WRAP, t = 12))

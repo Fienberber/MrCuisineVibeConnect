@@ -126,7 +126,7 @@ class KnobSetupScreen(a: MainActivity) : Screen(a) {
         root.addView(Ui.text(c, tr("Le bouton rotatif du robot règle les durées, les vitesses et les températures. Ce réglage ne se fait qu'une fois."),
             20f, Ui.TEXT2).apply { gravity = Gravity.CENTER; setLineSpacing(0f, 1.2f) }, Ui.lp(Ui.MATCH, Ui.WRAP))
         root.addView(Ui.spacer(c, weight = 1f), LinearLayout.LayoutParams(1, 0, 1f))
-        stepView = Ui.text(c, "", 22f, Ui.ACCENT, Ui.MEDIUM)
+        stepView = Ui.text(c, "", 22f, Ui.ACCENT_INK, Ui.MEDIUM)
         root.addView(stepView, Ui.lp(Ui.WRAP, Ui.WRAP))
         ask = Ui.text(c, "", 44f, Ui.TEXT, Ui.LIGHT).apply { gravity = Gravity.CENTER }
         root.addView(ask, Ui.lp(Ui.MATCH, Ui.WRAP, t = 12))

@@ -41,7 +41,7 @@ class Prefs(context: Context) {
             p.edit().putString("language", v).commit()
         }
 
-    /** Couleur d'accent de l'interface (une de Ui.ACCENTS), 0 = celle d'origine. */
+    /** Couleur d'accent de l'interface (une de Ui.ACCENTS, ou une couleur de la roue que Ui.accepts garde), 0 = celle d'origine. */
     var accentColor: Int
         get() = p.getInt("accentColor", 0)
         set(v) {
