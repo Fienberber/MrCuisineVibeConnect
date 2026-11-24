@@ -240,7 +240,7 @@ class HomeScreen(a: MainActivity) : Screen(a) {
         t.addView(View(c), LinearLayout.LayoutParams(1, 0, 1f))
         val badge = android.widget.FrameLayout(c)
         // Le rond prend la couleur choisie (Réglages › Apparence) et l'icône se dessine dessus en foncé :
-        // elle reste nette avec les dix couleurs, sur le thème sombre comme sur le clair.
+        // elle reste nette avec toutes les couleurs, sur le thème sombre comme sur le clair.
         badge.background = Ui.round(Ui.ACCENT, 44f)
         badge.addView(Icon(c, icon, Ui.ON_ACCENT), Ui.flp(Ui.u(46), Ui.u(46), Gravity.CENTER))
         t.addView(badge, LinearLayout.LayoutParams(Ui.u(84), Ui.u(84)))
