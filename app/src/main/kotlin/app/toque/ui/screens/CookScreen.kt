@@ -465,6 +465,7 @@ class CookScreen(a: MainActivity, private val recipe: Recipe, startStep: Int) : 
         row.addView(Ui.button(c, tr("Fermer"), Ui.Style.SECONDARY, height = 60) { a.closeOverlay() })
         card.addView(row, Ui.lp(t = 22))
         a.showOverlay(card, 680)
+    }
 
     // ------------------------------------------------------------------ étape à la main
 
