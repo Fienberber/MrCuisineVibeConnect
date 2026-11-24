@@ -75,6 +75,7 @@
   "Aucune recette lisible dans les fichiers de Download": "У файлах папки Download не знайдено придатних рецептів",
   "Aucune recette lisible. Envoyez le fichier diagnostic-recettes.txt.": "Доступних рецептів немає.\nДля діагностики надішліть diagnostic-recettes.txt",
   "Aucune recette ne correspond.\nAstuce : séparez plusieurs ingrédients par des virgules.": "Не знайдено жодного рецепта.\nПорада: розділяйте інгредієнти комами.",
+  "Recherche dans les ingrédients…": "Пошук в інгредієнтах…",
   "Aucune recette avec ces filtres.\nTouchez « Toutes » pour les retirer.": "Немає рецептів із цими фільтрами.\nНатисніть «Всі», щоб їх прибрати.",
   "Trier :": "Сортувати:",
   "Trier les recettes": "Сортування рецептів",
