@@ -798,5 +798,8 @@
   "Remettre la balance à zéro quand le bol vide est replacé": "Waage auf null setzen, wenn die leere Schüssel zurückgestellt wird",
   "Tare automatique aux étapes de pesée des recettes": "Automatische Tara bei Wiegeschritten von Rezepten",
   "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque vergleicht das aufgestellte Gewicht mit der gespeicherten leeren Schüssel: Eine Schüssel mit Inhalt wird nie auf null gesetzt.",
-  "Bol retiré": "Schüssel abgenommen"
+  "Bol retiré": "Schüssel abgenommen",
+  "Yaourt": "Joghurt",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentation: Messer steht, höchstens %d °C",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lauwarme Milch mit Starterkultur, Deckel zu. Hält %d °C ohne Rühren: das Messer steht still."
 }

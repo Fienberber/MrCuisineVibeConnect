@@ -798,5 +798,8 @@
   "Remettre la balance à zéro quand le bol vide est replacé": "Poner la báscula a cero al colocar el vaso vacío",
   "Tare automatique aux étapes de pesée des recettes": "Tara automática en los pasos de pesado de las recetas",
   "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque compara el peso colocado con el vaso vacío memorizado: un vaso con contenido nunca se pone a cero.",
-  "Bol retiré": "Vaso retirado"
+  "Bol retiré": "Vaso retirado",
+  "Yaourt": "Yogur",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentación: cuchilla parada, %d °C máximo",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Leche tibia con el fermento, tapa cerrada. Mantiene %d °C sin remover: la cuchilla no se mueve."
 }

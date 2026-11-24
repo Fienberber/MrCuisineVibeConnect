@@ -798,5 +798,8 @@
   "Remettre la balance à zéro quand le bol vide est replacé": "Posa la bàscula a zero en col·locar el bol buit",
   "Tare automatique aux étapes de pesée des recettes": "Tara automàtica als passos de pesada de les receptes",
   "Toque compare la masse posée au bol vide mémorisé : un bol replacé avec du contenu n'est jamais remis à zéro.": "Toque compara el pes col·locat amb el bol buit memoritzat: un bol amb contingut mai no es posa a zero.",
-  "Bol retiré": "Bol retirat"
+  "Bol retiré": "Bol retirat",
+  "Yaourt": "Iogurt",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentació: ganivetes aturades, %d °C com a màxim",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Llet tèbia amb el ferment, tapa tancada. Manté %d °C sense remenar: les ganivetes no es mouen."
 }
