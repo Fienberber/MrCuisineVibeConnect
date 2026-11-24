@@ -25,9 +25,10 @@ robot sans rien envoyer à sa base moteur et demande de le confirmer.
 
 > Projet indépendant, non affilié à Lidl, SilverCrest ni Hoyer. Le pilotage du moteur repose
 > sur une analyse publique du protocole. Depuis octobre 2026, Toque tourne sur des SKMC 1200
-> (révisions A1, B2 et C3) en France et en Espagne, et sur des SKMC 1100 A1. La prise en charge du
-> Smart vient des portages de Flav974 et de Tidusneo24150 ; le projet n'a pas de Smart. À utiliser à
-> vos risques, en suivant la procédure de premier essai.
+> (révisions A1, B2 et C3) en France et en Espagne, et sur des SKMC 1100 A1 (TWRP reconstruit
+> autour de leur propre noyau, ce que le script d'installation fait de lui-même, voir #10). La prise
+> en charge du Smart vient des portages de Flav974 et de Tidusneo24150 ; le projet n'a pas de Smart.
+> À utiliser à vos risques, en suivant la procédure de premier essai.
 >
 > L'interface existe en **français**, **anglais**, **allemand**, **espagnol**, **catalan** et
 > **ukrainien** (*Réglages › Langue · Language*).

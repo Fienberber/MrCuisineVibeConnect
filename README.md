@@ -25,7 +25,8 @@ robot without sending anything to its motor base and asks you to confirm it.
 
 > Independent project, not affiliated with Lidl, SilverCrest or Hoyer. Motor control is based on
 > a public analysis of the serial protocol. Since October 2026 Toque has been running on SKMC 1200
-> robots (revisions A1, B2 and C3) in France and Spain, and on SKMC 1100 A1 robots. The Smart support
+> robots (revisions A1, B2 and C3) in France and Spain, and on SKMC 1100 A1 robots (TWRP rebuilt
+> around their own kernel, which the install script does by itself, see #10). The Smart support
 > comes from Flav974's and Tidusneo24150's ports; the project does not own a Smart. Use at your own
 > risk and follow the first-run procedure.
 >

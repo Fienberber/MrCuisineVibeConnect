@@ -14,7 +14,9 @@ Menu names below are those of the English interface (*Settings › Langue · Lan
 
 ## What you need
 
-- A Windows PC with Android Studio (for ADB) and [SP Flash Tool](https://spflashtool.com/download)
+- A Windows PC with ADB (the Android platform tools: `tools\setup\toque-setup.ps1 -Step prepare`
+  puts them in `C:\Toque\platform-tools`; Android Studio also brings them) and
+  [SP Flash Tool](https://spflashtool.com/download)
   (v5.1924 tested). Upstream ships `SP_Flash_Tool_v5.1924_Win.rar`, a password-protected RAR (AES
   password `spflashtool.com`, published on that page), not a ZIP; Windows 10 and Windows 11 before
   23H2 cannot open RAR on their own, so extract it with 7-Zip or WinRAR. A *scripted* direct
@@ -50,16 +52,18 @@ Menu names below are those of the English interface (*Settings › Langue · Lan
    `recovery-original.img` (16 MB each): **keep them safe, they are your only way back.**
 
    > **SKMC 1100 A1** (label under the robot, system image `v4.3a_2022-09-15`): the TWRP of the
-   > reference guide carries a 2018 kernel and this robot runs a 2022 one. Before step 4, rebuild
-   > TWRP around your own kernel: put the two backups in `C:\Toque\backup\`, then run
+   > reference guide carries a 2018 kernel built for the SKMC 1200's board, and on this robot it
+   > starts without touch. Before step 4, rebuild TWRP around your own kernel: put the two backups
+   > in `C:\Toque\backup\`, then run
    > [`tools\setup\toque-setup.ps1`](../tools/setup/toque-setup.ps1) with `-Step prepare` (it
    > fetches and checks the TWRP image; its remarks about the driver and SP Flash Tool do not
    > matter if you already have them), `-Step backup` (with the files already there it only checks
-   > them) and `-Step own-twrp`. These commands send nothing to the robot. Use the resulting
-   > `C:\Toque\twrp-own-kernel.img` wherever this page says `hacks/recovery.img` (step 4 below, and
-   > step 2 of the next section).
-4. **Download** tab, *Download Only*: tick only `boot`, with `hacks/recovery.img` (TWRP). Click
-   **Download**, then switch the robot off and on again.
+   > them, and tells you which robot it sees) and `-Step own-twrp`. These commands send nothing to
+   > the robot. Use the resulting `C:\Toque\twrp-own-kernel.img` wherever this page says
+   > `hacks/recovery.img` (step 4 below, and step 2 of the next section). If you let the script do
+   > the flashing (`-Step flash-twrp`), it picks that image by itself.
+4. **Download** tab, *Download Only*: tick only `boot`, with `hacks/recovery.img` (TWRP). With
+   the robot switched off and the cable plugged in, click **Download**, then switch the robot on.
 5. Switch the robot off, unplug the cable, switch it on: **TWRP** starts. Plug the cable back in:
    `adb devices` shows the robot in `recovery` mode.
 
@@ -79,7 +83,8 @@ Menu names below are those of the English interface (*Settings › Langue · Lan
    `/system/recovery-from-boot.p` (otherwise Android puts the stock recovery back over TWRP) and
    authorizes your PC's ADB key (no prompt on the robot's screen).
 2. SP Flash Tool, *Download Only*: tick `boot` = `boot-magisk.img` and `recovery` =
-   `hacks/recovery.img`, click **Download**, switch the robot off and on again.
+   `hacks/recovery.img`. With the robot switched off and the cable plugged in, click **Download**,
+   then switch the robot on.
 3. Switch the robot off, unplug the cable, switch it on: the stock app starts. Plug the cable in.
 4. `adb install Magisk-v31.0.apk`, then `adb shell su -c id` and tap **Grant** on the robot: it
    must print `uid=0`. Toque uses the **busybox** shipped with Magisk (`/data/adb/magisk/busybox`).
@@ -110,15 +115,19 @@ disconnect the USB cable and perform all subsequent steps and updates over Wi-Fi
    [Releases page](https://github.com/Wuki60/MrCuisineVibeConnect/releases), or build it in
    Android Studio (see the README). With a downloaded APK, add `-Apk <path to the APK>` below.
 2. `powershell -ExecutionPolicy Bypass -File tools\install-robot.ps1`
-   (over Wi-Fi: add `-Ip <robot IP address>`).
+   (over Wi-Fi: add `-Ip <robot IP address>`). It uses the adb of `C:\Toque\platform-tools` when
+   it is there, and stops with the reason if the install is refused or if the file on the robot is
+   not the one it sent.
 3. The script also allows Toque in Magisk (no prompt on the robot: Magisk's prompt closes by
    itself after 10 s and then refuses), installs a boot script that allows it again at every
-   start (Magisk 31 forgets the permission of every app each time an Android 6 device starts),
-   and checks that Magisk's busybox, which Toque needs for the serial port, is in place.
+   start (Magisk 31 forgets the permission of every app each time an Android 6 device starts) and
+   opens Toque first, and checks that Magisk's busybox, which Toque needs for the serial port, is
+   in place.
 
 ## 4. First run — EMPTY bowl
 
-1. In Toque: **Settings › Machine › Real machine › Apply**. Toque turns off the stock app's motor service (reversible) and opens the
+1. At first start, Toque asks *Which robot is this?*: choose **Monsieur Cuisine Connect** (until then
+   it sends nothing to the motor base). Then **Settings › Machine › Real machine › Apply**. Toque turns off the stock app's motor service (reversible) and opens the
    serial port.
 2. Success: the badge at the top right must read Ready with **no Demo or Twin marker** **and** the
    journal must show the real link, e.g. `liaison ouverte : Base moteur (/dev/ttyMT…)`; `Démo (base simulée)`
@@ -159,5 +168,8 @@ Lidl's servers; come back with the **Back to Toque** button. If that import fail
 - From Toque: Settings › Tools › Back to the stock app.
 - From the PC: `powershell -ExecutionPolicy Bypass -File tools\restore-robot.ps1 -Uninstall`
 
-Toque changes neither the system nor the stock app: it only disables its motor service, which
-both methods undo. Toque then no longer opens at startup.
+Toque itself only disables the stock app's motor service, which both methods undo; Toque then no
+longer opens at startup. What the installation changed underneath stays: Magisk in `boot`, TWRP in
+`recovery`, three ADB lines in `/system/build.prop` and the deleted `/system/recovery-from-boot.p`
+(copies of the originals: `C:\Toque\system-originals`). To remove Magisk and TWRP as well, flash
+your two original images back (end of section 2).
