@@ -827,5 +827,5 @@
   "Yaourt": "Iogurt",
   "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentació: ganivetes aturades, %d °C com a màxim",
   "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Llet tèbia amb el ferment, tapa tancada. Manté %d °C sense remenar: les ganivetes no es mouen.",
-  "Pétrir, vapeur, rissoler, yaourt, nettoyage": "Pastar, vapor, sofregir, iogurt, neteja"
+  "Pétrir, vapeur, yaourt, nettoyage": "Pastar, vapor, iogurt, neteja"
 }
