@@ -116,9 +116,12 @@ class TopBar(private val a: MainActivity) : LinearLayout(a) {
 
     fun update(s: Snapshot) {
         lid.visibility = if (s.hasSample && s.lidOpen) View.VISIBLE else View.GONE
-        // Seulement si la détection du bol est exigée : la personne a vérifié que le capteur est
-        // fiable (sens réglé), sinon la pastille resterait affichée à tort.
-        bowl.visibility = if (s.hasSample && a.prefs.requireBowl && !s.bowlDetected) View.VISIBLE else View.GONE
+        // Bol retiré : pour la base le couvercle est « ouvert », mais ce n'est pas lui qu'il faut fermer.
+        Ui.chipText(lid).text = if (s.bowlRemoved) tr("Bol retiré") else tr("Couvercle ouvert")
+        (lid.getChildAt(0) as Icon).set(if (s.bowlRemoved) Icon.Kind.POT else Icon.Kind.LID)
+        // Capteur du bol seul : seulement si la détection du bol est exigée (la personne a alors vérifié que
+        // le capteur est fiable, sens réglé). Jamais deux fois « Bol retiré ».
+        bowl.visibility = if (s.hasSample && a.prefs.requireBowl && !s.bowlDetected && !s.bowlRemoved) View.VISIBLE else View.GONE
         if (s.hasSample) {
             temp.visibility = View.VISIBLE
             Ui.chipText(temp).text = "${s.actualTempC} °C"

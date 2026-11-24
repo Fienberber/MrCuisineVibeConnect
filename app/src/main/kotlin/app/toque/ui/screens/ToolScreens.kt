@@ -68,6 +68,7 @@ class DiagnosticsScreen(a: MainActivity) : Screen(a) {
             append(tr("Poids").padEnd(17)).append(s.weightG).append(" g · ").append(s.scaleState).append(if (s.scaleStable) " · " + tr("stable") else "").append('\n')
             append(tr("Couvercle ouvert").padEnd(17)).append(yn(s.lidOpen)).append('\n')
             append(tr("Bol détecté").padEnd(17)).append(yn(s.bowlDetected)).append('\n')
+            append(tr("Bol retiré").padEnd(17)).append(yn(s.bowlRemoved)).append('\n')
             append(tr("Erreur base").padEnd(17)).append(if (s.boardErrorCode == 0) tr("aucune") else "${s.boardErrorCode} · ${RobotProfiles.active.validator.errorMessage(s.boardErrorCode)}").append('\n')
             append(tr("Firmware base").padEnd(17)).append(s.firmware).append('\n')
             append(tr("Programme").padEnd(17)).append(s.jobLabel.ifEmpty { "—" }).append(' ').append(s.jobState).append('\n')
