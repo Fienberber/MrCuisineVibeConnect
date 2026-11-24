@@ -823,5 +823,8 @@
   "Pour être prévenu à la fin d'un programme : une automatisation de Home Assistant déclenchée par l'entité « Fin de programme » (finished, aborted ou fault).": "Für eine Nachricht am Programmende: eine Home-Assistant-Automatisierung, ausgelöst von der Entität „Programmende“ (finished, aborted oder fault).",
   "Désactivé": "Aus",
   "Indiquez l'adresse du broker MQTT": "Adresse des MQTT-Brokers eingeben",
-  "Connexion à %s…": "Verbinde mit %s…"
+  "Connexion à %s…": "Verbinde mit %s…",
+  "Yaourt": "Joghurt",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentation: Messer steht, höchstens %d °C",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lauwarme Milch mit Starterkultur, Deckel zu. Hält %d °C ohne Rühren: das Messer steht still."
 }

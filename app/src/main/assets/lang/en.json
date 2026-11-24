@@ -823,5 +823,8 @@
   "Pour être prévenu à la fin d'un programme : une automatisation de Home Assistant déclenchée par l'entité « Fin de programme » (finished, aborted ou fault).": "To be told when a program ends: a Home Assistant automation triggered by the “Program end” entity (finished, aborted or fault).",
   "Désactivé": "Off",
   "Indiquez l'adresse du broker MQTT": "Enter the MQTT broker address",
-  "Connexion à %s…": "Connecting to %s…"
+  "Connexion à %s…": "Connecting to %s…",
+  "Yaourt": "Yogurt",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentation: blade stopped, %d °C maximum",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Lukewarm milk with the starter, lid closed. Holds %d °C without stirring: the blade stays still."
 }

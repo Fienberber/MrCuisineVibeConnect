@@ -823,5 +823,8 @@
   "Pour être prévenu à la fin d'un programme : une automatisation de Home Assistant déclenchée par l'entité « Fin de programme » (finished, aborted ou fault).": "Per rebre un avís al final d'un programa: una automatització de Home Assistant activada per l'entitat «Final del programa» (finished, aborted o fault).",
   "Désactivé": "Desactivat",
   "Indiquez l'adresse du broker MQTT": "Indiqueu l'adreça del broker MQTT",
-  "Connexion à %s…": "Connectant amb %s…"
+  "Connexion à %s…": "Connectant amb %s…",
+  "Yaourt": "Iogurt",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Fermentació: ganivetes aturades, %d °C com a màxim",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Llet tèbia amb el ferment, tapa tancada. Manté %d °C sense remenar: les ganivetes no es mouen."
 }

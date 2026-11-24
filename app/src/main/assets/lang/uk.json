@@ -823,5 +823,8 @@
   "Pour être prévenu à la fin d'un programme : une automatisation de Home Assistant déclenchée par l'entité « Fin de programme » (finished, aborted ou fault).": "Щоб отримати сповіщення про завершення програми: автоматизація Home Assistant, яку запускає сутність «Завершення програми» (finished, aborted або fault).",
   "Désactivé": "Вимкнено",
   "Indiquez l'adresse du broker MQTT": "Вкажіть адресу брокера MQTT",
-  "Connexion à %s…": "Підключення до %s…"
+  "Connexion à %s…": "Підключення до %s…",
+  "Yaourt": "Йогурт",
+  "Fermentation : lame à l'arrêt, %d °C maximum": "Ферментація: ніж нерухомий, не більше %d °C",
+  "Lait tiède ensemencé, couvercle fermé. Garde %d °C sans remuer : la lame reste immobile.": "Тепле молоко із закваскою, кришка закрита. Тримає %d °C без перемішування: ніж нерухомий."
 }
