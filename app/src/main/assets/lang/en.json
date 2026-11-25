@@ -945,5 +945,6 @@
   "mode sombre": "dark mode",
   "Réglage non proposé par l'éditeur du robot": "Setting not offered by the robot's editor",
   "Durée : de %s à %s": "Duration: %s to %s",
-  "Impulsions : de %d à %d": "Pulses: %d to %d"
+  "Impulsions : de %d à %d": "Pulses: %d to %d",
+  "Pas encore l'appli ?": "Don't have the app yet?"
 }

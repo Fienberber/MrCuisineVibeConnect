@@ -21,6 +21,8 @@ import app.toque.core.machine.Verdict
 import app.toque.core.recipes.Recipe
 import app.toque.core.recipes.adjusted
 import app.toque.core.recipes.corrected
+import app.toque.core.robot.RecipeCompat
+import app.toque.core.robot.RobotProfiles
 import app.toque.ui.Ui
 import app.toque.ui.screens.CookScreen
 import app.toque.ui.screens.RecipeEditScreen
@@ -111,11 +113,19 @@ class RobotHost(
         return CatalogSearch.page(repo.index, query, repo.recentIds(), repo.mostCookedIds())
     }
 
-    override fun recipe(id: String): Recipe? = if (id.length > MAX_ID) null else app.recipes.getAdjusted(id)
+    /**
+     * Une recette que le robot choisi ne sait pas faire n'existe pas pour le téléphone, même demandée par
+     * son identifiant (le catalogue ne la liste déjà pas) : ni lue, ni envoyée sur l'accueil.
+     */
+    override fun recipe(id: String): Recipe? =
+        if (id.length > MAX_ID) null else app.recipes.getAdjusted(id)?.takeIf { cookable(it) }
 
     /** Les corrections de l'utilisateur, sans son nombre de personnes : le téléphone recalcule de là. */
     override fun baseRecipe(id: String): Recipe? =
-        if (id.length > MAX_ID) null else app.recipes.get(id)?.let { it.corrected(app.recipes.adjustmentsOf(it.id)) }
+        if (id.length > MAX_ID) null
+        else app.recipes.get(id)?.takeIf { cookable(it) }?.let { it.corrected(app.recipes.adjustmentsOf(it.id)) }
+
+    private fun cookable(r: Recipe) = RecipeCompat.supports(r, RobotProfiles.active)
 
     override fun baseServings(recipeId: String): Int = if (recipeId.length > MAX_ID) 0 else app.recipes.get(recipeId)?.servings ?: 0
 

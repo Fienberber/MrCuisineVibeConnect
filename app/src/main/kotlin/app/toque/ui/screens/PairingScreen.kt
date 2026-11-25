@@ -116,6 +116,8 @@ class PairingScreen(a: MainActivity) : Screen(a) {
         how.addView(stepRow(1, tr("Connectez-le au Wi-Fi de la maison.")), Ui.lp(t = 12))
         how.addView(stepRow(2, tr("Ouvrez l'application Toque Compagnon et scannez le QR code.")), Ui.lp(t = 12))
         how.addView(stepRow(3, tr("Il s'ajoute à la liste ci-dessous.")), Ui.lp(t = 12))
+        how.addView(Ui.divider(c), Ui.lp(Ui.MATCH, maxOf(1, Ui.u(1)), t = 14))
+        how.addView(getAppRow(), Ui.lp(Ui.MATCH, Ui.WRAP, t = 12))
         right.addView(how, Ui.lp(Ui.MATCH, Ui.WRAP))
 
         val phones = card()
@@ -127,6 +129,20 @@ class PairingScreen(a: MainActivity) : Screen(a) {
         right.addView(phones, LinearLayout.LayoutParams(Ui.MATCH, 0, 1f).apply { topMargin = Ui.u(14) })
         root.addView(right, LinearLayout.LayoutParams(0, Ui.MATCH, 1f))
         return root
+    }
+
+    /** « Pas encore l'appli ? » : l'adresse des versions du Compagnon et un petit QR code (calculé une fois). */
+    private fun getAppRow(): View {
+        val row = Ui.horizontal(c)
+        val code = try { QrCode.encode(APP_URL, QrCode.ErrorCorrection.L) } catch (t: Throwable) { null }
+        if (code != null) row.addView(QrView(c).apply { this.code = code },
+            LinearLayout.LayoutParams(Ui.u(APP_QR_SIZE), Ui.u(APP_QR_SIZE)).apply { rightMargin = Ui.u(16) })
+        val col = Ui.vertical(c)
+        col.addView(Ui.text(c, tr("Pas encore l'appli ?"), 17f, Ui.TEXT, Ui.MEDIUM))
+        col.addView(Ui.text(c, APP_URL.removePrefix("https://"), 15f, Ui.TEXT2).apply { setLineSpacing(0f, 1.1f) },
+            Ui.lp(t = 4))
+        row.addView(col, LinearLayout.LayoutParams(0, Ui.WRAP, 1f))
+        return row
     }
 
     private fun card(): LinearLayout = Ui.vertical(c).apply {
@@ -338,6 +354,10 @@ class PairingScreen(a: MainActivity) : Screen(a) {
     companion object {
         /** Côté du carré du QR code, en unités Toque (la carte de gauche fait 380 de large). */
         const val QR_SIZE = 280
+        /** Où télécharger Toque Compagnon (dernière version publiée). */
+        const val APP_URL = "https://github.com/Wuki60/ToqueCompagnon/releases/latest"
+        /** Petit QR de [APP_URL] : version 4 au niveau L, 41 modules avec la marge, 3 pixels chacun sur le Connect. */
+        private const val APP_QR_SIZE = 124
         private const val MINUTE = 60_000L
         private const val HOUR = 60 * MINUTE
         private const val DAY = 24 * HOUR

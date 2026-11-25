@@ -786,7 +786,7 @@ differ, so compute countdowns from the moment the response arrived, not from `se
 | `protocol` | protocol version |
 | `revision` | grows on every visible change; pass it back as `since` |
 | `serverTime` | robot wall clock at the response |
-| `robot` | `id` (stable random id, 12 hex), `name`, `appVersion`, `language` (UI language code), `protocol`, and its look so that the phone can match it: `accent` (the colour chosen in Settings › Screen, `#RRGGBB` in upper case) and `theme` (`dark` or `light`). Both are absent on a robot that does not know them (before 0.8.0): the phone then keeps its own colour and theme. A change of colour or theme on the robot moves `revision` like any visible change. `anyAccent`: `true` when `POST /api/robot/appearance` takes any colour of the colour wheel (any colour its guard accepts), not only the ten; written only when true, so absent on an older robot (read as false: offer it only the ten) and an older phone ignores it. `accent` may then be a wheel colour: a phone shows it as is |
+| `robot` | `id` (stable random id, 12 hex), `name`, `appVersion`, `language` (UI language code), `protocol`, and its look so that the phone can match it: `accent` (the colour chosen in Settings › Screen, `#RRGGBB` in upper case) and `theme` (`dark` or `light`). Both are absent on a robot that does not know them (before 0.8.0): the phone then keeps its own colour and theme. A change of colour or theme on the robot moves `revision` like any visible change. `anyAccent`: `true` when `POST /api/robot/appearance` takes any colour of the colour wheel (any colour its guard accepts), not only the ten; written only when true, so absent on an older robot (read as false: offer it only the ten) and an older phone ignores it. `accent` may then be a wheel colour: a phone shows it as is. `model`: the robot model, the id of its profile (`mc-connect` or `mc-smart`); written only when known, so absent on an older robot (the phone then infers it from `limits`: `heatNoStir` false is the Smart) |
 | `me` | this phone: `id`, `number`, `name`, `pairedAt`, `lastSeenAt`, `method` (`qr` / `code`) |
 | `machine` | the base, always present |
 | `job` | the current or last job, `null` when none is shown on the robot; an ended job (`FINISHED`, `ABORTED`) stays until OK is pressed on the robot or sent by a phone (`POST /api/machine/clear`) |
@@ -795,7 +795,7 @@ differ, so compute countdowns from the moment the response arrived, not from `se
 | `waiting` | the recipe waiting on the robot's home screen, `null` when none |
 | `last` | the last finished activity (journal), `null` when none ("Dernière activité") |
 | `journalSeq` | `seq` of the last journal line (0: empty); fetch `/api/journal?after=` when it moves |
-| `limits` | safety limits for drawing the controls (the robot checks everything again); `manualMinMs` (shortest manual duration on the robot's screen) and `highSpeedAbove` (above this speed the maximum is `maxMsHighSpeed`) complete the input rules of a manual cooking (`LimitsWire.manual()`); absent from an older robot, Toque's values apply |
+| `limits` | safety limits for drawing the controls (the robot checks everything again); `manualMinMs` (shortest manual duration on the robot's screen) and `highSpeedAbove` (above this speed the maximum is `maxMsHighSpeed`) complete the input rules of a manual cooking (`LimitsWire.manual()`); absent from an older robot, Toque's values apply. `temperaturesC` is the robot's table without the Smart's 40 °C: that one stays on the robot (start and adjust refuse it). A cooking started at 40 °C on a Smart shows `job.tempLevel` 1 (`job.tempC` 37) and `machine.targetTempC` 40; "−" from there goes to 37 °C |
 
 **`machine`**
 
@@ -814,6 +814,7 @@ differ, so compute countdowns from the moment the response arrived, not from `se
 | `bowlRemoved` | lid "open" because the bowl is out (not just the lid) |
 | `motorOn`, `heaterOn` | reported by the base |
 | `turbo` | a Turbo press is running |
+| `tempKnown` | the base is measuring the temperature right now. Written only when `false`: absent means `true` (the Connect, an older robot). `false` on the Smart outside a heating (its base measures only while heating, and during a heated job): `tempC` is then not a measurement, do not show it. Read it together with `hasSample` |
 
 **`job`**
 
@@ -968,7 +969,7 @@ stays untappable).
 | `recipe_removed` | | waiting recipe removed (robot or phone) |
 | `recipe_launched` | | waiting recipe launched on the robot |
 | `fault` | `fault` | machine alert (`text` = message) |
-| `temp_reached` | `temp_reached` | the bowl came within 2 °C of the requested temperature ("Température atteinte : 100 °C"); `stepIndex` in a recipe |
+| `temp_reached` | `temp_reached` | the bowl came within 2 °C of the requested temperature ("Température atteinte : 100 °C"; 40 °C on a Smart cooking at 40 °C); on the Smart, only from what its base measures while heating; `stepIndex` in a recipe |
 
 **Temperature reached** is the only temperature alert: no other temperature change is ever notified. One
 line per job and requested temperature, only for a single-phase manual cooking or a step of a guided
