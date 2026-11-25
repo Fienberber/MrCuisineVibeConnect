@@ -9,6 +9,12 @@ and still uses **the official Lidl recipes**.
 🌐 **[toqueapp.org](https://toqueapp.org)**, the Toque community site: share your recipes, find other
 users' ones and send them to your robot.
 
+📱 **[Toque Compagnon](https://github.com/Wuki60/ToqueCompagnon)**, the phone and tablet app: follow
+the cooking and send recipes to your robot over your home Wi-Fi.
+
+❤️ **[Support Toque](https://toqueapp.org/donate.php)**: Toque is free and ad-free, a donation helps keep
+it going.
+
 ## Supported robots
 
 | Robot | Label under the robot | Status | How to install |

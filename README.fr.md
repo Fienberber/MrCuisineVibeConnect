@@ -9,6 +9,12 @@ gardant **les recettes Lidl**.
 🌐 **[toqueapp.org](https://toqueapp.org)**, le site communautaire de Toque : partagez vos recettes,
 trouvez celles des autres et envoyez-les sur votre robot.
 
+📱 **[Toque Compagnon](https://github.com/Wuki60/ToqueCompagnon)**, l'appli pour téléphone et
+tablette : suivez la cuisson et envoyez des recettes sur votre robot par le Wi-Fi de la maison.
+
+❤️ **[Soutenir Toque](https://toqueapp.org/donate.php)** : Toque est gratuit et sans publicité, un don
+aide à le faire vivre.
+
 ## Robots pris en charge
 
 | Robot | Étiquette sous le robot | État | Installation |
